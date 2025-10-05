@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.egg
+*.manifest
+*.spec
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# Django
+*.log
+*.pot
+*.pyc
+*.pyo
+*.mo
+db.sqlite3
+media/
+staticfiles/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment Variables
+*.env
+
+# Pytest / Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Migrations (optional: keep only if auto-generated each time)
+# Comment out if you want to track migrations
+#migrations/
+
+# PostgreSQL dump files
+*.sql
+*.dump
