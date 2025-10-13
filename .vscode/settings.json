@@ -1,0 +1,95 @@
+{
+  "github.copilot.enable": {
+    "*": true
+  },
+  "github.copilot.chat.mcp.access": "all",
+  "github.copilot.chat.mcp.autostart": "all",
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    ".mcp/node_modules": true,
+    "frontend/node_modules": true
+  },
+  "python.envFile": "${workspaceFolder}/.mcp/.env",
+  "mcp.servers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${workspaceFolder}"
+      ]
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres"
+      ],
+      "env": {
+        "DATABASE_URL": "${config:sbcc.databaseUrl}"
+      }
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git",
+        "--repository",
+        "${workspaceFolder}"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${config:sbcc.githubToken}"
+      }
+    },
+    "notion": {
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/.mcp/servers/notion-server.js"
+      ],
+      "env": {
+        "NOTION_API_KEY": "${config:sbcc.notionApiKey}"
+      }
+    },
+    "fetch": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-fetch"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
+    },
+    "react": {
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/.mcp/servers/react-server.js"
+      ],
+      "env": {
+        "FRONTEND_PATH": "${workspaceFolder}/frontend/src"
+      }
+    }
+  },
+  "sbcc.databaseUrl": "",
+  "sbcc.githubToken": "",
+  "sbcc.notionApiKey": ""
+}
