@@ -42,19 +42,21 @@ pip install -r requirements.txt
 
 ### 5. Configure Environment Variables
 
-Create a `.env` file in the `backend/` directory:
+1. Copy the example file:
+   ```bash
+   cp .env.example .env
+   ```
 
-```env
-SECRET_KEY=your-secret-key-here
-DEBUG=True
-DB_NAME=sbcc_db
-DB_USER=sbcc_user
-DB_PASSWORD=your-password
-DB_HOST=localhost
-DB_PORT=5432
-```
+2. Ask team lead for the real `DATABASE_URL`
 
-⚠️ **Never commit `.env` file to version control!**
+3. Generate a `SECRET_KEY`:
+   ```bash
+   python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+   ```
+
+4. Update `.env` with real values
+
+⚠️ **NEVER commit the `.env` file to git!**
 
 ### 6. Set Up PostgreSQL Database
 

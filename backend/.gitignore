@@ -1,52 +1,46 @@
+# Environment variables
+*.env
+.env
+.env.*
+!.env.example 
+
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
 *.so
-*.egg-info/
-*.egg
-*.manifest
-*.spec
-
-# Virtual Environment
+.Python
 venv/
 ENV/
 env/
-.venv/
+.venv
 
 # Django
 *.log
-*.pot
-*.pyc
-*.pyo
-*.mo
 db.sqlite3
-media/
-staticfiles/
+db.sqlite3-journal
+/media
+/static
+/staticfiles
 
-# IDE / Editor
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
 
-# Environment Variables
-*.env
-
-# Pytest / Coverage
+# Testing
 .coverage
 htmlcov/
 .pytest_cache/
+.tox/
 
-# Migrations (optional: keep only if auto-generated each time)
-# Comment out if you want to track migrations
-#migrations/
-
-# PostgreSQL dump files
-*.sql
-*.dump
+# Backup files
+*.bak
+*.backup
+*.orig
