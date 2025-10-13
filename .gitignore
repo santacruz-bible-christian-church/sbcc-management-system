@@ -1,0 +1,7 @@
+# MCP Configuration
+.mcp/.env
+.mcp/node_modules/
+.mcp/package-lock.json
+
+# VS Code
+.vscode/.env
