@@ -7,7 +7,6 @@ A comprehensive web-based platform designed to streamline church operations incl
 **Course:** CMSC 309 - Software Engineering I  
 **Client:** Santa Cruz Bible Christian Church  
 **Team Size:** 9 Developers  
-**Timeline:** 16 Weeks
 
 ### Team Members
 - Agojo, Nigel
@@ -332,14 +331,13 @@ All rights reserved by the development team and Santa Cruz Bible Christian Churc
 
 ## 📞 Contact
 
-**Project Lead:** [Your Name]  
-**Email:** [your-email@example.com]  
-**Discord:** [Team Discord Server]
+**Project Lead:** Jeremy M. Garin  
+**Email:** garinjeremy6@gmail.com
 
 ---
 
 ## 🙏 Acknowledgments
 
 - Santa Cruz Bible Christian Church for the opportunity
-- [Your Professor's Name] - CMSC 309 Instructor
+- Prof. Reynalen Justo - CMSC 309 Instructor
 - All team members for their dedication
