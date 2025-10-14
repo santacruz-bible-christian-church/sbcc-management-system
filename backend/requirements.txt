@@ -1,23 +1,12 @@
-# Django Framework
-Django==5.2.7
-djangorestframework==3.15.2
-
-# Database
-psycopg2-binary==2.9.10
+asgiref==3.10.0
 dj-database-url==2.2.0
-
-# CORS handling
+Django==5.1.4
 django-cors-headers==4.5.0
-
-# Environment variables
+django-filter==24.3
+djangorestframework==3.15.2
+psycopg2-binary==2.9.10
 python-decouple==3.8
-
-# Testing (optional but recommended)
-pytest==8.3.3
-pytest-django==4.9.0
-coverage==7.6.4
-
-# Code quality (optional but recommended)
-black==24.10.0
-flake8==7.1.1
-isort==5.13.2
+setuptools==80.9.0
+sqlparse==0.5.3
+typing_extensions==4.15.0
+wheel==0.45.1
