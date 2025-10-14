@@ -39,9 +39,25 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Third-party
     'rest_framework',
     'corsheaders',
-    'core'
+    
+    # Old app
+    'core',
+    
+    # Local App
+    'apps.authentication',
+    'apps.members',
+    'apps.attendance',
+    'apps.events',
+    'apps.volunteers',
+    'apps.prayer_requests',
+    'apps.inventory',
+    'apps.tasks',
+    'apps.meeting_minutes',
+    'apps.announcements',
 ]
 
 MIDDLEWARE = [
