@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Label, TextInput, Alert } from 'flowbite-react';
+import { Button, Label, TextInput, Alert, Spinner } from 'flowbite-react';
 import { HiInformationCircle } from 'react-icons/hi';
 import { useAuth } from '../hooks/useAuth';
 
@@ -57,8 +57,15 @@ export const LoginForm = ({ onSuccess }) => {
         />
       </div>
 
-      <Button type="submit" disabled={loading} isProcessing={loading}>
-        {loading ? 'Signing in...' : 'Sign in'}
+      <Button type="submit" disabled={loading}>
+        {loading ? (
+          <div className="flex items-center gap-2">
+            <Spinner size="sm" />
+            <span>Signing in...</span>
+          </div>
+        ) : (
+          'Sign in'
+        )}
       </Button>
     </form>
   );
