@@ -1,18 +1,16 @@
-import { useState } from 'react'
+import { useEffect } from 'react'
 import './App.css'
-import { Button } from 'flowbite-react'
+import { AppRouter } from './router'
+import { useAuthStore } from './store/auth.store'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const initialize = useAuthStore((state) => state.initialize)
 
-  return (
-    <>
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-4">SBCC Management System</h1>
-        <Button color="blue">Flowbite Button</Button>
-      </div>
-    </>
-  )
+  useEffect(() => {
+    initialize()
+  }, [initialize])
+
+  return <AppRouter />
 }
 
 export default App

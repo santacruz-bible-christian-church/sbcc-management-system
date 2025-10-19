@@ -19,17 +19,13 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('core.urls')),
-
+    
     # API endpoints
-    # path('api/auth/', include('apps.authentication.urls')),
+    path('api/auth/', include('apps.authentication.urls')),  # Authentication
+    path('api/', include('core.urls')),                      # Core models
+    
+    # Future endpoints (uncomment when ready)
     # path('api/members/', include('apps.members.urls')),
-    # path('api/attendance/', include('apps.attendance.urls')),
     # path('api/events/', include('apps.events.urls')),
-    # path('api/volunteers/', include('apps.volunteers.urls')),
-    # path('api/prayer-requests/', include('apps.prayer_requests.urls')),
-    # path('api/inventory/', include('apps.inventory.urls')),
-    # path('api/tasks/', include('apps.tasks.urls')),
-    # path('api/meeting-minutes/', include('apps.meeting_minutes.urls')),
-    # path('api/announcements/', include('apps.announcements.urls')),
+    # path('api/attendance/', include('apps.attendance.urls')),
 ]
