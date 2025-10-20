@@ -19,13 +19,12 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
     # API endpoints
     path('api/auth/', include('apps.authentication.urls')),  # Authentication
+    path('api/events/', include('apps.events.urls')),  # Events Management
     path('api/', include('core.urls')),                      # Core models
     
     # Future endpoints (uncomment when ready)
     # path('api/members/', include('apps.members.urls')),
-    # path('api/events/', include('apps.events.urls')),
     # path('api/attendance/', include('apps.attendance.urls')),
 ]

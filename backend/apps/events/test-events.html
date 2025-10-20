@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBCC Events Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #e9ecef;
+            border: 1px solid #ddd;
+        }
+
+        .content {
+            display: flex;
+            gap: 20px;
+        }
+
+        .left-side,
+        .right-side {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+        }
+
+        .field {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .event-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            background: white;
+        }
+
+        .alert {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SBCC Events Tester</h1>
+            <p>Simple Events Management Testing</p>
+        </div>
+
+        <div class="content">
+            <div class="left-side">
+                <!-- Event Creation -->
+                <div class="section">
+                    <h2>Create Event</h2>
+                    <div class="field">
+                        <label>Event Title</label>
+                        <input type="text" id="event-title" placeholder="Sunday Morning Worship">
+                    </div>
+                    <div class="field">
+                        <label>Description</label>
+                        <textarea id="event-description" rows="3" placeholder="Event description..."></textarea>
+                    </div>
+                    <div class="field">
+                        <label>Event Type</label>
+                        <select id="event-type">
+                            <option value="service">Sunday Service</option>
+                            <option value="bible_study">Bible Study</option>
+                            <option value="prayer_meeting">Prayer Meeting</option>
+                            <option value="fellowship">Fellowship Event</option>
+                            <option value="outreach">Community Outreach</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Date & Time</label>
+                        <input type="datetime-local" id="event-datetime">
+                    </div>
+                    <div class="field">
+                        <label>Location</label>
+                        <input type="text" id="event-location" placeholder="Main Sanctuary">
+                    </div>
+                    <div class="field">
+                        <label>Max Attendees (Optional)</label>
+                        <input type="number" id="event-capacity" placeholder="Leave empty for unlimited">
+                    </div>
+                    <button onclick="createNewEvent()">Create Event</button>
+                </div>
+            </div>
+
+            <div class="right-side">
+                <!-- Events Display -->
+                <div class="section">
+                    <h2>Events List</h2>
+                    <button onclick="loadEvents()" style="margin-bottom: 15px;">Refresh Events</button>
+                    <div id="events-list"></div>
+                </div>
+
+                <!-- Messages -->
+                <div id="messages"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/events';
+
+        // Load events on page start
+        window.addEventListener('load', function () {
+            loadEvents();
+        });
+
+        // Create new event
+        async function createNewEvent() {
+            const eventData = {
+                title: document.getElementById('event-title').value.trim(),
+                description: document.getElementById('event-description').value.trim(),
+                event_type: document.getElementById('event-type').value,
+                date: document.getElementById('event-datetime').value,
+                location: document.getElementById('event-location').value.trim(),
+                status: 'published'
+            };
+
+            const capacity = document.getElementById('event-capacity').value;
+            if (capacity) {
+                eventData.max_attendees = parseInt(capacity);
+            }
+
+            // Check required fields
+            if (!eventData.title || !eventData.date || !eventData.location) {
+                showMessage('Please fill in title, date, and location', 'error');
+                return;
+            }
+
+            try {
+                showMessage('Creating event...', 'success');
+
+                const response = await fetch(`${API_BASE}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(eventData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('Event created successfully!', 'success');
+                    clearForm();
+                    loadEvents();
+                } else {
+                    showMessage('Failed to create event: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        // Load all events
+        async function loadEvents() {
+            const eventsList = document.getElementById('events-list');
+            eventsList.innerHTML = 'Loading events...';
+
+            try {
+                const response = await fetch(`${API_BASE}/`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayEvents(data.results || data);
+                } else {
+                    eventsList.innerHTML = 'Failed to load events: ' + (data.error || 'Unknown error');
+                }
+            } catch (error) {
+                eventsList.innerHTML = 'Error loading events: ' + error.message;
+            }
+        }
+
+        // Display events in simple format
+        function displayEvents(events) {
+            const eventsList = document.getElementById('events-list');
+
+            if (!events || events.length === 0) {
+                eventsList.innerHTML = '<p>No events found. Create your first event!</p>';
+                return;
+            }
+
+            let html = '';
+            events.forEach(event => {
+                html += `
+                    <div class="event-item">
+                        <h3>${event.title}</h3>
+                        <p><strong>Date:</strong> ${formatDate(event.date)}</p>
+                        <p><strong>Location:</strong> ${event.location}</p>
+                        <p><strong>Type:</strong> ${formatType(event.event_type)}</p>
+                        <p><strong>Status:</strong> ${event.status}</p>
+                        ${event.description ? `<p><strong>Description:</strong> ${event.description}</p>` : ''}
+                        ${event.max_attendees ? `<p><strong>Capacity:</strong> ${event.max_attendees}</p>` : ''}
+                    </div>
+                `;
+            });
+
+            eventsList.innerHTML = html;
+        }
+
+        // Show messages
+        function showMessage(message, type) {
+            const messagesDiv = document.getElementById('messages');
+            const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+
+            messagesDiv.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                messagesDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // Clear form
+        function clearForm() {
+            document.getElementById('event-title').value = '';
+            document.getElementById('event-description').value = '';
+            document.getElementById('event-location').value = '';
+            document.getElementById('event-capacity').value = '';
+            document.getElementById('event-datetime').value = '';
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+
+        // Format event type
+        function formatType(type) {
+            return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+    </script>
+</body>
+
+</html>
