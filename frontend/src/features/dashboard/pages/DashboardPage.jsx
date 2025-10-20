@@ -1,9 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, Spinner, Alert } from 'flowbite-react';
+import { Spinner, Alert } from 'flowbite-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { dashboardApi } from '../../../api/dashboard.api';
-import { HiUser, HiLogout, HiRefresh } from 'react-icons/hi';
+import { 
+  HiUser, 
+  HiLogout, 
+  HiRefresh, 
+  HiUsers,
+  HiCalendar,
+  HiOfficeBuilding,
+  HiClipboardCheck,
+  HiPlus,
+  HiDocumentReport,
+} from 'react-icons/hi';
+import { Card, StatsCard } from '../../../components/ui/Card';
+import { Button, PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
 
 export const DashboardPage = () => {
   const { user, logout } = useAuth();
@@ -37,142 +49,128 @@ export const DashboardPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner size="xl" />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-sbcc-cream">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-sbcc-primary border-t-transparent mb-4" />
+        <p className="text-sbcc-gray">Loading dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-1">
-              Welcome back, {stats?.user?.name || user?.username}!
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button color="gray" onClick={fetchStats}>
-              <HiRefresh className="mr-2 h-5 w-5" />
-              Refresh
-            </Button>
-            <Button color="failure" onClick={handleLogout}>
-              <HiLogout className="mr-2 h-5 w-5" />
-              Logout
-            </Button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-sbcc-cream via-white to-sbcc-light-orange">
+      <div className="max-w-7xl mx-auto p-4 md:p-8">
+        {/* Header Section */}
+        <div className="mb-8">
+          <Card variant="gradient" className="shadow-xl">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              {/* User Info */}
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                  <HiUser className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-white">
+                    Welcome back, {stats?.user?.name || user?.username}!
+                  </h1>
+                  <p className="text-white/80 text-sm mt-1">
+                    {stats?.user?.email}
+                  </p>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/20 text-white mt-2 backdrop-blur-sm">
+                    {stats?.user?.role?.replace('_', ' ').toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 w-full md:w-auto">
+                <SecondaryButton 
+                  onClick={fetchStats}
+                  className="flex-1 md:flex-none bg-white/20 hover:bg-white/30 text-white border-white/30"
+                  icon={HiRefresh}
+                >
+                  Refresh
+                </SecondaryButton>
+                <Button 
+                  variant="danger"
+                  onClick={handleLogout}
+                  className="flex-1 md:flex-none"
+                  icon={HiLogout}
+                >
+                  Logout
+                </Button>
+              </div>
+            </div>
+          </Card>
         </div>
 
         {/* Error Alert */}
         {error && (
           <Alert color="failure" className="mb-6">
-            {error}
+            <span className="font-medium">Error!</span> {error}
           </Alert>
         )}
 
-        {/* User Info Card */}
-        <Card className="mb-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <HiUser className="h-8 w-8 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                {stats?.user?.name}
-              </h2>
-              <p className="text-gray-600">{stats?.user?.email}</p>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-2">
-                {stats?.user?.role}
-              </span>
-            </div>
-          </div>
-        </Card>
-
-        {/* Stats Grid - Admin/Pastor View */}
-        {stats?.overview && (
+        {/* Stats Grid - Admin/Pastor Only */}
+        {stats?.overview && (user?.role === 'admin' || user?.role === 'pastor') && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <h3 className="text-gray-500 text-sm font-medium mb-2">
-                Total Members
-              </h3>
-              <p className="text-3xl font-bold text-gray-900">
-                {stats.overview.total_members || 0}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                {stats.overview.active_members || 0} active
-              </p>
-            </Card>
+            <StatsCard
+              title="Total Members"
+              value={stats.overview.total_members || 0}
+              change={`${stats.overview.active_members || 0} active`}
+              icon={HiUsers}
+              variant="gradient"
+            />
             
-            {stats.overview.upcoming_events !== undefined && (
-              <Card>
-                <h3 className="text-gray-500 text-sm font-medium mb-2">
-                  Upcoming Events
-                </h3>
-                <p className="text-3xl font-bold text-gray-900">
-                  {stats.overview.upcoming_events}
-                </p>
-                {stats.overview.past_events !== undefined && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    {stats.overview.past_events} past events
-                  </p>
-                )}
-              </Card>
-            )}
+            <StatsCard
+              title="Upcoming Events"
+              value={stats.overview.upcoming_events || 0}
+              change="This month"
+              icon={HiCalendar}
+              variant="orange"
+            />
             
-            {stats.overview.total_ministries !== undefined && (
-              <Card>
-                <h3 className="text-gray-500 text-sm font-medium mb-2">
-                  Ministries
-                </h3>
-                <p className="text-3xl font-bold text-gray-900">
-                  {stats.overview.total_ministries}
-                </p>
-              </Card>
-            )}
+            <StatsCard
+              title="Ministries"
+              value={stats.overview.total_ministries || 0}
+              change="Active ministries"
+              icon={HiOfficeBuilding}
+              variant="default"
+            />
             
             {stats.attendance && (
-              <Card>
-                <h3 className="text-gray-500 text-sm font-medium mb-2">
-                  Today's Attendance
-                </h3>
-                <p className="text-3xl font-bold text-gray-900">
-                  {stats.attendance.today}
-                </p>
-                {stats.attendance.this_week !== undefined && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    {stats.attendance.this_week} this week
-                  </p>
-                )}
-              </Card>
+              <StatsCard
+                title="Today's Attendance"
+                value={stats.attendance.today || 0}
+                change={`${stats.attendance.this_week || 0} this week`}
+                icon={HiClipboardCheck}
+                variant="default"
+              />
             )}
           </div>
         )}
 
         {/* Personal Stats - Member View */}
         {stats?.personal && (
-          <Card className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              My Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-gray-500 text-sm">Ministry</p>
-                <p className="text-gray-900 font-medium">
+          <Card 
+            title="My Information"
+            className="mb-8 hover:shadow-lg transition-shadow"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-4 bg-sbcc-light-orange rounded-lg">
+                <p className="text-sbcc-gray text-sm font-medium mb-1">Ministry</p>
+                <p className="text-sbcc-dark font-bold text-lg">
                   {stats.personal.ministry || 'Not assigned'}
                 </p>
               </div>
-              <div>
-                <p className="text-gray-500 text-sm">Status</p>
-                <p className="text-gray-900 font-medium capitalize">
+              <div className="p-4 bg-sbcc-light-orange rounded-lg">
+                <p className="text-sbcc-gray text-sm font-medium mb-1">Status</p>
+                <p className="text-sbcc-dark font-bold text-lg capitalize">
                   {stats.personal.status}
                 </p>
               </div>
-              <div>
-                <p className="text-gray-500 text-sm">Attendance Count</p>
-                <p className="text-gray-900 font-medium">
+              <div className="p-4 bg-sbcc-light-orange rounded-lg">
+                <p className="text-sbcc-gray text-sm font-medium mb-1">Attendance</p>
+                <p className="text-sbcc-dark font-bold text-lg">
                   {stats.personal.my_attendance_count} times
                 </p>
               </div>
@@ -182,45 +180,110 @@ export const DashboardPage = () => {
 
         {/* Upcoming Events */}
         {stats?.upcoming_events && stats.upcoming_events.length > 0 && (
-          <Card className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Upcoming Events
-            </h2>
+          <Card 
+            title="Upcoming Events"
+            subtitle="Don't miss these important events"
+            className="mb-8"
+          >
             <div className="space-y-3">
               {stats.upcoming_events.map((event, index) => (
                 <div
                   key={event.id || index}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between p-4 bg-sbcc-light-orange hover:bg-sbcc-orange/30 rounded-lg transition-colors cursor-pointer"
                 >
-                  <div>
-                    <p className="font-medium text-gray-900">{event.title}</p>
-                    <p className="text-sm text-gray-600">
-                      {new Date(event.date).toLocaleDateString()} • {event.event_type}
-                    </p>
-                    {event.location && (
-                      <p className="text-sm text-gray-500">{event.location}</p>
-                    )}
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-sbcc-gradient rounded-lg flex items-center justify-center flex-shrink-0">
+                      <HiCalendar className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sbcc-dark">{event.title}</p>
+                      <p className="text-sm text-sbcc-gray">
+                        {new Date(event.date).toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })} • {event.event_type}
+                      </p>
+                      {event.location && (
+                        <p className="text-xs text-sbcc-gray mt-1">📍 {event.location}</p>
+                      )}
+                    </div>
                   </div>
+                  <SecondaryButton size="sm">
+                    View Details
+                  </SecondaryButton>
                 </div>
               ))}
             </div>
           </Card>
         )}
 
-        {/* Quick Actions */}
-        {user?.role === 'admin' && (
-          <Card>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Quick Actions
-            </h2>
-            <div className="flex flex-wrap gap-4">
-              <Button color="blue">Add Member</Button>
-              <Button color="purple">Create Event</Button>
-              <Button color="green">Mark Attendance</Button>
-              <Button color="yellow">View Reports</Button>
+        {/* Empty State for Events */}
+        {stats?.upcoming_events?.length === 0 && (
+          <Card className="mb-8 text-center py-12">
+            <HiCalendar className="h-16 w-16 text-sbcc-gray mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-sbcc-dark mb-2">
+              No Upcoming Events
+            </h3>
+            <p className="text-sbcc-gray mb-4">
+              There are no events scheduled at the moment.
+            </p>
+            {(user?.role === 'admin' || user?.role === 'pastor') && (
+              <PrimaryButton icon={HiPlus}>
+                Create Event
+              </PrimaryButton>
+            )}
+          </Card>
+        )}
+
+        {/* Quick Actions - Admin Only */}
+        {(user?.role === 'admin' || user?.role === 'pastor') && (
+          <Card 
+            title="Quick Actions"
+            subtitle="Common tasks and shortcuts"
+            className="mb-8"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <button className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg transition-all transform hover:scale-105 text-left group">
+                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <HiUsers className="h-6 w-6 text-white" />
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-1">Add Member</h4>
+                <p className="text-xs text-gray-600">Register new member</p>
+              </button>
+
+              <button className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg transition-all transform hover:scale-105 text-left group">
+                <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <HiCalendar className="h-6 w-6 text-white" />
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-1">Create Event</h4>
+                <p className="text-xs text-gray-600">Schedule new event</p>
+              </button>
+
+              <button className="p-6 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-lg transition-all transform hover:scale-105 text-left group">
+                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <HiClipboardCheck className="h-6 w-6 text-white" />
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-1">Attendance</h4>
+                <p className="text-xs text-gray-600">Mark attendance</p>
+              </button>
+
+              <button className="p-6 bg-gradient-to-br from-sbcc-light-orange to-sbcc-orange hover:from-sbcc-orange hover:to-sbcc-primary rounded-lg transition-all transform hover:scale-105 text-left group">
+                <div className="w-12 h-12 bg-sbcc-primary rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <HiDocumentReport className="h-6 w-6 text-white" />
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-1">Reports</h4>
+                <p className="text-xs text-gray-600">View analytics</p>
+              </button>
             </div>
           </Card>
         )}
+
+        {/* Footer Info */}
+        <div className="text-center text-sm text-sbcc-gray mt-8">
+          <p>Last updated: {new Date(stats?.timestamp).toLocaleString()}</p>
+        </div>
       </div>
     </div>
   );
