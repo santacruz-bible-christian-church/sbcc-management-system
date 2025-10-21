@@ -118,8 +118,12 @@ python manage.py check
 ### 10. Create and Apply Migrations
 
 ```bash
-# Create migrations for core app
-python manage.py makemigrations core
+# Create migrations for all apps (in dependency order)
+python manage.py makemigrations authentication
+python manage.py makemigrations ministries
+python manage.py makemigrations members
+python manage.py makemigrations events
+python manage.py makemigrations attendance
 
 # Apply all migrations
 python manage.py migrate
@@ -135,6 +139,7 @@ Follow the prompts:
 - Username: `admin`
 - Email: `your@email.com`
 - Password: (choose a strong password)
+- Role: `admin` (from choices: admin, pastor, ministry_leader, volunteer, member)
 
 ### 12. Run Development Server
 
@@ -151,21 +156,24 @@ Navigate to: `http://localhost:8000/admin`
 Login with your superuser credentials.
 
 You should see:
-- Users
-- Ministries
-- Members
-- Events
-- Attendance
+- **Authentication:** Users
+- **Ministries:** Ministries
+- **Members:** Members
+- **Events:** Events
+- **Attendance:** Attendance
 
 ### 14. Test API Endpoints
 
 Navigate to: `http://localhost:8000/api/`
 
 Available endpoints:
-- `/api/ministries/` - Church ministries
-- `/api/members/` - Church members
-- `/api/events/` - Church events
-- `/api/attendance/` - Attendance records
+- `/api/auth/` - Authentication (login, register, token)
+- `/api/ministries/` - Church ministries management
+- `/api/members/` - Church members management
+- `/api/events/` - Church events management
+- `/api/attendance/` - Attendance tracking
+- `/api/dashboard/stats/` - Dashboard statistics
+- `/api/dashboard/activities/` - Recent activities
 
 ## 📦 Installed Packages
 
@@ -173,6 +181,7 @@ Available endpoints:
 |---------|---------|---------|
 | Django | 5.2.7 | Web framework |
 | djangorestframework | 3.15.2 | REST API toolkit |
+| djangorestframework-simplejwt | 5.4.1 | JWT authentication |
 | django-cors-headers | 4.5.0 | CORS handling |
 | django-filter | 24.3 | Filtering support |
 | dj-database-url | 2.2.0 | Database URL parser |
@@ -184,17 +193,42 @@ Available endpoints:
 ```
 backend/
 ├── venv/                    # Virtual environment (not in git)
-├── apps/                    # Future app modules (placeholders)
-│   ├── authentication/     # JWT authentication (to implement)
-│   ├── members/            # Extended member features
-│   ├── attendance/         # Advanced attendance
-│   ├── events/             # Event management
-│   ├── volunteers/         # Volunteer scheduling
-│   ├── prayer_requests/    # Prayer tracking
-│   ├── inventory/          # Equipment management
-│   ├── tasks/              # Task assignments
-│   ├── meeting_minutes/    # Meeting records
-│   └── announcements/      # Communications
+├── apps/                    # Django apps (feature-based architecture)
+│   ├── authentication/      # ✅ User model & JWT auth
+│   │   ├── models.py       # User (with role-based access)
+│   │   ├── views.py        # Login, register, token endpoints
+│   │   ├── serializers.py  # UserSerializer
+│   │   └── urls.py         # /api/auth/
+│   ├── ministries/         # ✅ Ministry management
+│   │   ├── models.py       # Ministry
+│   │   ├── views.py        # MinistryViewSet
+│   │   ├── serializers.py  # MinistrySerializer
+│   │   ├── admin.py        # Admin config
+│   │   └── urls.py         # /api/ministries/
+│   ├── members/            # ✅ Member management
+│   │   ├── models.py       # Member
+│   │   ├── views.py        # MemberViewSet
+│   │   ├── serializers.py  # MemberSerializer
+│   │   ├── admin.py        # Admin config
+│   │   └── urls.py         # /api/members/
+│   ├── events/             # ✅ Event management
+│   │   ├── models.py       # Event
+│   │   ├── views.py        # EventViewSet
+│   │   ├── serializers.py  # EventSerializer
+│   │   ├── admin.py        # Admin config
+│   │   └── urls.py         # /api/events/
+│   ├── attendance/         # ✅ Attendance tracking
+│   │   ├── models.py       # Attendance
+│   │   ├── views.py        # AttendanceViewSet
+│   │   ├── serializers.py  # AttendanceSerializer
+│   │   ├── admin.py        # Admin config
+│   │   └── urls.py         # /api/attendance/
+│   ├── volunteers/         # 🚧 Future: Volunteer scheduling
+│   ├── prayer_requests/    # 🚧 Future: Prayer tracking
+│   ├── inventory/          # 🚧 Future: Equipment management
+│   ├── tasks/              # 🚧 Future: Task assignments
+│   ├── meeting_minutes/    # 🚧 Future: Meeting records
+│   └── announcements/      # 🚧 Future: Communications
 ├── common/                  # Shared utilities
 │   ├── permissions.py      # Custom permissions
 │   ├── validators.py       # Custom validators
@@ -202,13 +236,9 @@ backend/
 │   └── exceptions.py       # Custom exceptions
 ├── config/                  # App configuration
 │   └── apps.py
-├── core/                    # Main Django app (ACTIVE)
-│   ├── models.py           # User, Ministry, Member, Event, Attendance
-│   ├── views.py            # API ViewSets
-│   ├── serializers.py      # DRF serializers
-│   ├── urls.py             # API routes
-│   ├── admin.py            # Admin configuration
-│   └── migrations/         # Database migrations
+├── core/                    # Dashboard aggregation (NO models)
+│   ├── views.py            # dashboard_stats, recent_activities
+│   └── urls.py             # /api/dashboard/
 ├── sbcc/                    # Django project settings
 │   ├── settings.py         # Main settings
 │   ├── urls.py             # Root URL configuration
@@ -225,7 +255,89 @@ backend/
 └── start-backend.sh        # Startup script
 ```
 
+## 🏗️ Architecture Overview
+
+### Feature-Based Architecture
+
+The project follows a **domain-driven, feature-based architecture**:
+
+1. **`apps/authentication/`** - User model with role-based access (admin, pastor, ministry_leader, volunteer, member)
+2. **`apps/ministries/`** - Ministry/department management
+3. **`apps/members/`** - Church member profiles (depends on User, Ministry)
+4. **`apps/events/`** - Event management (depends on User, Ministry)
+5. **`apps/attendance/`** - Attendance tracking (depends on Member, Event)
+6. **`core/`** - Dashboard aggregation functions (imports from all apps)
+
+### Model Dependencies
+
+```
+User (authentication)
+ ↓
+Ministry (ministries)
+ ↓                    ↓
+Member (members)    Event (events)
+ ↓                    ↓
+ └──→ Attendance (attendance) ←──┘
+```
+
+### URL Structure
+
+```
+/api/
+├── auth/
+│   ├── login/
+│   ├── register/
+│   ├── token/refresh/
+│   └── logout/
+├── ministries/          # CRUD for ministries
+├── members/             # CRUD for members
+├── events/              # CRUD for events
+├── attendance/          # CRUD for attendance
+└── dashboard/
+    ├── stats/           # Aggregate statistics
+    └── activities/      # Recent activities
+```
+
 ## 🔑 Key Configuration
+
+### Custom User Model
+
+```python
+# settings.py
+AUTH_USER_MODEL = 'authentication.User'  # Changed from 'core.User'
+```
+
+### Installed Apps Order (Dependency Chain)
+
+```python
+# settings.py
+INSTALLED_APPS = [
+    # ... Django apps ...
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
+    'django_filters',
+    
+    # Local apps (in dependency order)
+    'apps.authentication',      # User model
+    'apps.ministries',          # Ministry model
+    'apps.members',             # Member (depends on User, Ministry)
+    'apps.events',              # Event (depends on User, Ministry)
+    'apps.attendance',          # Attendance (depends on Member, Event)
+    
+    # Core (dashboard only - no models)
+    'core',
+    
+    # Future apps
+    'apps.announcements',
+    'apps.inventory',
+    'apps.meeting_minutes',
+    'apps.prayer_requests',
+    'apps.tasks',
+    'apps.volunteers',
+]
+```
 
 ### Database Configuration (Neon PostgreSQL)
 
@@ -240,11 +352,32 @@ DATABASES = {
 }
 ```
 
-### Custom User Model
+### JWT Authentication Settings
 
 ```python
 # settings.py
-AUTH_USER_MODEL = 'core.User'
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
+}
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
 ```
 
 ### CORS Settings
@@ -259,26 +392,62 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 ```
 
-### REST Framework Settings
+## 🐛 Troubleshooting
 
+### "ModuleNotFoundError: No module named 'apps.ministries'"
+
+**Cause:** Incorrect `apps.py` configuration
+
+**Solution:**
 ```python
-# settings.py
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
-}
+# apps/ministries/apps.py
+class MinistriesConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'apps.ministries'  # Must include 'apps.' prefix
 ```
 
-## 🐛 Troubleshooting
+### "AUTH_USER_MODEL refers to model 'core.User' that has not been installed"
+
+**Cause:** AUTH_USER_MODEL not updated
+
+**Solution:**
+```python
+# settings.py
+AUTH_USER_MODEL = 'authentication.User'  # Not 'core.User'
+```
+
+### "django.db.migrations.exceptions.InconsistentMigrationHistory"
+
+**Cause:** Migration conflicts after refactoring
+
+**Solution:**
+```bash
+# Drop all tables in Neon console
+# Delete all migration files
+find ./apps -path "*/migrations/*.py" -not -name "__init__.py" -delete
+find ./core -path "*/migrations/*.py" -not -name "__init__.py" -delete
+
+# Recreate migrations
+python manage.py makemigrations authentication
+python manage.py makemigrations ministries
+python manage.py makemigrations members
+python manage.py makemigrations events
+python manage.py makemigrations attendance
+python manage.py migrate
+```
+
+### "ImportError: cannot import name 'Event' from 'apps.members.models'"
+
+**Cause:** Wrong imports in admin.py or views.py
+
+**Solution:**
+```python
+# apps/members/admin.py (CORRECT)
+from .models import Member  # Not Event
+
+# apps/events/admin.py (CORRECT)
+from .models import Event
+```
 
 ### "ModuleNotFoundError: No module named 'django.db.migrations.migration'"
 
@@ -298,19 +467,6 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### "django.core.exceptions.ImproperlyConfigured: Requested setting DATABASE_URL"
-
-**Cause:** Missing or incorrect `.env` file
-
-**Solution:**
-```bash
-# Ensure .env file exists
-cp .env.example .env
-
-# Update DATABASE_URL with your Neon credentials
-nano .env
-```
-
 ### "psycopg2.OperationalError: could not connect to server"
 
 **Cause:** Incorrect Neon database URL or network issue
@@ -319,37 +475,6 @@ nano .env
 - Check `DATABASE_URL` in `.env`
 - Ensure it includes `?sslmode=require`
 - Test connection: `python manage.py dbshell`
-
-### "System check identified some issues: AUTH_USER_MODEL"
-
-**Cause:** Migration order conflict
-
-**Solution:**
-```bash
-# Reset migrations
-find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
-
-# Recreate migrations
-python manage.py makemigrations core
-python manage.py migrate
-```
-
-### Virtual Environment Issues
-
-**Problem:** Wrong Python version in venv
-
-**Solution:**
-```bash
-# Check Python version
-python --version
-
-# If not 3.12, recreate venv
-deactivate
-rm -rf venv
-python3.12 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
 
 ## 📝 Common Commands
 
@@ -360,8 +485,12 @@ python manage.py check
 # Run development server
 python manage.py runserver
 
-# Create migrations
-python manage.py makemigrations
+# Create migrations (in dependency order)
+python manage.py makemigrations authentication
+python manage.py makemigrations ministries
+python manage.py makemigrations members
+python manage.py makemigrations events
+python manage.py makemigrations attendance
 
 # Apply migrations
 python manage.py migrate
@@ -416,10 +545,14 @@ python manage.py check
 echo "✅ Setup complete!"
 echo "Next steps:"
 echo "  1. Update .env with your Neon database URL"
-echo "  2. python manage.py makemigrations core"
-echo "  3. python manage.py migrate"
-echo "  4. python manage.py createsuperuser"
-echo "  5. python manage.py runserver"
+echo "  2. python manage.py makemigrations authentication"
+echo "  3. python manage.py makemigrations ministries"
+echo "  4. python manage.py makemigrations members"
+echo "  5. python manage.py makemigrations events"
+echo "  6. python manage.py makemigrations attendance"
+echo "  7. python manage.py migrate"
+echo "  8. python manage.py createsuperuser"
+echo "  9. python manage.py runserver"
 ```
 
 Run with:
@@ -437,6 +570,8 @@ chmod +x setup.sh
 - ✅ Regularly update dependencies
 - ✅ Use environment variables for all secrets
 - ✅ Enable SSL for database connections (Neon uses SSL by default)
+- ✅ JWT tokens expire after 60 minutes
+- ✅ Refresh tokens rotate and blacklist after use
 
 ## 🎯 Verification Checklist
 
@@ -447,12 +582,19 @@ After setup, verify everything works:
 - [ ] `python manage.py showmigrations` shows all migrations applied
 - [ ] Admin panel loads at http://localhost:8000/admin
 - [ ] API root loads at http://localhost:8000/api/
-- [ ] Can create/view Ministries, Members, Events, Attendance in admin
+- [ ] Can create/view Users in apps.authentication admin
+- [ ] Can create/view Ministries in apps.ministries admin
+- [ ] Can create/view Members in apps.members admin
+- [ ] Can create/view Events in apps.events admin
+- [ ] Can create/view Attendance in apps.attendance admin
+- [ ] Dashboard stats endpoint works: `/api/dashboard/stats/`
+- [ ] Dashboard activities endpoint works: `/api/dashboard/activities/`
 
 ## 📚 Additional Resources
 
 - [Django Documentation](https://docs.djangoproject.com/)
 - [Django REST Framework](https://www.django-rest-framework.org/)
+- [Simple JWT](https://django-rest-framework-simplejwt.readthedocs.io/)
 - [Neon Database Docs](https://neon.tech/docs/introduction)
 - [Python-Decouple](https://github.com/HBNetwork/python-decouple)
 
@@ -461,23 +603,32 @@ After setup, verify everything works:
 If you encounter issues:
 
 1. Check this troubleshooting guide
-2. Ask team lead for help
-3. Check project Discord/Slack
-4. Review Django/DRF documentation
+2. Review DEVELOPMENT_WORKFLOW.md
+3. Check Django/DRF documentation
+4. Ask team lead for help
 
-## 📅 Next Steps
+## 📅 Development Roadmap
 
-After successful setup:
+**Completed:**
+- ✅ User authentication with JWT
+- ✅ Ministry management
+- ✅ Member management
+- ✅ Event management
+- ✅ Attendance tracking
+- ✅ Dashboard statistics
+- ✅ Role-based access control
 
-1. ✅ Implement JWT authentication in `apps/authentication/`
-2. ✅ Build dashboard API endpoints
-3. ✅ Add sample data for testing
-4. ✅ Connect frontend to backend APIs
-5. ✅ Implement remaining app modules
+**Next Steps:**
+1. ✅ Implement permission-based views
+2. ✅ Add sample data fixtures
+3. ✅ Connect frontend to backend APIs
+4. ✅ Implement remaining app modules (volunteers, prayer requests, etc.)
+5. ✅ Add comprehensive test coverage
 
 ---
 
-**Last Updated:** October 14, 2024
+**Last Updated:** October 22, 2024
 **Django Version:** 5.2.7
 **Python Version:** 3.12.x
 **Database:** Neon PostgreSQL
+**Architecture:** Feature-based, Domain-driven
