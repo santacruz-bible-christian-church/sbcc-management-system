@@ -23,12 +23,12 @@ main
 ### Branch Naming Convention
 
 - **feature/** - For new features
-  - Example: `feature/add-student-module`
-  - Example: `feature/user-authentication`
+  - Example: `feature/add-volunteer-scheduling`
+  - Example: `feature/prayer-request-module`
 
 - **bugfix/** - For bug fixes
-  - Example: `bugfix/fix-login-error`
-  - Example: `bugfix/resolve-payment-calculation`
+  - Example: `bugfix/fix-attendance-calculation`
+  - Example: `bugfix/resolve-ministry-assignment`
 
 - **hotfix/** - For urgent production fixes
   - Example: `hotfix/security-patch`
@@ -36,23 +36,23 @@ main
 
 - **docs/** - For documentation
   - Example: `docs/update-api-documentation`
-  - Example: `docs/add-setup-guide`
+  - Example: `docs/add-architecture-diagram`
 
 - **design/** - For UI/UX changes or layout updates
   - Example: `design/update-dashboard-layout`
-  - Example: `design/improve-form-styling`
+  - Example: `design/improve-member-form`
 
 - **test/** - For adding or updating tests
-  - Example: `test/add-student-model-tests`
+  - Example: `test/add-ministry-model-tests`
   - Example: `test/integration-tests`
 
 - **refactor/** - For improving code structure without changing functionality
-  - Example: `refactor/optimize-database-queries`
-  - Example: `refactor/extract-reusable-components`
+  - Example: `refactor/move-models-to-apps`
+  - Example: `refactor/extract-dashboard-logic`
 
 - **chore/** - For maintenance tasks (configs, dependencies, CI/CD updates)
   - Example: `chore/update-dependencies`
-  - Example: `chore/configure-eslint`
+  - Example: `chore/configure-pre-commit-hooks`
 
 - **release/** - For preparing new version release
   - Example: `release/v1.0.0`
@@ -69,9 +69,9 @@ git pull origin main
 git checkout -b <branch-type>/your-branch-name
 
 # Examples:
-git checkout -b feature/add-student-registration
-git checkout -b bugfix/fix-grade-calculation
-git checkout -b design/update-navbar-layout
+git checkout -b feature/add-volunteer-module
+git checkout -b bugfix/fix-attendance-api
+git checkout -b refactor/optimize-dashboard-queries
 ```
 
 ### Making Changes
@@ -80,17 +80,31 @@ git checkout -b design/update-navbar-layout
 # Check status
 git status
 
-# Add files
+# Add specific files
+git add backend/apps/ministries/models.py
+git add backend/apps/ministries/views.py
+
+# Or add all changes
 git add .
 
 # Commit with descriptive message
-git commit -m "feat: add student registration form"
+git commit -m "feat(ministries): add ministry CRUD endpoints"
 ```
 
 ### Commit Message Convention
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
+**Format:**
+```
+<type>(<scope>): <subject>
+
+[optional body]
+
+[optional footer]
+```
+
+**Types:**
 - `feat:` New feature
 - `fix:` Bug fix
 - `docs:` Documentation changes
@@ -104,16 +118,69 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `build:` Build system changes
 - `revert:` Reverting previous changes
 
+**Scopes (for this project):**
+- `authentication` - User auth and JWT
+- `ministries` - Ministry management
+- `members` - Member management
+- `events` - Event management
+- `attendance` - Attendance tracking
+- `dashboard` - Dashboard/core functionality
+- `api` - API routing and configuration
+- `settings` - Django settings
+- `migrations` - Database migrations
+- `deps` - Dependencies
+
 **Examples:**
 ```bash
-git commit -m "feat: add user authentication"
-git commit -m "fix: resolve database connection timeout"
-git commit -m "docs: update API documentation"
-git commit -m "design: improve dashboard layout"
-git commit -m "refactor: optimize student query performance"
-git commit -m "test: add unit tests for payment module"
-git commit -m "chore: update dependencies to latest versions"
-git commit -m "perf: optimize image loading performance"
+# Features
+git commit -m "feat(ministries): add ministry CRUD with filtering"
+git commit -m "feat(authentication): implement JWT token refresh"
+git commit -m "feat(dashboard): add recent activities endpoint"
+
+# Bug fixes
+git commit -m "fix(attendance): resolve duplicate check-in issue"
+git commit -m "fix(members): correct ministry assignment validation"
+
+# Refactoring
+git commit -m "refactor(core): move models to domain apps
+
+BREAKING CHANGE: All models moved from core to domain-specific apps
+- Ministry → apps.ministries
+- Member → apps.members
+- Event → apps.events
+- Attendance → apps.attendance"
+
+# Documentation
+git commit -m "docs: update backend setup for new architecture"
+git commit -m "docs(api): add endpoint documentation for ministries"
+
+# Tests
+git commit -m "test(members): add unit tests for Member model"
+git commit -m "test(api): add integration tests for attendance endpoints"
+
+# Chore
+git commit -m "chore(deps): update Django to 5.2.7"
+git commit -m "chore(migrations): create initial migrations for all apps"
+```
+
+### Atomic Commits Best Practices
+
+**✅ Good - Atomic commits (one logical change each):**
+```bash
+git add backend/apps/ministries/
+git commit -m "feat(ministries): add ministries app with full CRUD"
+
+git add backend/apps/members/
+git commit -m "feat(members): add members app with full CRUD"
+
+git add backend/core/models.py backend/core/serializers.py
+git commit -m "refactor(core): remove models and move to domain apps"
+```
+
+**❌ Bad - One huge commit:**
+```bash
+git add .
+git commit -m "Added everything"
 ```
 
 ### Pushing Changes
@@ -123,8 +190,8 @@ git commit -m "perf: optimize image loading performance"
 git push origin <branch-type>/your-branch-name
 
 # Examples:
-git push origin feature/add-student-registration
-git push origin bugfix/fix-grade-calculation
+git push origin feature/add-volunteer-module
+git push origin refactor/move-models-to-apps
 ```
 
 ### Creating Pull Request
@@ -132,25 +199,50 @@ git push origin bugfix/fix-grade-calculation
 1. Go to GitHub repository
 2. Click "New Pull Request"
 3. Select your branch
-4. Add descriptive title following branch type
-5. Add detailed description of changes:
-   - What was changed
-   - Why it was changed
-   - How to test the changes
-   - Screenshots (for design changes)
+4. Add descriptive title following conventional commits
+5. Add detailed description:
+   - **What**: What was changed
+   - **Why**: Why it was changed
+   - **How**: How to test the changes
+   - **Screenshots**: For design changes
+   - **Breaking Changes**: If applicable
 6. Link related issues (if applicable)
 7. Request review from team members
 8. Wait for approval and merge
 
-**PR Title Examples:**
-```
-[FEATURE] Add student registration module
-[BUGFIX] Fix grade calculation error
-[DESIGN] Update dashboard layout
-[DOCS] Add API endpoint documentation
-[TEST] Add integration tests for enrollment
-[REFACTOR] Optimize database queries
-[CHORE] Update project dependencies
+**PR Template:**
+```markdown
+## Description
+Brief description of changes
+
+## Type of Change
+- [ ] New feature (feat)
+- [ ] Bug fix (fix)
+- [ ] Refactoring (refactor)
+- [ ] Documentation (docs)
+- [ ] Design/UI (design)
+- [ ] Tests (test)
+- [ ] Chore (chore)
+
+## Changes Made
+- Added Ministry CRUD endpoints
+- Implemented filtering and search
+- Created admin configuration
+
+## Testing
+- [ ] Migrations run successfully
+- [ ] All tests pass
+- [ ] Manual testing completed
+- [ ] API endpoints tested
+
+## Screenshots (if applicable)
+[Add screenshots here]
+
+## Breaking Changes
+None / [Describe breaking changes]
+
+## Related Issues
+Closes #123
 ```
 
 ## 🏗️ Development Setup
@@ -164,10 +256,24 @@ cd sbcc-management-system
 
 # Setup backend
 cd backend
-python3 -m venv venv
+python3.12 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+
+# Configure .env
+cp .env.example .env
+# Update .env with your Neon database URL
+
+# Run migrations
+python manage.py makemigrations authentication
+python manage.py makemigrations ministries
+python manage.py makemigrations members
+python manage.py makemigrations events
+python manage.py makemigrations attendance
 python manage.py migrate
+
+# Create superuser
+python manage.py createsuperuser
 
 # Setup frontend (in new terminal)
 cd ../frontend
@@ -193,8 +299,11 @@ npm run dev
 
 #### Terminal 3: Database (if needed)
 
+Access Neon database console or use:
 ```bash
-psql -U sbcc_user -d sbcc_db
+cd backend
+source venv/bin/activate
+python manage.py dbshell
 ```
 
 ## 🧪 Testing
@@ -209,11 +318,18 @@ source venv/bin/activate
 python manage.py test
 
 # Run specific app tests
-python manage.py test core
+python manage.py test apps.ministries
+python manage.py test apps.members
+python manage.py test apps.events
+python manage.py test apps.attendance
+
+# Run specific test class
+python manage.py test apps.ministries.tests.TestMinistryModel
 
 # Run with coverage
 coverage run --source='.' manage.py test
 coverage report
+coverage html  # Generate HTML report
 ```
 
 ### Frontend Tests (when configured)
@@ -230,15 +346,18 @@ npm run test
 - [ ] Code follows project style guidelines
 - [ ] Branch naming convention followed
 - [ ] Commit messages follow conventional commits
-- [ ] All tests pass
+- [ ] Commits are atomic (one logical change per commit)
+- [ ] All tests pass (`python manage.py test`)
 - [ ] No console errors or warnings
 - [ ] Documentation updated (if applicable)
 - [ ] Environment variables documented (if added)
-- [ ] No sensitive data committed
-- [ ] Database migrations included (if applicable)
+- [ ] No sensitive data committed (`.env` not committed)
+- [ ] Database migrations included and tested
 - [ ] Screenshots added (for design changes)
 - [ ] Code is properly commented
 - [ ] No unnecessary dependencies added
+- [ ] `apps.py` has correct `name` field (e.g., `apps.ministries`)
+- [ ] Imports use correct paths (e.g., `from apps.ministries.models import Ministry`)
 
 ### For Reviewers
 
@@ -251,7 +370,9 @@ npm run test
 - [ ] UI/UX changes are consistent with design system
 - [ ] Accessibility considerations met
 - [ ] Code follows DRY principles
-- [ ] No breaking changes (or properly documented)
+- [ ] No breaking changes (or properly documented with `BREAKING CHANGE:`)
+- [ ] Model dependencies follow correct order (User → Ministry → Member/Event → Attendance)
+- [ ] Migrations are reversible
 
 ## 🔄 Updating Your Branch
 
@@ -265,10 +386,10 @@ git pull origin main
 # Switch back to your branch
 git checkout feature/your-feature-name
 
-# Rebase on main
+# Rebase on main (preferred for cleaner history)
 git rebase main
 
-# Or merge main
+# Or merge main (if you prefer merge commits)
 git merge main
 ```
 
@@ -289,6 +410,9 @@ git rebase --continue
 
 # Or continue merge
 git merge --continue
+
+# Push (use --force-with-lease for rebased branches)
+git push origin feature/your-feature-name --force-with-lease
 ```
 
 ## 🚀 Deployment Workflow
@@ -297,7 +421,8 @@ git merge --continue
 
 1. **Development**
    - Create appropriate branch type
-   - Develop and test locally
+   - Make atomic commits
+   - Test locally
    - Push to remote
    - Create pull request
 
@@ -305,10 +430,11 @@ git merge --continue
    - Peer review
    - Address feedback
    - Update PR if needed
+   - Approve when satisfied
 
 3. **Merge to Develop**
    - PR approved
-   - Merge to develop branch
+   - Squash merge (for feature branches) or merge commit (for releases)
    - Deploy to staging environment
 
 4. **Testing**
@@ -329,60 +455,6 @@ git merge --continue
    - Monitor for issues
    - If critical issues, create hotfix/ branch from main
 
-### Release Branch Workflow
-
-```bash
-# Create release branch from develop
-git checkout develop
-git pull origin develop
-git checkout -b release/v1.0.0
-
-# Update version numbers and changelog
-# Commit changes
-git commit -m "chore: prepare release v1.0.0"
-
-# Merge to main
-git checkout main
-git merge release/v1.0.0
-git tag -a v1.0.0 -m "Release version 1.0.0"
-git push origin main --tags
-
-# Merge back to develop
-git checkout develop
-git merge release/v1.0.0
-git push origin develop
-
-# Delete release branch
-git branch -d release/v1.0.0
-```
-
-### Hotfix Workflow
-
-```bash
-# Create hotfix branch from main
-git checkout main
-git pull origin main
-git checkout -b hotfix/critical-security-fix
-
-# Make fixes
-# Commit changes
-git commit -m "fix: resolve critical security vulnerability"
-
-# Merge to main
-git checkout main
-git merge hotfix/critical-security-fix
-git tag -a v1.0.1 -m "Hotfix version 1.0.1"
-git push origin main --tags
-
-# Merge to develop
-git checkout develop
-git merge hotfix/critical-security-fix
-git push origin develop
-
-# Delete hotfix branch
-git branch -d hotfix/critical-security-fix
-```
-
 ## 📊 Database Migrations
 
 ### Creating Migrations
@@ -391,37 +463,82 @@ git branch -d hotfix/critical-security-fix
 cd backend
 source venv/bin/activate
 
-# After model changes
-python manage.py makemigrations
+# After model changes, create migrations in dependency order
+python manage.py makemigrations authentication
+python manage.py makemigrations ministries
+python manage.py makemigrations members
+python manage.py makemigrations events
+python manage.py makemigrations attendance
 
-# Review migration file
+# Review migration files before applying
+cat apps/ministries/migrations/0002_add_description.py
+
 # Apply migrations
 python manage.py migrate
+
+# Check migration status
+python manage.py showmigrations
 ```
 
 ### Migration Best Practices
 
-- Always review generated migrations
-- Test migrations on copy of production data
-- Include both up and down migrations
-- Never delete old migrations
-- Commit migrations with code changes
-- Use meaningful migration names
-- Add comments for complex migrations
+- ✅ Always review generated migrations
+- ✅ Test migrations on copy of production data
+- ✅ Use `migrations.RunPython` for data migrations
+- ✅ Never delete old migrations (except during development reset)
+- ✅ Commit migrations with code changes
+- ✅ Use meaningful migration names: `python manage.py makemigrations --name add_ministry_description`
+- ✅ Add comments for complex migrations
+- ✅ Follow dependency order: authentication → ministries → members/events → attendance
+
+### Resetting Migrations (Development Only)
+
+```bash
+# ⚠️ ONLY USE DURING DEVELOPMENT - DESTROYS DATA
+
+# Drop all tables in Neon console
+
+# Delete migration files
+find ./apps -path "*/migrations/*.py" -not -name "__init__.py" -delete
+find ./core -path "*/migrations/*.py" -not -name "__init__.py" -delete
+
+# Recreate migrations
+python manage.py makemigrations authentication
+python manage.py makemigrations ministries
+python manage.py makemigrations members
+python manage.py makemigrations events
+python manage.py makemigrations attendance
+
+# Apply
+python manage.py migrate
+
+# Recreate superuser
+python manage.py createsuperuser
+```
 
 ## 🐛 Debugging Tips
 
 ### Backend Debugging
 
 ```python
-# Use Django shell
+# Django shell
 python manage.py shell
 
 # Use debugger
 import pdb; pdb.set_trace()
 
-# Check logs
+# Check logs with verbosity
 python manage.py runserver --verbosity 3
+
+# Test specific query
+from apps.ministries.models import Ministry
+Ministry.objects.all()
+
+# Check model relationships
+from apps.members.models import Member
+member = Member.objects.first()
+member.ministry  # ForeignKey
+member.user  # OneToOne
 ```
 
 ### Frontend Debugging
@@ -430,12 +547,27 @@ python manage.py runserver --verbosity 3
 // Console logging
 console.log('Debug:', variable);
 
-// React DevTools
-// Install browser extension
+// React DevTools (browser extension)
 
-// Network tab
-// Check API requests/responses
+// Network tab (check API requests/responses)
+
+// Axios interceptors for debugging
+axios.interceptors.request.use(request => {
+  console.log('Starting Request', request)
+  return request
+})
 ```
+
+### Common Django Errors
+
+**"ModuleNotFoundError: No module named 'apps.ministries'"**
+→ Check `apps.py` has `name = 'apps.ministries'` (not `name = 'ministries'`)
+
+**"ImportError: cannot import name 'Event' from 'apps.members.models'"**
+→ Check admin.py imports correct model from correct app
+
+**"AUTH_USER_MODEL refers to model 'core.User'"**
+→ Update `settings.py`: `AUTH_USER_MODEL = 'authentication.User'`
 
 ## 📝 Documentation Standards
 
@@ -443,53 +575,89 @@ console.log('Debug:', variable);
 
 ```python
 # Backend (Python)
-def calculate_gpa(grades):
+def calculate_attendance_rate(member_id, start_date, end_date):
     """
-    Calculate Grade Point Average.
+    Calculate attendance rate for a member in date range.
     
     Args:
-        grades (list): List of grade values
+        member_id (int): Member's ID
+        start_date (date): Start of date range
+        end_date (date): End of date range
         
     Returns:
-        float: GPA rounded to 2 decimal places
+        float: Attendance rate (0.0 to 1.0)
+        
+    Example:
+        >>> calculate_attendance_rate(1, date(2024,1,1), date(2024,12,31))
+        0.85
     """
-    return round(sum(grades) / len(grades), 2)
+    total_events = Event.objects.filter(
+        start_datetime__range=(start_date, end_date)
+    ).count()
+    
+    attended = Attendance.objects.filter(
+        member_id=member_id,
+        attended=True,
+        check_in_time__range=(start_date, end_date)
+    ).count()
+    
+    return attended / total_events if total_events > 0 else 0.0
 ```
 
 ```jsx
-// Frontend (JavaScript)
+// Frontend (JavaScript/React)
 /**
- * Fetches student data from API
- * @param {string} studentId - The student's ID
- * @returns {Promise<Object>} Student data object
+ * Fetches ministry data with members count
+ * @param {string} ministryId - Ministry ID
+ * @returns {Promise<Object>} Ministry data with member count
+ * @throws {Error} If API request fails
+ * 
+ * @example
+ * const ministry = await fetchMinistry('123');
+ * console.log(ministry.member_count); // 25
  */
-const fetchStudent = async (studentId) => {
-  // Implementation
+const fetchMinistry = async (ministryId) => {
+  const response = await api.get(`/api/ministries/${ministryId}/`);
+  return response.data;
 };
 ```
 
 ### API Documentation
 
-Document all endpoints in `API_DOCUMENTATION.md`
+Document endpoints in code:
 
-## 🤝 Team Communication
-
-### Daily Standup Topics
-
-- What did you work on yesterday?
-- What will you work on today?
-- Any blockers or challenges?
-
-### Code Review Etiquette
-
-- Be respectful and constructive
-- Ask questions, don't demand changes
-- Explain reasoning behind suggestions
-- Praise good solutions
-- Approve when satisfied
-- Respond to feedback promptly
-- Use PR templates
-- Test changes locally before approving
+```python
+# apps/ministries/views.py
+class MinistryViewSet(viewsets.ModelViewSet):
+    """
+    API endpoints for Ministry management.
+    
+    list: GET /api/ministries/
+        Returns paginated list of ministries
+        Filters: search (name, description)
+        Ordering: name, created_at
+        
+    retrieve: GET /api/ministries/{id}/
+        Returns single ministry with member_count
+        
+    create: POST /api/ministries/
+        Creates new ministry
+        Required: name
+        Optional: description, leader
+        
+    update: PUT /api/ministries/{id}/
+        Updates ministry
+        
+    partial_update: PATCH /api/ministries/{id}/
+        Partial update
+        
+    destroy: DELETE /api/ministries/{id}/
+        Deletes ministry (sets members.ministry to NULL)
+    """
+    queryset = Ministry.objects.all()
+    serializer_class = MinistrySerializer
+    # ...
+```
 
 ## 🔧 Useful Commands
 
@@ -499,11 +667,19 @@ Document all endpoints in `API_DOCUMENTATION.md`
 # Create superuser
 python manage.py createsuperuser
 
+# Django shell with models loaded
+python manage.py shell
+>>> from apps.ministries.models import Ministry
+>>> Ministry.objects.all()
+
 # Run specific tests
-python manage.py test core.tests.TestStudentModel
+python manage.py test apps.ministries.tests.TestMinistryModel
 
 # Check for issues
 python manage.py check
+
+# Show all URLs
+python manage.py show_urls  # if django-extensions installed
 
 # Generate secret key
 python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
@@ -511,28 +687,11 @@ python -c 'from django.core.management.utils import get_random_secret_key; print
 # Show migrations
 python manage.py showmigrations
 
+# Squash migrations (production)
+python manage.py squashmigrations ministries 0001 0005
+
 # Create empty migration
-python manage.py makemigrations --empty core
-```
-
-### Frontend
-
-```bash
-# Clear cache and reinstall
-rm -rf node_modules package-lock.json
-npm install
-
-# Build for production
-npm run build
-
-# Analyze bundle size
-npm run build -- --analyze
-
-# Check for outdated packages
-npm outdated
-
-# Update packages
-npm update
+python manage.py makemigrations --empty ministries --name custom_data_migration
 ```
 
 ### Git
@@ -540,13 +699,23 @@ npm update
 ```bash
 # Stash changes
 git stash
+git stash list
 git stash pop
 
 # Undo last commit (keep changes)
 git reset --soft HEAD~1
 
 # View commit history
-git log --oneline --graph
+git log --oneline --graph --all
+
+# Show files changed in commit
+git show --name-only HEAD
+
+# Interactive rebase (squash commits)
+git rebase -i HEAD~3
+
+# Cherry-pick commit from another branch
+git cherry-pick abc123
 
 # Clean untracked files
 git clean -fd
@@ -554,17 +723,8 @@ git clean -fd
 # List all branches
 git branch -a
 
-# Delete local branch
-git branch -d branch-name
-
-# Delete remote branch
-git push origin --delete branch-name
-
-# Rename branch
-git branch -m old-name new-name
-
-# Show branch details
-git show-branch
+# Delete merged branches
+git branch --merged | grep -v "\*" | xargs -n 1 git branch -d
 ```
 
 ## 📚 Resources
@@ -572,7 +732,13 @@ git show-branch
 - [Git Documentation](https://git-scm.com/doc)
 - [Conventional Commits](https://www.conventionalcommits.org/)
 - [Python PEP 8](https://pep8.org/)
-- [JavaScript Style Guide](https://github.com/airbnb/javascript)
+- [Django Coding Style](https://docs.djangoproject.com/en/dev/internals/contributing/writing-code/coding-style/)
 - [Django Best Practices](https://docs.djangoproject.com/en/stable/misc/design-philosophies/)
-- [React Best Practices](https://react.dev/learn/thinking-in-react)
+- [DRF Best Practices](https://www.django-rest-framework.org/api-guide/views/)
 - [Semantic Versioning](https://semver.org/)
+- [Feature-Based Architecture](https://softwareengineering.stackexchange.com/questions/338597/folder-by-type-or-folder-by-feature)
+
+---
+
+**Last Updated:** October 22, 2024
+**Architecture:** Feature-based, Domain-driven
