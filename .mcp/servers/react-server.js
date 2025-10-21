@@ -7,8 +7,15 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import fs from 'fs/promises';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-const FRONTEND_PATH = process.env.FRONTEND_PATH || './frontend/src';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Resolve from project root
+const PROJECT_ROOT = path.resolve(__dirname, '../..');
+const FRONTEND_PATH = process.env.FRONTEND_PATH || path.join(PROJECT_ROOT, 'frontend/src');
 
 const server = new Server(
   {
