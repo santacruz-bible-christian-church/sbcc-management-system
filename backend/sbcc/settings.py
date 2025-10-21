@@ -45,18 +45,22 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'django_filters',
     
-    # Local apps
-    'apps.authentication',  # Add this FIRST (before core)
+    # Local apps (in dependency order)
+    'apps.authentication',      # User model
+    'apps.ministries',          # Ministry model
+    'apps.members',             # Member model (depends on User, Ministry)
+    'apps.events',              # Event model (depends on User, Ministry)
+    'apps.attendance',          # Attendance (depends on Member, Event)
+    
+    # Core (dashboard only - no models)
     'core',
     
-    # Other apps
+    # Future apps
     'apps.announcements',
-    'apps.attendance',
-    'apps.events',
     'apps.inventory',
     'apps.meeting_minutes',
-    'apps.members',
     'apps.prayer_requests',
     'apps.tasks',
     'apps.volunteers',
