@@ -46,24 +46,24 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     
-    # Old app
+    # Local apps
+    'apps.authentication',  # Add this FIRST (before core)
     'core',
     
-    # Local App
-    'apps.authentication',
-    'apps.members',
+    # Other apps
+    'apps.announcements',
     'apps.attendance',
     'apps.events',
-    'apps.volunteers',
-    'apps.prayer_requests',
     'apps.inventory',
-    'apps.tasks',
     'apps.meeting_minutes',
-    'apps.announcements',
+    'apps.members',
+    'apps.prayer_requests',
+    'apps.tasks',
+    'apps.volunteers',
 ]
 
 # Custom User Model
-AUTH_USER_MODEL = 'core.user'
+AUTH_USER_MODEL = 'authentication.User'  # Change from 'core.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

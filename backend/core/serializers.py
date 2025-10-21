@@ -1,12 +1,5 @@
 from rest_framework import serializers
-from .models import User, Ministry, Member, Event, Attendance
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'phone']
-        read_only_fields = ['id']
-
+from .models import Ministry, Member, Event, Attendance
 class MinistrySerializer(serializers.ModelSerializer):
     leader_name = serializers.CharField(source='leader.username', read_only=True)
     member_count = serializers.SerializerMethodField()
@@ -18,6 +11,7 @@ class MinistrySerializer(serializers.ModelSerializer):
     
     def get_member_count(self, obj):
         return obj.members.count()
+
 
 class MemberSerializer(serializers.ModelSerializer):
     ministry_name = serializers.CharField(source='ministry.name', read_only=True, allow_null=True)
@@ -31,17 +25,20 @@ class MemberSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'full_name', 'membership_date']
 
+
 class EventSerializer(serializers.ModelSerializer):
     ministry_name = serializers.CharField(source='ministry.name', read_only=True, allow_null=True)
+    created_by_name = serializers.CharField(source='created_by.username', read_only=True)
     
     class Meta:
         model = Event
         fields = [
             'id', 'title', 'description', 'event_type',
             'start_datetime', 'end_datetime', 'location',
-            'ministry', 'ministry_name', 'created_at'
+            'ministry', 'ministry_name', 'created_by', 'created_by_name', 'created_at'
         ]
         read_only_fields = ['id', 'created_at']
+
 
 class AttendanceSerializer(serializers.ModelSerializer):
     member_name = serializers.CharField(source='member.full_name', read_only=True)
