@@ -1,17 +1,24 @@
 {
+  // ============================================
+  // GitHub Copilot MCP Configuration
+  // ============================================
   "github.copilot.enable": {
-    "*": true
+    "*": true,
+    "plaintext": false,
+    "markdown": true,
+    "scminput": false
   },
   "github.copilot.chat.mcp.access": "all",
   "github.copilot.chat.mcp.autostart": "all",
-  "files.exclude": {
-    "**/__pycache__": true,
-    "**/*.pyc": true,
-    ".mcp/node_modules": true,
-    "frontend/node_modules": true
-  },
-  "python.envFile": "${workspaceFolder}/.mcp/.env",
+  
+  // ============================================
+  // MCP Servers (Auto-Start on VS Code Open)
+  // ============================================
+  // Note: Some servers require API keys in User Settings
+  // See .mcp/README.md for setup instructions
+  
   "mcp.servers": {
+    // File system operations
     "filesystem": {
       "command": "npx",
       "args": [
@@ -20,6 +27,19 @@
         "${workspaceFolder}"
       ]
     },
+    
+    // Git operations
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git",
+        "--repository",
+        "${workspaceFolder}"
+      ]
+    },
+    
+    // PostgreSQL database (requires sbcc.databaseUrl)
     "postgres": {
       "command": "npx",
       "args": [
@@ -30,15 +50,8 @@
         "DATABASE_URL": "${config:sbcc.databaseUrl}"
       }
     },
-    "git": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-git",
-        "--repository",
-        "${workspaceFolder}"
-      ]
-    },
+    
+    // GitHub API (requires sbcc.githubToken)
     "github": {
       "command": "npx",
       "args": [
@@ -49,6 +62,8 @@
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${config:sbcc.githubToken}"
       }
     },
+    
+    // Custom Notion integration (requires sbcc.notionApiKey)
     "notion": {
       "command": "node",
       "args": [
@@ -58,27 +73,8 @@
         "NOTION_API_KEY": "${config:sbcc.notionApiKey}"
       }
     },
-    "fetch": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-fetch"
-      ]
-    },
-    "memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ]
-    },
-    "puppeteer": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-puppeteer"
-      ]
-    },
+    
+    // Custom React component analyzer
     "react": {
       "command": "node",
       "args": [
@@ -87,9 +83,43 @@
       "env": {
         "FRONTEND_PATH": "${workspaceFolder}/frontend/src"
       }
+    },
+    
+    // HTTP fetch for API testing
+    "fetch": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-fetch"
+      ]
+    },
+    
+    // Memory for context persistence
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    },
+    
+    // Browser automation
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
     }
   },
-  "sbcc.databaseUrl": "",
-  "sbcc.githubToken": "",
-  "sbcc.notionApiKey": ""
+  
+  // ============================================
+  // Editor Configuration
+  // ============================================
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    ".mcp/node_modules": true,
+    "frontend/node_modules": true
+  }
 }
