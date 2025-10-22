@@ -1,8 +1,11 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
+router = DefaultRouter()
+router.register(r'events', views.EventViewSet)
+router.register(r'attendees', views.EventAttendeeViewSet)
+
 urlpatterns = [
-    path('', views.events_list, name='events-list'),                    # GET/POST /api/events/
-    path('<int:event_id>/', views.event_detail, name='event-detail'),   # GET/DELETE /api/events/1/
-    path('test/', views.test_events_api, name='events-test'),           # GET /api/events/test/
+    path('', include(router.urls)),
 ]
