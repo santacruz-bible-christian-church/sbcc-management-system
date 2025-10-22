@@ -1,49 +1,71 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Event, EventAttendee
+from .models import Event, EventRegistration
 
 User = get_user_model()
 
 class EventSerializer(serializers.ModelSerializer):
     organizer_name = serializers.CharField(source='organizer.get_full_name', read_only=True)
+    ministry_name = serializers.CharField(source='ministry.name', read_only=True, allow_null=True)
     attendee_count = serializers.SerializerMethodField()
+    attended_count = serializers.SerializerMethodField()
     is_registered = serializers.SerializerMethodField()
+    is_full = serializers.BooleanField(read_only=True)
+    available_slots = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Event
         fields = [
             'id', 'title', 'description', 'event_type', 'status',
-            'date', 'end_date', 'location', 'organizer', 'organizer_name',
-            'max_attendees', 'is_recurring', 'attendee_count', 'is_registered',
+            'date', 'end_date', 'location', 
+            'organizer', 'organizer_name',
+            'ministry', 'ministry_name',
+            'max_attendees', 'is_recurring', 
+            'attendee_count', 'attended_count',
+            'is_registered', 'is_full', 'available_slots',
             'created_at', 'updated_at'
         ]
         read_only_fields = ('organizer', 'created_at', 'updated_at')
     
     def get_attendee_count(self, obj):
-        return obj.attendees.count()
+        """Total registered attendees"""
+        return obj.registrations.count()
+    
+    def get_attended_count(self, obj):
+        """Total who actually attended"""
+        return obj.registrations.filter(attended=True).count()
     
     def get_is_registered(self, obj):
+        """Check if current user's member is registered"""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.attendees.filter(user=request.user).exists()
+            # Check if user has a member profile
+            if hasattr(request.user, 'member_profile'):
+                return obj.registrations.filter(member=request.user.member_profile).exists()
         return False
 
-class EventAttendeeSerializer(serializers.ModelSerializer):
-    user_name = serializers.CharField(source='user.get_full_name', read_only=True)
+
+class EventRegistrationSerializer(serializers.ModelSerializer):
+    member_name = serializers.CharField(source='member.full_name', read_only=True)
+    member_email = serializers.EmailField(source='member.email', read_only=True)
     event_title = serializers.CharField(source='event.title', read_only=True)
     
     class Meta:
-        model = EventAttendee
+        model = EventRegistration
         fields = [
-            'id', 'event', 'event_title', 'user', 'user_name',
-            'registered_at', 'attended', 'notes'
+            'id', 'event', 'event_title', 
+            'member', 'member_name', 'member_email',
+            'registered_at', 'attended', 'check_in_time', 'notes'
         ]
         read_only_fields = ('registered_at',)
 
+
 class EventCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating events"""
     class Meta:
         model = Event
         fields = [
             'title', 'description', 'event_type', 'status',
-            'date', 'end_date', 'location', 'max_attendees', 'is_recurring'
+            'date', 'end_date', 'location', 
+            'ministry', 'max_attendees', 'is_recurring'
         ]
