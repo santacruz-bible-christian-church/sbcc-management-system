@@ -10,7 +10,8 @@ class MemberSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'first_name', 'last_name', 'full_name',
             'email', 'phone', 'date_of_birth', 'baptism_date',
-            'ministry', 'ministry_name', 'is_active', 'membership_date',
+            'ministry', 'ministry_name', 'is_active', 'membership_date', 'status',
+            'archived_at',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'full_name', 'membership_date', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'full_name', 'membership_date', 'created_at', 'updated_at', 'archived_at']
