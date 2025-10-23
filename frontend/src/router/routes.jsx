@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
+import EventsPage from '../features/events/pages/EventsPage';
 
 export const routes = [
   {
@@ -17,6 +18,14 @@ export const routes = [
     element: (
       <ProtectedRoute>
         <DashboardPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/events',
+    element: (
+      <ProtectedRoute>
+        <EventsPage />
       </ProtectedRoute>
     ),
   },
