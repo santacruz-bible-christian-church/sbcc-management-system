@@ -29,6 +29,7 @@ export const Button = ({
       size={size}
       disabled={disabled || loading}
       className={clsx(
+        '!border-none shadow-[0_16px_32px_rgba(31,41,55,0.12)] hover:shadow-[0_24px_48px_rgba(31,41,55,0.18)] transition-shadow',
         fullWidth && 'w-full',
         className
       )}
@@ -55,10 +56,10 @@ export const PrimaryButton = (props) => (
 );
 
 export const SecondaryButton = ({ className, ...props }) => (
-  <Button 
-    variant="secondary" 
-    className={clsx('text-sbcc-dark border-sbcc-orange', className)}
-    {...props} 
+  <Button
+    variant="secondary"
+    className={clsx('text-sbcc-dark', className)}
+    {...props}
   />
 );
 
