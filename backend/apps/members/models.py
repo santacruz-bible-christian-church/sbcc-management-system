@@ -21,6 +21,7 @@ class Member(models.Model):
         related_name='members'
     )
     is_active = models.BooleanField(default=True)
+    archived_at = models.DateTimeField(null=True, blank=True)
     membership_date = models.DateField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
