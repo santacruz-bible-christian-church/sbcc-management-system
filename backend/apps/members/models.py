@@ -6,6 +6,13 @@ User = get_user_model()
 
 class Member(models.Model):
     """Church member profiles"""
+
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('archived', 'Archived'),
+        ('pending', 'Pending'),
+    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='member_profile')
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -22,6 +29,7 @@ class Member(models.Model):
     )
     is_active = models.BooleanField(default=True)
     archived_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     membership_date = models.DateField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
