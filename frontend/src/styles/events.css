@@ -23,7 +23,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 600;
-  color: rgba(56, 56, 56, 0.7);
+  color: rgba(56, 56, 56, 0.75);
 }
 
 .events-input {
@@ -118,69 +118,14 @@
   text-transform: uppercase;
 }
 
-.events-status-badge--draft {
-  background: rgba(59, 130, 246, 0.18);
-  color: #1d4ed8;
-}
-
-.events-status-badge--published {
-  background: rgba(253, 181, 74, 0.22);
-  color: #b45309;
-}
-
-.events-status-badge--completed {
-  background: rgba(22, 163, 74, 0.18);
-  color: #047857;
-}
-
-.events-status-badge--cancelled {
-  background: rgba(239, 68, 68, 0.18);
-  color: #b91c1c;
-}
-
 .events-type-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.35rem 0.75rem;
+  padding: 0.35rem 0.8rem;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-}
-
-.events-type-chip--service {
-  background: rgba(253, 181, 74, 0.16);
-  color: #b45309;
-}
-
-.events-type-chip--bible {
-  background: rgba(59, 130, 246, 0.16);
-  color: #1d4ed8;
-}
-
-.events-type-chip--prayer {
-  background: rgba(45, 212, 191, 0.16);
-  color: #0f766e;
-}
-
-.events-type-chip--fellowship {
-  background: rgba(251, 191, 36, 0.18);
-  color: #92400e;
-}
-
-.events-type-chip--outreach {
-  background: rgba(249, 115, 22, 0.18);
-  color: #c2410c;
-}
-
-.events-type-chip--other {
-  background: rgba(148, 163, 184, 0.18);
-  color: #475569;
-}
-
-.events-type-chip--ministry {
-  background: rgba(59, 130, 246, 0.18);
-  color: #1d4ed8;
 }
 
 .events-card-title {
@@ -202,17 +147,6 @@
   gap: 1rem;
 }
 
-.events-meta-grid dt {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(56, 56, 56, 0.55);
-  margin-bottom: 0.35rem;
-}
-
 .events-meta-grid dd {
   margin: 0;
   font-weight: 600;
@@ -230,7 +164,6 @@
 .events-card-actions__left {
   display: flex;
   align-items: stretch;
-  min-width: 0;
 }
 
 .events-card-actions__left > * {
@@ -278,12 +211,12 @@
 }
 
 .events-status-chip--success {
-  background: rgba(34, 197, 94, 0.18);
+  background: rgba(16, 185, 129, 0.18);
   color: #047857;
 }
 
 .events-status-chip--warning {
-  background: rgba(253, 181, 74, 0.2);
+  background: rgba(245, 158, 11, 0.2);
   color: #b45309;
 }
 
@@ -320,20 +253,8 @@
   overflow: hidden;
 }
 
-.events-modal__dialog--md {
-  max-width: 520px;
-}
-
-.events-modal__dialog--lg {
-  max-width: 640px;
-}
-
 .events-modal__dialog--xl {
   max-width: 760px;
-}
-
-.events-modal__dialog--2xl {
-  max-width: 900px;
 }
 
 .events-modal__dialog--5xl {
