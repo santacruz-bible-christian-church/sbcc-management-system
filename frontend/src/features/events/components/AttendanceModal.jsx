@@ -1,7 +1,7 @@
 import { Spinner, Table } from 'flowbite-react';
 import { HiClipboardCheck } from 'react-icons/hi';
 import { PrimaryButton } from '../../../components/ui/Button';
-import { formatDateTimeDisplay } from '../utils/formats';
+import { formatDateTimeDisplay } from '../utils/format';
 
 export const AttendanceModalContent = ({
   loading,

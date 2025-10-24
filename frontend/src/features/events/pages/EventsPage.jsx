@@ -3,14 +3,9 @@ import { Spinner } from 'flowbite-react';
 import { HiOutlineFilter, HiOutlinePlusCircle, HiOutlineRefresh } from 'react-icons/hi';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useEvents } from '../hooks/useEvents';
-import EventsForm from '../components/EventsForm';
-import EventsFilters from '../components/EventsFilters';
-import EventsBoard from '../components/EventsBoard';
-import EventsSummaryCards from '../components/EventsSummaryCards';
-import EventModal from '../components/EventModal';
-import AttendanceModalContent from '../components/AttendanceModal';
+import { EventsFilters, EventsBoard, EventModal, AttendanceModalContent, EventsForm, EventsSummaryCards } from '../components';
 import { MANAGER_ROLES } from '../utils/constants';
-import { prepareEventFormValues } from '../utils/formats';
+import { prepareEventFormValues } from '../utils/format';
 import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
 import '../../../styles/events.css';
 
