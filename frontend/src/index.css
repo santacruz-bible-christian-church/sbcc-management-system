@@ -13,6 +13,10 @@
   --sbcc-text-dark: #383838;
   --sbcc-primary: #FDB54A;
   --sbcc-secondary: #F6C67E;
+  --sbcc-success: #10B981;
+  --sbcc-warning: #F59E0B;
+  --sbcc-danger: #EF4444;
+  --sbcc-info: #3B82F6;
 }
 
 /* ✅ Base Styles */
