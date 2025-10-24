@@ -16,7 +16,7 @@ import {
   formatDateRange,
   getEventTypeLabel,
   withAlpha,
-} from '../utils/formats';
+} from '../utils/format';
 import { SBCC_COLORS } from '../../../store/theme.store';
 
 const statusStyle = (status) => {
