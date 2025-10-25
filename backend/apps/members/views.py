@@ -8,6 +8,7 @@ from django.db import transaction
 
 from .models import Member
 from .serializers import MemberSerializer
+from .services import get_upcoming_birthdays
 
 
 class MemberViewSet(viewsets.ModelViewSet):
@@ -116,3 +117,22 @@ class MemberViewSet(viewsets.ModelViewSet):
             # clear archived_at for non-archived statuses; set is_active only for 'active'
             updated = qs.update(status=status_value, archived_at=None, is_active=(status_value == 'active'), updated_at=now)
         return Response({'updated_count': updated}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def upcoming_birthdays(self, request):
+        """
+        GET /api/members/upcoming_birthdays/?days=7
+        Returns members with birthdays in the next `days` days (default 7).
+        """
+        try:
+            days = int(request.query_params.get('days', 7))
+        except ValueError:
+            days = 7
+        reminders = get_upcoming_birthdays(days=days)
+        data = []
+        for r in reminders:
+            ser = self.get_serializer(r['member'])
+            item = ser.data
+            item['occurrence_date'] = r['occurrence'].isoformat()
+            data.append(item)
+        return Response(data, status=status.HTTP_200_OK)
