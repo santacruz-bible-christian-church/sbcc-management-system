@@ -34,3 +34,20 @@ def get_upcoming_birthdays(days=7):
     # optional: sort by occurrence date
     results.sort(key=lambda r: r['occurrence'])
     return results
+
+def get_upcoming_anniversaries(days=7):
+    """
+    Return list of dicts: {'member': Member, 'occurrence': date}
+    for anniversaries occurring in the next `days` days (including today).
+    """
+    today = timezone.localdate()
+    deadline = today + timedelta(days=days)
+    results = []
+    # simple approach: iterate members (ok for small/medium datasets)
+    for m in Member.objects.all():
+        occ = _next_annual_occurrence(m.baptism_date, today)
+        if occ and today <= occ <= deadline:
+            results.append({'member': m, 'occurrence': occ})
+    # optional: sort by occurrence date
+    results.sort(key=lambda r: r['occurrence'])
+    return results
