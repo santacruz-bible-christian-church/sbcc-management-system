@@ -8,7 +8,7 @@ from django.db import transaction
 
 from .models import Member
 from .serializers import MemberSerializer
-from .services import get_upcoming_birthdays
+from .services import get_upcoming_birthdays, get_upcoming_anniversaries
 
 
 class MemberViewSet(viewsets.ModelViewSet):
@@ -129,6 +129,25 @@ class MemberViewSet(viewsets.ModelViewSet):
         except ValueError:
             days = 7
         reminders = get_upcoming_birthdays(days=days)
+        data = []
+        for r in reminders:
+            ser = self.get_serializer(r['member'])
+            item = ser.data
+            item['occurrence_date'] = r['occurrence'].isoformat()
+            data.append(item)
+        return Response(data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def upcoming_anniversaries(self, request):
+        """
+        GET /api/members/upcoming_anniversaries/?days=7
+        Returns members with anniversaries in the next `days` days (default 7).
+        """
+        try:
+            days = int(request.query_params.get('days', 7))
+        except ValueError:
+            days = 7
+        reminders = get_upcoming_anniversaries(days=days)
         data = []
         for r in reminders:
             ser = self.get_serializer(r['member'])
