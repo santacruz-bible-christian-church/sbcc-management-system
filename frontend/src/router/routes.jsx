@@ -1,19 +1,25 @@
 import { Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
+import { MainLayout } from '../components/layout/MainLayout';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { EventsPage } from '../features/events/pages/EventsPage';
 
-// Placeholder components for routes that don't exist yet
+// Placeholder component for routes that don't exist yet
 const ComingSoon = ({ title }) => (
-  <div className="flex h-screen">
-    <div className="flex-1 flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">{title}</h1>
-        <p className="text-gray-600">This feature is coming soon!</p>
-      </div>
+  <div className="flex-1 flex items-center justify-center">
+    <div className="text-center">
+      <h1 className="text-4xl font-bold text-gray-900 mb-4">{title}</h1>
+      <p className="text-gray-600">This feature is coming soon!</p>
     </div>
   </div>
+);
+
+// Wrapper to apply MainLayout to protected routes
+const ProtectedWithLayout = ({ children }) => (
+  <ProtectedRoute>
+    <MainLayout>{children}</MainLayout>
+  </ProtectedRoute>
 );
 
 export const routes = [
@@ -28,89 +34,89 @@ export const routes = [
   {
     path: '/dashboard',
     element: (
-      <ProtectedRoute>
+      <ProtectedWithLayout>
         <DashboardPage />
-      </ProtectedRoute>
+      </ProtectedWithLayout>
     ),
   },
   {
     path: '/events',
     element: (
-      <ProtectedRoute>
+      <ProtectedWithLayout>
         <EventsPage />
-      </ProtectedRoute>
+      </ProtectedWithLayout>
     ),
   },
   {
     path: '/members',
     element: (
-      <ProtectedRoute>
+      <ProtectedWithLayout>
         <ComingSoon title="Members Management" />
-      </ProtectedRoute>
+      </ProtectedWithLayout>
     ),
   },
   {
     path: '/attendance',
     element: (
-      <ProtectedRoute>
+      <ProtectedWithLayout>
         <ComingSoon title="Attendance Tracking" />
-      </ProtectedRoute>
+      </ProtectedWithLayout>
     ),
   },
   {
     path: '/ministries',
     element: (
-      <ProtectedRoute>
+      <ProtectedWithLayout>
         <ComingSoon title="Ministries" />
-      </ProtectedRoute>
+      </ProtectedWithLayout>
     ),
   },
   {
     path: '/inventory',
     element: (
-      <ProtectedRoute>
+      <ProtectedWithLayout>
         <ComingSoon title="Inventory Management" />
-      </ProtectedRoute>
+      </ProtectedWithLayout>
     ),
   },
   {
     path: '/documents',
     element: (
-      <ProtectedRoute>
+      <ProtectedWithLayout>
         <ComingSoon title="Documents" />
-      </ProtectedRoute>
+      </ProtectedWithLayout>
     ),
   },
   {
     path: '/support/helpdesk',
     element: (
-      <ProtectedRoute>
+      <ProtectedWithLayout>
         <ComingSoon title="Helpdesk" />
-      </ProtectedRoute>
+      </ProtectedWithLayout>
     ),
   },
   {
     path: '/support/contact',
     element: (
-      <ProtectedRoute>
+      <ProtectedWithLayout>
         <ComingSoon title="Contact Support" />
-      </ProtectedRoute>
+      </ProtectedWithLayout>
     ),
   },
   {
     path: '/docs',
     element: (
-      <ProtectedRoute>
+      <ProtectedWithLayout>
         <ComingSoon title="Documentation" />
-      </ProtectedRoute>
+      </ProtectedWithLayout>
     ),
   },
   {
     path: '/help',
     element: (
-      <ProtectedRoute>
+      <ProtectedWithLayout>
         <ComingSoon title="Help Center" />
-      </ProtectedRoute>
+      </ProtectedWithLayout>
     ),
   },
   {
