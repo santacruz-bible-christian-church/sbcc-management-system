@@ -6,7 +6,7 @@ import {
   calculateCompletionRate,
   cleanFilters,
   summarizeEvents,
-} from '../utils/format';
+} from '../utils/formats';
 
 const initialQuery = {
   filters: { ...DEFAULT_FILTERS },
@@ -71,13 +71,13 @@ export const useEvents = () => {
     }));
   };
 
-const resetQuery = () => {
-  setQuery({
-    filters: { ...DEFAULT_FILTERS },
-    search: '',
-    ordering: DEFAULT_ORDERING,
-  });
-};
+  const resetQuery = () => {
+    setQuery({
+      filters: { ...DEFAULT_FILTERS },
+      search: '',
+      ordering: DEFAULT_ORDERING,
+    });
+  };
 
   const runAndRefresh = async (action) => {
     setLoading(true);

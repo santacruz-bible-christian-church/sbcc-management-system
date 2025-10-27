@@ -17,8 +17,8 @@
   gap: 1.5rem;
   padding: 1.75rem clamp(1.5rem, 4vw, 2.5rem);
   border-radius: 1.5rem;
-  background: var(--sbcc-white);
-  box-shadow: 0 24px 60px color-mix(in srgb, var(--sbcc-text-dark) 12%, transparent);
+  background: transparent;
+  box-shadow: none;
 }
 
 .events-field-label {
@@ -65,10 +65,10 @@
 }
 
 .events-board {
-  background: color-mix(in srgb, var(--sbcc-white) 60%, transparent);
+  background: transparent;
   border-radius: 1.5rem;
-  padding: clamp(1.5rem, 4vw, 2.5rem);
-  box-shadow: 0 30px 80px color-mix(in srgb, var(--sbcc-text-dark) 12%, transparent);
+  padding: 0;
+  box-shadow: none;
 }
 
 .events-empty-state {

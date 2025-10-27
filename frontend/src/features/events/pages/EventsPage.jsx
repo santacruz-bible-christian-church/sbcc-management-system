@@ -3,9 +3,17 @@ import { Spinner } from 'flowbite-react';
 import { HiOutlineCalendar, HiOutlineFilter, HiOutlinePlusCircle, HiOutlineRefresh } from 'react-icons/hi';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useEvents } from '../hooks/useEvents';
-import { EventsFilters, EventsBoard, EventModal, AttendanceModalContent, EventsForm, EventsSummaryCards } from '../components';
+import {
+  AttendanceModalContent,
+  EventModal,
+  EventsBoard,
+  EventsCalendar,
+  EventsFilters,
+  EventsForm,
+  EventsSummaryCards,
+} from '../components';
 import { MANAGER_ROLES } from '../utils/constants';
-import { prepareEventFormValues } from '../utils/format';
+import { prepareEventFormValues } from '../utils/formats';
 import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
 import '../../../styles/events.css';
 import '../../../styles/calendar.css';
