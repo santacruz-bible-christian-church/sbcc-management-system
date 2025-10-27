@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Spinner } from 'flowbite-react';
-import { HiOutlineFilter, HiOutlinePlusCircle, HiOutlineRefresh } from 'react-icons/hi';
+import { HiOutlineCalendar, HiOutlineFilter, HiOutlinePlusCircle, HiOutlineRefresh } from 'react-icons/hi';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useEvents } from '../hooks/useEvents';
-import { EventsFilters, EventsBoard, EventModal, AttendanceModalContent, EventsForm, EventsSummaryCards } from '../components';
+import {
+  AttendanceModalContent,
+  EventModal,
+  EventsBoard,
+  EventsCalendar,
+  EventsFilters,
+  EventsForm,
+  EventsSummaryCards,
+} from '../components';
 import { MANAGER_ROLES } from '../utils/constants';
-import { prepareEventFormValues } from '../utils/format';
+import { prepareEventFormValues } from '../utils/formats';
 import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
 import '../../../styles/events.css';
+import '../../../styles/calendar.css';
 
 export const EventsPage = () => {
   const { user } = useAuth();
@@ -47,6 +56,7 @@ export const EventsPage = () => {
     error: null,
   });
   const [submitting, setSubmitting] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
     setSearchDraft(search);
@@ -85,8 +95,6 @@ export const EventsPage = () => {
         await updateEvent(formState.event.id, payload);
       }
       closeFormModal();
-    } catch {
-      // hook handles error reporting
     } finally {
       setSubmitting(false);
     }
@@ -135,7 +143,7 @@ export const EventsPage = () => {
       <div className="max-w-7xl mx-auto space-y-8">
         <header className="events-header-card">
           <div>
-            <p className="text-sm font-semibold text-sbcc-gray uppercase tracking-wide">Page · Events</p>
+            <p className="text-sm font-semibold text-sbcc-gray uppercase tracking-wide">Page / Events</p>
             <h1 className="text-3xl md:text-4xl font-bold text-sbcc-dark">Events &amp; Attendance</h1>
             <p className="mt-2 text-sbcc-gray max-w-2xl">
               Coordinate ministry gatherings, track attendance, and keep your church community informed.
@@ -151,6 +159,13 @@ export const EventsPage = () => {
             </SecondaryButton>
             <SecondaryButton icon={HiOutlineRefresh} onClick={refresh}>
               Refresh
+            </SecondaryButton>
+            <SecondaryButton
+              icon={HiOutlineCalendar}
+              onClick={() => setShowCalendar((prev) => !prev)}
+              className={showCalendar ? 'bg-sbcc-light-orange/60' : undefined}
+            >
+              {showCalendar ? 'List View' : 'Calendar'}
             </SecondaryButton>
             {canManageEvents && (
               <PrimaryButton icon={HiOutlinePlusCircle} onClick={openCreateModal}>
@@ -190,6 +205,8 @@ export const EventsPage = () => {
               <Spinner size="xl" />
               <p className="mt-3 text-sbcc-gray">Loading events...</p>
             </div>
+          ) : showCalendar ? (
+            <EventsCalendar events={events} />
           ) : (
             <EventsBoard
               events={events}
@@ -224,7 +241,7 @@ export const EventsPage = () => {
         />
       </EventModal>
 
-      <EventModal
+  <EventModal
         open={attendanceState.open}
         size="5xl"
         title="Attendance Overview"

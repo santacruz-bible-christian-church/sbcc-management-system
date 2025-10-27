@@ -4,3 +4,4 @@ export { default as EventModal } from './EventModal';
 export { default as AttendanceModalContent } from './AttendanceModal';
 export { default as EventsForm } from './EventsForm';
 export { default as EventsSummaryCards } from './EventsSummaryCards';
+export { default as EventsCalendar } from './calendar/EventsCalendar';
