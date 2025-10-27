@@ -8,15 +8,14 @@ import {
     FileText,
     Headphones,
     File,
-    Layers,
     HelpCircle,
     ChevronDown,
     ChevronUp,
-    Building2,
-    ClipboardCheck,
+    Menu,
+    X,
 } from 'lucide-react';
 
-export default function SCBCSidebar() {
+export default function SCBCSidebar({ collapsed = false, onToggle }) {
     const navigate = useNavigate();
     const location = useLocation();
     const [membershipOpen, setMembershipOpen] = useState(false);
@@ -42,19 +41,22 @@ export default function SCBCSidebar() {
                     className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors rounded-md ${
                         isActive ? 'bg-orange-50 text-[#FDB54A]' : 'text-gray-700 hover:bg-gray-50'
                     }`}
+                    title={collapsed ? label : undefined}
                 >
                     <div className="flex items-center gap-3">
                         <Icon size={18} className={isActive ? 'text-[#FDB54A]' : 'text-gray-600'} />
-                        <span className="font-medium">{label}</span>
+                        {!collapsed && <span className="font-medium">{label}</span>}
                     </div>
-                    <div className="flex items-center gap-2">
-                        {badge && (
-                            <span className="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">{badge}</span>
-                        )}
-                        {typeof isOpen === 'boolean' && (
-                            isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />
-                        )}
-                    </div>
+                    {!collapsed && (
+                        <div className="flex items-center gap-2">
+                            {badge && (
+                                <span className="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">{badge}</span>
+                            )}
+                            {typeof isOpen === 'boolean' && (
+                                isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />
+                            )}
+                        </div>
+                    )}
                 </button>
             </div>
         );
@@ -62,6 +64,8 @@ export default function SCBCSidebar() {
 
     const SubLink = ({ id, path, children }) => {
         const isActive = location.pathname === path;
+        
+        if (collapsed) return null;
         
         return (
             <button
@@ -76,16 +80,44 @@ export default function SCBCSidebar() {
     };
 
     return (
-        <aside className="w-72 h-screen bg-white border-r border-gray-200 flex flex-col">
+        <aside 
+            className={`${
+                collapsed ? 'w-20' : 'w-72'
+            } h-screen bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out`}
+        >
             {/* Header */}
-            <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#F6C67E] to-[#FDB54A] rounded-full flex items-center justify-center shadow-lg">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                <div className={`flex items-center gap-3 ${collapsed ? 'justify-center w-full' : ''}`}>
+                    <div className="w-8 h-8 bg-gradient-to-br from-[#F6C67E] to-[#FDB54A] rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
                         <span className="text-white font-bold text-sm">SC</span>
                     </div>
-                    <h1 className="text-lg font-semibold text-gray-900">SBCC Management</h1>
+                    {!collapsed && (
+                        <h1 className="text-lg font-semibold text-gray-900 whitespace-nowrap">SBCC Management</h1>
+                    )}
                 </div>
+                
+                {/* Toggle Button */}
+                <button
+                    onClick={onToggle}
+                    className={`p-2 hover:bg-gray-100 rounded-lg transition-colors ${collapsed ? 'hidden' : ''}`}
+                    aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                    {collapsed ? <Menu size={20} /> : <X size={20} />}
+                </button>
             </div>
+
+            {/* Collapsed State Toggle Button */}
+            {collapsed && (
+                <button
+                    onClick={onToggle}
+                    className="mx-auto my-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    aria-label="Expand sidebar"
+                    title="Expand sidebar"
+                >
+                    <Menu size={20} />
+                </button>
+            )}
 
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto py-4 px-2" style={{ fontSize: 'clamp(0.8rem, 1vw + 0.2rem, 1rem)' }}>
@@ -109,20 +141,23 @@ export default function SCBCSidebar() {
                             id="membership"
                             icon={Users}
                             label="Membership"
-                            isOpen={membershipOpen}
-                            onClick={() => setMembershipOpen(!membershipOpen)}
+                            isOpen={!collapsed && membershipOpen}
+                            onClick={!collapsed ? () => setMembershipOpen(!membershipOpen) : undefined}
+                            path={collapsed ? '/members' : undefined}
                         />
 
-                        <div
-                            id="membership-submenu"
-                            role="region"
-                            aria-labelledby="membership"
-                            className={`${membershipOpen ? 'block' : 'hidden'} mt-1 space-y-1`}
-                        >
-                            <SubLink id="membership-list" path="/members">Members List</SubLink>
-                            <SubLink id="membership-attendance" path="/attendance">Attendance</SubLink>
-                            <SubLink id="membership-ministries" path="/ministries">Ministries</SubLink>
-                        </div>
+                        {!collapsed && (
+                            <div
+                                id="membership-submenu"
+                                role="region"
+                                aria-labelledby="membership"
+                                className={`${membershipOpen ? 'block' : 'hidden'} mt-1 space-y-1`}
+                            >
+                                <SubLink id="membership-list" path="/members">Members List</SubLink>
+                                <SubLink id="membership-attendance" path="/attendance">Attendance</SubLink>
+                                <SubLink id="membership-ministries" path="/ministries">Ministries</SubLink>
+                            </div>
+                        )}
                     </div>
 
                     <NavButton 
@@ -139,31 +174,36 @@ export default function SCBCSidebar() {
                         path="/documents"
                     />
 
-                    <div className="my-3 border-t border-gray-200"></div>
+                    {!collapsed && <div className="my-3 border-t border-gray-200"></div>}
 
-                    <div className="px-2 py-2">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                            Support & Resources
-                        </p>
-                    </div>
+                    {!collapsed && (
+                        <div className="px-2 py-2">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                Support & Resources
+                            </p>
+                        </div>
+                    )}
 
                     <div className="mt-1">
                         <NavButton 
                             id="support" 
                             icon={Headphones} 
                             label="Support" 
-                            isOpen={supportOpen} 
-                            onClick={() => setSupportOpen(!supportOpen)} 
+                            isOpen={!collapsed && supportOpen}
+                            onClick={!collapsed ? () => setSupportOpen(!supportOpen) : undefined}
+                            path={collapsed ? '/support/helpdesk' : undefined}
                         />
-                        <div 
-                            id="support-submenu" 
-                            role="region" 
-                            aria-labelledby="support" 
-                            className={`${supportOpen ? 'block' : 'hidden'} mt-1 space-y-1`}
-                        >
-                            <SubLink id="support-helpdesk" path="/support/helpdesk">Helpdesk</SubLink>
-                            <SubLink id="support-contact" path="/support/contact">Contact</SubLink>
-                        </div>
+                        {!collapsed && (
+                            <div 
+                                id="support-submenu" 
+                                role="region" 
+                                aria-labelledby="support" 
+                                className={`${supportOpen ? 'block' : 'hidden'} mt-1 space-y-1`}
+                            >
+                                <SubLink id="support-helpdesk" path="/support/helpdesk">Helpdesk</SubLink>
+                                <SubLink id="support-contact" path="/support/contact">Contact</SubLink>
+                            </div>
+                        )}
                     </div>
 
                     <NavButton 
@@ -184,14 +224,18 @@ export default function SCBCSidebar() {
 
             {/* Footer - User Info */}
             <div className="p-4 border-t border-gray-200">
-                <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                <div className={`flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
+                    collapsed ? 'justify-center' : ''
+                }`}>
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                         JG
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
-                        <p className="text-xs text-gray-500 truncate">admin@sbcc.com</p>
-                    </div>
+                    {!collapsed && (
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
+                            <p className="text-xs text-gray-500 truncate">admin@sbcc.com</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </aside>
