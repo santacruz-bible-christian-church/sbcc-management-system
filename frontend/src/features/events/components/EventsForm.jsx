@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { EVENT_TYPE_OPTIONS, STATUS_OPTIONS, DEFAULT_FORM_VALUES } from '../utils/constants';
-import { formatDateTimeInput, serializeEventForm } from '../utils/formats';
+import { formatDateTimeInput, serializeEventForm } from '../utils/format';
 
 const fieldClass =
   'events-input focus:outline-none focus:ring-0 w-full text-sbcc-dark placeholder:text-sbcc-gray';

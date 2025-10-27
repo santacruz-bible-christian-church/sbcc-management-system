@@ -6,7 +6,7 @@ import {
   calculateCompletionRate,
   cleanFilters,
   summarizeEvents,
-} from '../utils/formats';
+} from '../utils/format';
 
 const initialQuery = {
   filters: { ...DEFAULT_FILTERS },
