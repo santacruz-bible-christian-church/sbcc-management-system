@@ -13,7 +13,7 @@ import {
   EventsSummaryCards,
 } from '../components';
 import { MANAGER_ROLES } from '../utils/constants';
-import { prepareEventFormValues } from '../utils/formats';
+import { prepareEventFormValues } from '../utils/format';
 import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
 import '../../../styles/events.css';
 import '../../../styles/calendar.css';
