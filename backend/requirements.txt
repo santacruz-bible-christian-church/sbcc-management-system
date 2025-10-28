@@ -1,3 +1,5 @@
+# This is the content for backend/requirements-dev.txt
+# Development dependencies for the project
 asgiref==3.10.0
 certifi==2025.10.5
 cffi==2.0.0
