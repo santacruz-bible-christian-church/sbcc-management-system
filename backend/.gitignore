@@ -44,3 +44,7 @@ htmlcov/
 *.bak
 *.backup
 *.orig
+
+# Ignore mirror and temporary repos
+repo-mirror.git/
+repo-mirror/
