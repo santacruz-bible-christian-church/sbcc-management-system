@@ -1,0 +1,29 @@
+# Code Owners - Require review from lead developer
+# These patterns require approval from @emperuna before merging
+
+# Critical Infrastructure
+/backend/sbcc/settings.py @emperuna
+/backend/sbcc/*.py @emperuna
+/backend/manage.py @emperuna
+/backend/requirements.txt @emperuna
+
+# Database Migrations - MUST BE REVIEWED
+**/migrations/*.py @emperuna
+
+# Configuration Files
+*.config.js @emperuna
+*.config.ts @emperuna
+package.json @emperuna
+pyproject.toml @emperuna
+.env.example @emperuna
+
+# Core Models - Critical
+/backend/apps/*/models.py @emperuna
+
+# Authentication & Security
+/backend/apps/authentication/ @emperuna
+/backend/common/permissions.py @emperuna
+/backend/common/validators.py @emperuna
+
+# Default: Everything else requires review
+* @emperuna
