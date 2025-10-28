@@ -4,4 +4,4 @@
 .mcp/package-lock.json
 
 # VS Code
-.vscode/.env
+.vscode/.envvenv/
