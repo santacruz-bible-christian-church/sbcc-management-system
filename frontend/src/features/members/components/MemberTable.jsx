@@ -37,12 +37,12 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
     <div className="space-y-4">
       {/* Table Headers */}
       <div className="flex gap-3 font-[15px] font-bold text-[#A0A0A0] px-3">
-        <h1 className="w-[20%]">Name</h1>
-        <h1 className="w-[12%]">Gender</h1>
-        <h1 className="w-[15%]">Contact No.</h1>
-        <h1 className="w-[15%]">Birthday</h1>
-        <h1 className="w-[18%]">Ministry</h1>
-        <h1 className="w-[20%]">Command</h1>
+        <span className="w-[20%]">Name</span>
+        <span className="w-[12%]">Gender</span>
+        <span className="w-[15%]">Contact No.</span>
+        <span className="w-[15%]">Birthday</span>
+        <span className="w-[18%]">Ministry</span>
+        <span className="w-[20%]">Command</span>
       </div>
 
       {/* Table Rows */}
@@ -53,11 +53,11 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
         >
           {/* Name */}
           <p className="font-[15px] font-bold text-[#383838] w-[20%] pl-4">
-            {member.name}
+            {member.full_name || `${member.first_name} ${member.last_name}`}
           </p>
 
           {/* Gender */}
-          <p className="font-[15px] font-regular text-[#383838] w-[12%]">
+          <p className="font-[15px] font-regular text-[#383838] w-[12%] capitalize">
             {member.gender || 'N/A'}
           </p>
 
@@ -68,14 +68,14 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
 
           {/* Birthday */}
           <p className="font-[15px] font-regular text-[#383838] w-[15%]">
-            {formatDate(member.birthday)}
+            {formatDate(member.date_of_birth)}
           </p>
 
           {/* Ministry Badge */}
           <div className="w-[18%]">
-            {member.ministry ? (
-              <div className={`${getMinistryColor(member.ministry)} font-[15px] font-regular rounded-full pl-4 pr-4 py-1 inline-block`}>
-                {member.ministry}
+            {member.ministry_name ? (
+              <div className={`${getMinistryColor(member.ministry_name)} font-[15px] font-regular rounded-full pl-4 pr-4 py-1 inline-block`}>
+                {member.ministry_name}
               </div>
             ) : (
               <span className="text-[#A0A0A0]">Unassigned</span>
@@ -84,18 +84,30 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
 
           {/* Action Icons */}
           <div className="flex gap-5 w-[20%]">
-            <button onClick={() => onViewDetails(member)} title="View Details">
-              <HiOutlineFolder className="w-5 h-5 text-[#FFB039] hover:text-[#e59e2f]" />
+            <button
+              onClick={() => onViewDetails(member)}
+              title="View Details"
+              className="transition-colors"
+            >
+              <HiOutlineFolder className="w-5 h-5 text-[#FFB039] hover:text-[#e59e2f] transition-colors" />
             </button>
 
             {canManage && (
               <>
-                <button onClick={() => onEdit(member)} title="Edit">
-                  <HiOutlinePencil className="w-5 h-5 text-[#FFB039] hover:text-[#e59e2f]" />
+                <button
+                  onClick={() => onEdit(member)}
+                  title="Edit"
+                  className="transition-colors"
+                >
+                  <HiOutlinePencil className="w-5 h-5 text-[#FFB039] hover:text-[#e59e2f] transition-colors" />
                 </button>
 
-                <button onClick={() => onDelete(member)} title="Delete">
-                  <HiOutlineTrash className="w-5 h-5 text-[#E55050] hover:text-[#d13e3e]" />
+                <button
+                  onClick={() => onDelete(member)}
+                  title="Delete"
+                  className="transition-colors"
+                >
+                  <HiOutlineTrash className="w-5 h-5 text-[#E55050] hover:text-[#d13e3e] transition-colors" />
                 </button>
               </>
             )}
@@ -105,7 +117,7 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
 
       {/* Pagination */}
       <div className="flex justify-center items-center gap-2 mt-6">
-        <button className="px-3 py-2 hover:bg-gray-100 rounded">
+        <button className="px-3 py-2 hover:bg-gray-100 rounded transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
@@ -114,13 +126,13 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((page) => (
           <button
             key={page}
-            className={`px-3 py-2 rounded ${page === 1 ? 'bg-[#FDB54A] text-white' : 'hover:bg-gray-100'}`}
+            className={`px-3 py-2 rounded transition-colors ${page === 1 ? 'bg-[#FDB54A] text-white' : 'hover:bg-gray-100'}`}
           >
             {page}
           </button>
         ))}
 
-        <button className="px-3 py-2 hover:bg-gray-100 rounded">
+        <button className="px-3 py-2 hover:bg-gray-100 rounded transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
