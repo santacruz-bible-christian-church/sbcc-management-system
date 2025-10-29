@@ -4,6 +4,8 @@ import { LoginPage } from '../features/auth/pages/LoginPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { EventsPage } from '../features/events/pages/EventsPage';
 import { ComingSoon } from '../components/ui/ComingSoon';
+import AttendanceSheetPage from '../features/attendance/pages/AttendanceSheetPage';
+import AttendanceTracker from '../features/attendance/pages/AttendanceTracker';
 
 export const routes = [
   {
@@ -42,7 +44,15 @@ export const routes = [
     path: '/attendance',
     element: (
       <ProtectedWithLayout>
-        <ComingSoon title="Attendance Tracking" />
+        <AttendanceSheetPage />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: '/attendance/tracker',
+    element: (
+      <ProtectedWithLayout>
+        <AttendanceTracker />
       </ProtectedWithLayout>
     ),
   },
