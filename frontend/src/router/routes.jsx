@@ -4,6 +4,7 @@ import { MainLayout } from '../components/layout/MainLayout';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { EventsPage } from '../features/events/pages/EventsPage';
+import { MembershipListPage } from '../features/members/pages/MembershipListPage';
 
 // Placeholder component for routes that don't exist yet
 const ComingSoon = ({ title }) => (
@@ -51,7 +52,7 @@ export const routes = [
     path: '/members',
     element: (
       <ProtectedWithLayout>
-        <ComingSoon title="Members Management" />
+        <MembershipListPage />
       </ProtectedWithLayout>
     ),
   },

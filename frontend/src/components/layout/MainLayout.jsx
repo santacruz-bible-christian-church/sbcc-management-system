@@ -17,6 +17,7 @@ export const MainLayout = ({ children }) => {
       {/* Sidebar Navigation */}
       <SCBCSidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
 
+
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto bg-gradient-to-br from-sbcc-cream via-white to-sbcc-light-orange">
         {children}
