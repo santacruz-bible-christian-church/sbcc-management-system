@@ -4,9 +4,9 @@ import {
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
 } from 'react-icons/hi';
-import { useCalendar } from './useCalendar';
-import { STATUS_METADATA } from '../../utils/constants';
-import { withAlpha } from '../../utils/format';
+import { useCalendar } from '../hooks/useCalendar';
+import { STATUS_METADATA } from '../utils/constants';
+import { withAlpha } from '../utils/format';
 
 const viewOptions = [
   { value: 'month', label: 'Month' },
