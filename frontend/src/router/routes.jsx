@@ -1,26 +1,9 @@
 import { Navigate } from 'react-router-dom';
-import { ProtectedRoute } from './ProtectedRoute';
-import { MainLayout } from '../components/layout/MainLayout';
+import { ProtectedWithLayout } from './ProtectedWithLayout';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { EventsPage } from '../features/events/pages/EventsPage';
-
-// Placeholder component for routes that don't exist yet
-const ComingSoon = ({ title }) => (
-  <div className="flex-1 flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-4xl font-bold text-gray-900 mb-4">{title}</h1>
-      <p className="text-gray-600">This feature is coming soon!</p>
-    </div>
-  </div>
-);
-
-// Wrapper to apply MainLayout to protected routes
-const ProtectedWithLayout = ({ children }) => (
-  <ProtectedRoute>
-    <MainLayout>{children}</MainLayout>
-  </ProtectedRoute>
-);
+import { ComingSoon } from '../components/ui/ComingSoon';
 
 export const routes = [
   {
