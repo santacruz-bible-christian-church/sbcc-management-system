@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Spinner } from 'flowbite-react';
 import { HiOutlineCalendar, HiOutlineFilter, HiOutlinePlusCircle, HiOutlineRefresh } from 'react-icons/hi';
 import { useAuth } from '../../auth/hooks/useAuth';
@@ -15,8 +15,11 @@ import {
 import { MANAGER_ROLES } from '../utils/constants';
 import { prepareEventFormValues } from '../utils/format';
 import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
+import { ConfirmationModal } from '../../../components/ui/Modal';
 import '../../../styles/events.css';
 import '../../../styles/calendar.css';
+
+const MAX_EVENTS_PER_PAGE = 100;
 
 export const EventsPage = () => {
   const { user } = useAuth();
@@ -48,6 +51,7 @@ export const EventsPage = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchDraft, setSearchDraft] = useState(search);
   const [formState, setFormState] = useState({ open: false, mode: 'create', event: null });
+  const [deleteState, setDeleteState] = useState({ open: false, event: null });
   const [attendanceState, setAttendanceState] = useState({
     open: false,
     event: null,
@@ -56,6 +60,7 @@ export const EventsPage = () => {
     error: null,
   });
   const [submitting, setSubmitting] = useState(false);
+  const [mutating, setMutating] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
@@ -80,11 +85,17 @@ export const EventsPage = () => {
     setSearch(searchDraft.trim());
   };
 
-  const openCreateModal = () => setFormState({ open: true, mode: 'create', event: null });
+  const openCreateModal = useCallback(() => {
+    setFormState({ open: true, mode: 'create', event: null });
+  }, []);
 
-  const openEditModal = (event) => setFormState({ open: true, mode: 'edit', event });
+  const openEditModal = useCallback((event) => {
+    setFormState({ open: true, mode: 'edit', event });
+  }, []);
 
-  const closeFormModal = () => setFormState({ open: false, mode: 'create', event: null });
+  const closeFormModal = useCallback(() => {
+    setFormState({ open: false, mode: 'create', event: null });
+  }, []);
 
   const handleFormSubmit = async (payload) => {
     setSubmitting(true);
@@ -95,33 +106,72 @@ export const EventsPage = () => {
         await updateEvent(formState.event.id, payload);
       }
       closeFormModal();
+    } catch (err) {
+      // Error already handled by useEvents hook
+      console.error('Form submission error:', err);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const openAttendanceModal = async (event) => {
-    setAttendanceState({
-      open: true,
-      event,
-      loading: true,
-      data: null,
-      error: null,
-    });
+  const openDeleteModal = useCallback((event) => {
+    setDeleteState({ open: true, event });
+  }, []);
+
+  const closeDeleteModal = useCallback(() => {
+    setDeleteState({ open: false, event: null });
+  }, []);
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteState.event) return;
+
+    setMutating(true);
     try {
-      const report = await getAttendanceReport(event.id);
-      setAttendanceState((prev) => ({ ...prev, loading: false, data: report }));
+      await deleteEvent(deleteState.event.id);
+      closeDeleteModal();
     } catch (err) {
-      setAttendanceState((prev) => ({
-        ...prev,
-        loading: false,
-        error: err.response?.data?.detail || 'Unable to load attendance report.',
-      }));
+      console.error('Delete error:', err);
+    } finally {
+      setMutating(false);
     }
   };
 
-  const closeAttendanceModal = () =>
+  const openAttendanceModal = useCallback(
+    async (event) => {
+      let cancelled = false;
+
+      setAttendanceState({
+        open: true,
+        event,
+        loading: true,
+        data: null,
+        error: null,
+      });
+      try {
+        const report = await getAttendanceReport(event.id);
+        if (!cancelled) {
+          setAttendanceState((prev) => ({ ...prev, loading: false, data: report }));
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setAttendanceState((prev) => ({
+            ...prev,
+            loading: false,
+            error: err.response?.data?.detail || 'Unable to load attendance report.',
+          }));
+        }
+      }
+
+      return () => {
+        cancelled = true;
+      };
+    },
+    [getAttendanceReport]
+  );
+
+  const closeAttendanceModal = useCallback(() => {
     setAttendanceState({ open: false, event: null, loading: false, data: null, error: null });
+  }, []);
 
   const handleMarkAttended = async (registrationId) => {
     try {
@@ -138,9 +188,35 @@ export const EventsPage = () => {
     }
   };
 
+  const handleRegister = useCallback(
+    async (event) => {
+      setMutating(true);
+      try {
+        await registerForEvent(event.id);
+      } finally {
+        setMutating(false);
+      }
+    },
+    [registerForEvent]
+  );
+
+  const handleUnregister = useCallback(
+    async (event) => {
+      setMutating(true);
+      try {
+        await unregisterFromEvent(event.id);
+      } finally {
+        setMutating(false);
+      }
+    },
+    [unregisterFromEvent]
+  );
+
+  const isLoading = loading || mutating;
+
   return (
-    <div className="events-shell">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto p-4 md:p-8">
+      <div className="space-y-8">
         <header className="events-header-card">
           <div>
             <p className="text-sm font-semibold text-sbcc-gray uppercase tracking-wide">Page / Events</p>
@@ -154,21 +230,32 @@ export const EventsPage = () => {
               icon={HiOutlineFilter}
               onClick={() => setFiltersOpen((prev) => !prev)}
               className={filtersOpen ? 'bg-sbcc-light-orange/60' : undefined}
+              aria-expanded={filtersOpen}
+              aria-controls="events-filters"
             >
               {filtersOpen ? 'Hide Filters' : 'Filter'}
             </SecondaryButton>
-            <SecondaryButton icon={HiOutlineRefresh} onClick={refresh}>
+            <SecondaryButton
+              icon={HiOutlineRefresh}
+              onClick={refresh}
+              disabled={isLoading}
+            >
               Refresh
             </SecondaryButton>
             <SecondaryButton
               icon={HiOutlineCalendar}
               onClick={() => setShowCalendar((prev) => !prev)}
               className={showCalendar ? 'bg-sbcc-light-orange/60' : undefined}
+              aria-expanded={showCalendar}
             >
               {showCalendar ? 'List View' : 'Calendar'}
             </SecondaryButton>
             {canManageEvents && (
-              <PrimaryButton icon={HiOutlinePlusCircle} onClick={openCreateModal}>
+              <PrimaryButton
+                icon={HiOutlinePlusCircle}
+                onClick={openCreateModal}
+                disabled={isLoading}
+              >
                 New Event
               </PrimaryButton>
             )}
@@ -182,6 +269,7 @@ export const EventsPage = () => {
         />
 
         <EventsFilters
+          id="events-filters"
           open={filtersOpen}
           filters={filters}
           searchDraft={searchDraft}
@@ -194,13 +282,13 @@ export const EventsPage = () => {
         />
 
         {error && (
-          <div className="events-banner events-banner--error">
+          <div className="events-banner events-banner--error" role="alert">
             <span>{error}</span>
           </div>
         )}
 
         <section className="events-board">
-          {loading ? (
+          {loading && !events.length ? (
             <div className="flex flex-col items-center justify-center py-20">
               <Spinner size="xl" />
               <p className="mt-3 text-sbcc-gray">Loading events...</p>
@@ -210,23 +298,20 @@ export const EventsPage = () => {
           ) : (
             <EventsBoard
               events={events}
-              loading={loading}
+              loading={isLoading}
               canManage={canManageEvents}
               onCreate={openCreateModal}
               onEdit={openEditModal}
-              onDelete={(event) => {
-                if (window.confirm(`Delete "${event.title}"? This cannot be undone.`)) {
-                  deleteEvent(event.id);
-                }
-              }}
-              onRegister={(event) => registerForEvent(event.id)}
-              onUnregister={(event) => unregisterFromEvent(event.id)}
+              onDelete={openDeleteModal}
+              onRegister={handleRegister}
+              onUnregister={handleUnregister}
               onAttendance={openAttendanceModal}
             />
           )}
         </section>
       </div>
 
+      {/* Event Create/Edit Modal */}
       <EventModal
         open={formState.open}
         size="xl"
@@ -241,7 +326,20 @@ export const EventsPage = () => {
         />
       </EventModal>
 
-  <EventModal
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        open={deleteState.open}
+        title="Delete Event?"
+        message={`Are you sure you want to delete "${deleteState.event?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        confirmVariant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={closeDeleteModal}
+        loading={mutating}
+      />
+
+      {/* Attendance Modal */}
+      <EventModal
         open={attendanceState.open}
         size="5xl"
         title="Attendance Overview"

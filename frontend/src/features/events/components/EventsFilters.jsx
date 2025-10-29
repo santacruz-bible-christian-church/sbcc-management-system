@@ -4,7 +4,8 @@ import { STATUS_METADATA, EVENT_TYPE_OPTIONS } from '../utils/constants';
 const labelClass =
   'events-field-label text-xs font-semibold uppercase tracking-wide text-sbcc-dark/70';
 
-export const EventsFilters = ({
+export default function EventsFilters({
+  id = 'events-filters',
   open,
   filters,
   searchDraft,
@@ -14,11 +15,11 @@ export const EventsFilters = ({
   onFilterChange,
   onOrderingChange,
   onReset,
-}) => {
+}) {
   if (!open) return null;
 
   return (
-    <div className="space-y-4">
+    <div id={id} className="events-filters">
       <form className="grid gap-4" onSubmit={onSearchSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="md:col-span-2">
@@ -149,6 +150,4 @@ export const EventsFilters = ({
       </form>
     </div>
   );
-};
-
-export default EventsFilters;
+}
