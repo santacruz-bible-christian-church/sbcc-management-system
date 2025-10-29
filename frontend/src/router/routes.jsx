@@ -3,6 +3,7 @@ import { ProtectedWithLayout } from './ProtectedWithLayout';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { EventsPage } from '../features/events/pages/EventsPage';
+import { MembershipListPage } from '../features/members/pages/MembershipListPage';
 import { ComingSoon } from '../components/ui/ComingSoon';
 
 export const routes = [
@@ -34,7 +35,7 @@ export const routes = [
     path: '/members',
     element: (
       <ProtectedWithLayout>
-        <ComingSoon title="Members Management" />
+        <MembershipListPage />
       </ProtectedWithLayout>
     ),
   },
