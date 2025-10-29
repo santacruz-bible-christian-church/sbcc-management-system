@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth import get_user_model
+from django.db import models
 
 User = get_user_model()
 
@@ -8,39 +8,47 @@ class Member(models.Model):
     """Church member profiles"""
 
     STATUS_CHOICES = [
-        ('active', 'Active'),
-        ('inactive', 'Inactive'),
-        ('archived', 'Archived'),
-        ('pending', 'Pending'),
+        ("active", "Active"),
+        ("inactive", "Inactive"),
+        ("archived", "Archived"),
+        ("pending", "Pending"),
     ]
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='member_profile')
+
+    GENDER_CHOICES = [
+        ("male", "Male"),
+        ("female", "Female"),
+        ("other", "Other"),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="member_profile")
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
     date_of_birth = models.DateField()
     baptism_date = models.DateField(null=True, blank=True)
     ministry = models.ForeignKey(
-        'ministries.Ministry',
+        "ministries.Ministry",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='members'
+        related_name="members",
     )
     is_active = models.BooleanField(default=True)
     archived_at = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
     membership_date = models.DateField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
-        db_table = 'members'
-        ordering = ['last_name', 'first_name']
-    
+        db_table = "members"
+        ordering = ["last_name", "first_name"]
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
-    
+
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
