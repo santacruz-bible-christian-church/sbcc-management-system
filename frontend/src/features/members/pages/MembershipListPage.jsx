@@ -155,8 +155,8 @@ export const MembershipListPage = () => {
             aria-label="Filter by gender"
           >
             <option value="">Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
           </select>
 
           {/* Ministry Dropdown */}
@@ -167,10 +167,10 @@ export const MembershipListPage = () => {
             aria-label="Filter by ministry"
           >
             <option value="">Ministry</option>
-            <option value="Music Ministry">Music Ministry</option>
-            <option value="Media Ministry">Media Ministry</option>
-            <option value="Worship Ministry">Worship Ministry</option>
-            <option value="Youth Ministry">Youth Ministry</option>
+            <option value="1">Music Ministry</option>
+            <option value="2">Media Ministry</option>
+            <option value="3">Worship Ministry</option>
+            <option value="4">Youth Ministry</option>
           </select>
 
           {/* Clear Button */}
