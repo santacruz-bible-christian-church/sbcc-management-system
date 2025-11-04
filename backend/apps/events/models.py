@@ -1,79 +1,79 @@
-from django.db import models 
 from django.contrib.auth import get_user_model
+from django.db import models
 
 User = get_user_model()
 
+
 class Event(models.Model):
     """Church events and services"""
+
     EVENT_TYPES = [
-        ('service', 'Sunday Service'),
-        ('bible_study', 'Bible Study'),
-        ('prayer_meeting', 'Prayer Meeting'),
-        ('fellowship', 'Fellowship'),
-        ('outreach', 'Outreach'),
-        ('other', 'Other'),
+        ("service", "Sunday Service"),
+        ("bible_study", "Bible Study"),
+        ("prayer_meeting", "Prayer Meeting"),
+        ("fellowship", "Fellowship"),
+        ("outreach", "Outreach"),
+        ("other", "Other"),
     ]
-    
+
     STATUS_CHOICES = [
-        ('draft', 'Draft'),
-        ('published', 'Published'),
-        ('cancelled', 'Cancelled'),
-        ('completed', 'Completed'),
+        ("draft", "Draft"),
+        ("published", "Published"),
+        ("cancelled", "Cancelled"),
+        ("completed", "Completed"),
     ]
-    
+
     # Basic Information
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     event_type = models.CharField(max_length=20, choices=EVENT_TYPES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
-    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+
     # Date & Time
-    date = models.DateTimeField(help_text='Event start date and time')
-    end_date = models.DateTimeField(null=True, blank=True, help_text='Event end date and time')
+    date = models.DateTimeField(help_text="Event start date and time")
+    end_date = models.DateTimeField(null=True, blank=True, help_text="Event end date and time")
     location = models.CharField(max_length=200)
-    
+
     # Relationships
     organizer = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
-        related_name='organized_events',
-        help_text='User organizing this event'
+        User,
+        on_delete=models.CASCADE,
+        related_name="organized_events",
+        help_text="User organizing this event",
     )
     ministry = models.ForeignKey(
-        'ministries.Ministry',
+        "ministries.Ministry",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='events',
-        help_text='Ministry organizing this event'
+        related_name="events",
+        help_text="Ministry organizing this event",
     )
-    
+
     # Event Settings
     max_attendees = models.PositiveIntegerField(
-        null=True, 
-        blank=True,
-        help_text='Maximum number of attendees (leave blank for unlimited)'
+        null=True, blank=True, help_text="Maximum number of attendees (leave blank for unlimited)"
     )
-    is_recurring = models.BooleanField(default=False, help_text='Is this a recurring event?')
-    
+    is_recurring = models.BooleanField(default=False, help_text="Is this a recurring event?")
+
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
-        db_table = 'events'
-        ordering = ['-date']
-    
+        db_table = "events"
+        ordering = ["-date"]
+
     def __str__(self):
         return f"{self.title} - {self.date.strftime('%Y-%m-%d %H:%M')}"
-    
+
     @property
     def is_full(self):
         """Check if event has reached maximum capacity"""
         if not self.max_attendees:
             return False
         return self.registrations.count() >= self.max_attendees
-    
+
     @property
     def available_slots(self):
         """Return number of available slots"""
@@ -87,42 +87,36 @@ class EventRegistration(models.Model):
     Track event-specific registrations and attendance
     For members registering for special church events
     """
-    event = models.ForeignKey(
-        Event, 
-        on_delete=models.CASCADE, 
-        related_name='registrations'
-    )
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="registrations")
     member = models.ForeignKey(
-        'members.Member',
-        on_delete=models.CASCADE,
-        related_name='event_registrations'
+        "members.Member", on_delete=models.CASCADE, related_name="event_registrations"
     )
-    
+
     # Registration
     registered_at = models.DateTimeField(auto_now_add=True)
-    
-    # Attendance tracking
-    attended = models.BooleanField(default=False, help_text='Did the member attend?')
+
+    # Attendance tracking (DEPRECATED - use Attendance model instead)
+    attended = models.BooleanField(default=False, help_text="DEPRECATED: Use Attendance model")
     check_in_time = models.DateTimeField(
-        null=True, 
-        blank=True,
-        help_text='When member checked in'
+        null=True, blank=True, help_text="DEPRECATED: Use Attendance model"
     )
-    
+
     # Additional info
-    notes = models.TextField(blank=True, help_text='Notes about registration/attendance')
-    
+    notes = models.TextField(blank=True, help_text="Notes about registration/attendance")
+
     class Meta:
-        db_table = 'event_registrations'
-        unique_together = ('event', 'member')
-        ordering = ['-registered_at']
-    
+        db_table = "event_registrations"
+        unique_together = ("event", "member")
+        ordering = ["-registered_at"]
+
     def __str__(self):
         return f"{self.member.full_name} - {self.event.title}"
-    
+
     def mark_attended(self, check_in_time=None):
-        """Mark member as attended"""
+        """DEPRECATED: Use Attendance model instead"""
         from django.utils import timezone
+
         self.attended = True
         self.check_in_time = check_in_time or timezone.now()
         self.save()
