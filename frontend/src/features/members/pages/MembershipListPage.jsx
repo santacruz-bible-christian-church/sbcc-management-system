@@ -4,6 +4,7 @@ import { HiOutlinePlus } from 'react-icons/hi';
 import { FaSliders } from 'react-icons/fa6';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useMembers } from '../hooks/useMembers';
+import { useMinistries } from '../../../hooks/useMinistries';
 import { MemberTable } from '../components/MemberTable';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 
@@ -19,11 +20,15 @@ export const MembershipListPage = () => {
     error,
     filters,
     search,
+    pagination,
     setFilters,
     setSearch,
     resetFilters,
     deleteMember,
+    goToPage,
   } = useMembers();
+
+  const { ministries, loading: ministriesLoading } = useMinistries(); // Add this
 
   const [searchDraft, setSearchDraft] = useState(search);
   const [deleteState, setDeleteState] = useState({ open: false, member: null });
@@ -159,18 +164,20 @@ export const MembershipListPage = () => {
             <option value="female">Female</option>
           </select>
 
-          {/* Ministry Dropdown */}
+          {/* Ministry Dropdown - UPDATED */}
           <select
             value={filters.ministry}
             onChange={(e) => handleFilterChange('ministry', e.target.value)}
             className="flex-1 text-[#383838] border rounded-full bg-white text-sm m-2 px-3 focus:ring-[#FDB54A] focus:border-[#FDB54A]"
             aria-label="Filter by ministry"
+            disabled={ministriesLoading}
           >
             <option value="">Ministry</option>
-            <option value="1">Music Ministry</option>
-            <option value="2">Media Ministry</option>
-            <option value="3">Worship Ministry</option>
-            <option value="4">Youth Ministry</option>
+            {ministries.map((ministry) => (
+              <option key={ministry.id} value={ministry.id}>
+                {ministry.name}
+              </option>
+            ))}
           </select>
 
           {/* Clear Button */}
@@ -205,6 +212,8 @@ export const MembershipListPage = () => {
           onEdit={handleEditMember}
           onDelete={openDeleteModal}
           onViewDetails={handleViewDetails}
+          pagination={pagination}
+          onPageChange={goToPage}
         />
       )}
 

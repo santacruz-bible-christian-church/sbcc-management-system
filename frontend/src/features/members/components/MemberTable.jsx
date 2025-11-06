@@ -4,7 +4,7 @@ import {
   HiOutlineTrash
 } from 'react-icons/hi';
 
-export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetails }) => {
+export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetails, pagination, onPageChange }) => {
   const getMinistryColor = (ministry) => {
     const colors = {
       'Music Ministry': 'bg-[#D4EFFF] text-[#0092FF]',
@@ -23,6 +23,42 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
+  };
+
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    if (!pagination) return [1];
+
+    const { currentPage, totalPages } = pagination;
+    const pages = [];
+
+    if (totalPages <= 7) {
+      // Show all pages if 7 or fewer
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+
+      if (currentPage > 3) {
+        pages.push('...');
+      }
+
+      // Show pages around current page
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+        pages.push(i);
+      }
+
+      if (currentPage < totalPages - 2) {
+        pages.push('...');
+      }
+
+      // Always show last page
+      pages.push(totalPages);
+    }
+
+    return pages;
   };
 
   if (members.length === 0) {
@@ -116,28 +152,68 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
       ))}
 
       {/* Pagination */}
-      <div className="flex justify-center items-center gap-2 mt-6">
-        <button className="px-3 py-2 hover:bg-gray-100 rounded transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((page) => (
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          {/* Previous Button */}
           <button
-            key={page}
-            className={`px-3 py-2 rounded transition-colors ${page === 1 ? 'bg-[#FDB54A] text-white' : 'hover:bg-gray-100'}`}
+            onClick={() => onPageChange(pagination.currentPage - 1)}
+            disabled={!pagination.previous}
+            className={`px-3 py-2 rounded transition-colors ${
+              !pagination.previous
+                ? 'text-gray-300 cursor-not-allowed'
+                : 'hover:bg-gray-100'
+            }`}
+            aria-label="Previous page"
           >
-            {page}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
           </button>
-        ))}
 
-        <button className="px-3 py-2 hover:bg-gray-100 rounded transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
+          {/* Page Numbers */}
+          {getPageNumbers().map((page, index) => (
+            page === '...' ? (
+              <span key={`ellipsis-${index}`} className="px-3 py-2">...</span>
+            ) : (
+              <button
+                key={page}
+                onClick={() => onPageChange(page)}
+                className={`px-3 py-2 rounded transition-colors ${
+                  page === pagination.currentPage
+                    ? 'bg-[#FDB54A] text-white'
+                    : 'hover:bg-gray-100'
+                }`}
+                aria-label={`Go to page ${page}`}
+              >
+                {page}
+              </button>
+            )
+          ))}
+
+          {/* Next Button */}
+          <button
+            onClick={() => onPageChange(pagination.currentPage + 1)}
+            disabled={!pagination.next}
+            className={`px-3 py-2 rounded transition-colors ${
+              !pagination.next
+                ? 'text-gray-300 cursor-not-allowed'
+                : 'hover:bg-gray-100'
+            }`}
+            aria-label="Next page"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Results Info */}
+      {pagination && pagination.count > 0 && (
+        <div className="text-center text-sm text-[#A0A0A0] mt-2">
+          Showing {Math.min((pagination.currentPage - 1) * 10 + 1, pagination.count)} - {Math.min(pagination.currentPage * 10, pagination.count)} of {pagination.count} members
+        </div>
+      )}
     </div>
   );
 };
