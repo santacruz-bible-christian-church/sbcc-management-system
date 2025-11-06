@@ -4,7 +4,7 @@ import { HiOutlinePlus } from 'react-icons/hi';
 import { FaSliders } from 'react-icons/fa6';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useMembers } from '../hooks/useMembers';
-import { useMinistries } from '../../../hooks/useMinistries';
+import { useMinistries } from '../../ministries/hooks/useMinistries';
 import { MemberTable } from '../components/MemberTable';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 
