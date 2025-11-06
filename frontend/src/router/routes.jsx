@@ -4,6 +4,7 @@ import { LoginPage } from '../features/auth/pages/LoginPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { EventsPage } from '../features/events/pages/EventsPage';
 import { MembershipListPage } from '../features/members/pages/MembershipListPage';
+import { MinistriesPage } from '../features/ministries/pages/MinistriesPages';
 import { ComingSoon } from '../components/ui/ComingSoon';
 import AttendanceSheetPage from '../features/attendance/pages/AttendanceSheetPage';
 import AttendanceTracker from '../features/attendance/pages/AttendanceTracker';
@@ -61,7 +62,7 @@ export const routes = [
     path: '/ministries',
     element: (
       <ProtectedWithLayout>
-        <ComingSoon title="Ministries" />
+        <MinistriesPage />
       </ProtectedWithLayout>
     ),
   },
