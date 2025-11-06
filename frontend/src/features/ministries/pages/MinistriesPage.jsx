@@ -6,12 +6,14 @@ import { useMinistries } from '../hooks/useMinistries';
 import { MinistryCard } from '../components/MinistryCard';
 import { MinistryFormModal } from '../components/MinistryFormModal';
 import { ConfirmationModal } from '../../../components/ui/Modal';
+import { useNavigate } from 'react-router-dom';
 
 const MANAGER_ROLES = ['admin', 'pastor', 'staff'];
 
 export const MinistriesPage = () => {
   const { user } = useAuth();
   const canManage = MANAGER_ROLES.includes(user?.role);
+  const navigate = useNavigate();
 
   const {
     ministries,
@@ -75,9 +77,8 @@ export const MinistriesPage = () => {
   }, [deleteState.ministry, deleteMinistry, closeDeleteModal]);
 
   const handleViewDetails = useCallback((ministry) => {
-    // TODO: Navigate to ministry details page
-    console.log('View ministry:', ministry);
-  }, []);
+    navigate(`/ministries/${ministry.id}`);
+  }, [navigate]);
 
   // Generate page numbers to display
   const getPageNumbers = () => {
