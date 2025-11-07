@@ -1,14 +1,22 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Download, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Spinner } from 'flowbite-react';
-import AttendanceSheetInput from '../components/AttendanceSheetInput';
 import { useAttendanceSheets } from '../hooks/useAttendanceSheets';
-import { ConfirmationModal } from '../../../components/ui/Modal';
+import {
+  AttendanceSheetInput,
+  AttendanceSheetList
+} from '../components';
+import {
+  SearchBar,
+  Pagination,
+  EmptyState,
+  ConfirmationModal
+} from '../../../components/ui';
 
 const ACCENT = '#FDB54A';
 
-function formatDate(dateString) {
+const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', {
@@ -16,7 +24,7 @@ function formatDate(dateString) {
     day: '2-digit',
     year: 'numeric'
   });
-}
+};
 
 export default function AttendanceSheetPage() {
   const navigate = useNavigate();
@@ -44,13 +52,11 @@ export default function AttendanceSheetPage() {
 
   const handleCreate = useCallback(async (data) => {
     try {
-      // Validate data
       if (!data.eventId || !data.date) {
         console.error('Missing required fields:', data);
         return;
       }
 
-      // Convert date format from mm/dd/yyyy to yyyy-mm-dd
       const dateParts = data.date.split('/');
       if (dateParts.length !== 3) {
         console.error('Invalid date format:', data.date);
@@ -78,6 +84,10 @@ export default function AttendanceSheetPage() {
     }
   }, [downloadSheet]);
 
+  const handleEdit = useCallback((sheet) => {
+    navigate('/attendance/tracker', { state: { attendanceId: sheet.id } });
+  }, [navigate]);
+
   const openDeleteModal = useCallback((sheet) => {
     setDeleteState({ open: true, sheet });
   }, []);
@@ -96,31 +106,10 @@ export default function AttendanceSheetPage() {
     }
   }, [deleteState.sheet, deleteSheet, closeDeleteModal]);
 
-  // Generate page numbers to display
-  const getPageNumbers = () => {
-    const { currentPage, totalPages } = pagination;
-    const pages = [];
-
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      pages.push(1);
-      if (currentPage > 3) pages.push('...');
-      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-        pages.push(i);
-      }
-      if (currentPage < totalPages - 2) pages.push('...');
-      pages.push(totalPages);
-    }
-
-    return pages;
-  };
-
   return (
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
+        {/* Page Header */}
         <div className="mb-6">
           <div>
             <h2 className="text-gray-600 text-sm">Page/Attendance</h2>
@@ -138,33 +127,21 @@ export default function AttendanceSheetPage() {
               <Plus className="w-4 h-4 text-white" />
             </button>
 
-            <form onSubmit={handleSearchSubmit} className="flex items-center bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-              <div className="pl-3 pr-2">
-                <Search className="w-4 h-4 text-gray-400" />
-              </div>
-              <input
-                value={searchDraft}
-                onChange={(e) => setSearchDraft(e.target.value)}
-                placeholder="Search by event title..."
-                className="w-80 md:w-96 py-2 px-2 outline-none text-sm text-gray-700"
-              />
-              <button
-                type="submit"
-                className="bg-[#FDB54A] text-white px-4 py-2 text-sm font-medium"
-                style={{ backgroundColor: ACCENT }}
-              >
-                Search
-              </button>
-            </form>
+            <SearchBar
+              value={searchDraft}
+              onChange={(e) => setSearchDraft(e.target.value)}
+              onSubmit={handleSearchSubmit}
+              placeholder="Search by event title..."
+            />
           </div>
-
-          {/* Create modal */}
-          <AttendanceSheetInput
-            open={showModal}
-            onClose={() => setShowModal(false)}
-            onCreate={handleCreate}
-          />
         </div>
+
+        {/* Create Modal */}
+        <AttendanceSheetInput
+          open={showModal}
+          onClose={() => setShowModal(false)}
+          onCreate={handleCreate}
+        />
 
         {/* Error Message */}
         {error && (
@@ -180,112 +157,29 @@ export default function AttendanceSheetPage() {
             <p className="mt-3 text-gray-500">Loading attendance sheets...</p>
           </div>
         ) : sheets.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-gray-500 text-lg">No attendance sheets found</p>
-            <button
-              onClick={() => setShowModal(true)}
-              className="mt-4 bg-[#FDB54A] hover:opacity-90 text-white px-6 py-2 rounded-lg transition-colors"
-            >
-              Create Your First Sheet
-            </button>
-          </div>
+          <EmptyState
+            message="No attendance sheets found"
+            actionLabel="Create Your First Sheet"
+            onAction={() => setShowModal(true)}
+          />
         ) : (
-          <div className="grid gap-4">
-            {/* Header row */}
-            <div className="grid grid-cols-12 gap-4 text-sm text-gray-500 px-2">
-              <div className="col-span-4">Event</div>
-              <div className="col-span-2">Date</div>
-              <div className="col-span-2">Attendance</div>
-              <div className="col-span-1">Rate</div>
-              <div className="col-span-3 text-right">Actions</div>
-            </div>
-
-            {/* List items */}
-            {sheets.map((sheet) => (
-              <div
-                key={sheet.id}
-                className="bg-white rounded-xl shadow-md py-4 px-6 grid grid-cols-12 items-center gap-4"
-                style={{ boxShadow: '0 8px 20px rgba(0,0,0,0.06)' }}
-              >
-                <div className="col-span-4 text-gray-700 font-medium">
-                  {sheet.event_title || 'Untitled Event'}
-                </div>
-                <div className="col-span-2 text-gray-600">
-                  {formatDate(sheet.date)}
-                </div>
-                <div className="col-span-2 text-gray-600">
-                  {sheet.total_attended || 0} / {sheet.total_expected || 0}
-                </div>
-                <div className="col-span-1 text-gray-600">
-                  {sheet.attendance_rate ? `${sheet.attendance_rate.toFixed(0)}%` : 'N/A'}
-                </div>
-                <div className="col-span-3 text-right flex items-center justify-end gap-4">
-                  <button
-                    title="Download CSV"
-                    onClick={() => handleDownload(sheet)}
-                    className="p-2 rounded-lg hover:bg-gray-50"
-                  >
-                    <Download className="w-4 h-4 text-[#FDB54A]" />
-                  </button>
-                  <button
-                    title="Open tracker"
-                    onClick={() => navigate('/attendance/tracker', { state: { attendanceId: sheet.id } })}
-                    className="p-2 rounded-lg hover:bg-gray-50"
-                  >
-                    <Edit2 className="w-4 h-4 text-[#FDB54A]" />
-                  </button>
-                  <button
-                    title="Delete"
-                    onClick={() => openDeleteModal(sheet)}
-                    className="p-2 rounded-lg hover:bg-gray-50"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-400" />
-                  </button>
-                </div>
-              </div>
-            ))}
+          <>
+            <AttendanceSheetList
+              sheets={sheets}
+              onDownload={handleDownload}
+              onEdit={handleEdit}
+              onDelete={openDeleteModal}
+              formatDate={formatDate}
+            />
 
             {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center py-6">
-                <nav className="inline-flex items-center gap-2 bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-200">
-                  <button
-                    className="p-2 rounded hover:bg-gray-100 disabled:opacity-50"
-                    disabled={!pagination.previous}
-                    onClick={() => goToPage(pagination.currentPage - 1)}
-                  >
-                    <ChevronLeft className="w-4 h-4 text-gray-600" />
-                  </button>
-
-                  {getPageNumbers().map((page, idx) => (
-                    page === '...' ? (
-                      <span key={`ellipsis-${idx}`} className="px-2">...</span>
-                    ) : (
-                      <button
-                        key={page}
-                        onClick={() => goToPage(page)}
-                        className={`w-8 h-8 rounded-md text-sm flex items-center justify-center ${
-                          page === pagination.currentPage
-                            ? 'bg-[#FDB54A] text-white'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                        style={{ backgroundColor: page === pagination.currentPage ? ACCENT : undefined }}
-                      >
-                        {page}
-                      </button>
-                    )
-                  ))}
-
-                  <button
-                    className="p-2 rounded hover:bg-gray-100 disabled:opacity-50"
-                    disabled={!pagination.next}
-                    onClick={() => goToPage(pagination.currentPage + 1)}
-                  >
-                    <ChevronRight className="w-4 h-4 text-gray-600" />
-                  </button>
-                </nav>
-              </div>
-            )}
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={goToPage}
+              hasNext={!!pagination.next}
+              hasPrevious={!!pagination.previous}
+            />
 
             {/* Results Info */}
             {pagination.count > 0 && (
@@ -293,7 +187,7 @@ export default function AttendanceSheetPage() {
                 Showing {Math.min((pagination.currentPage - 1) * 10 + 1, pagination.count)} - {Math.min(pagination.currentPage * 10, pagination.count)} of {pagination.count} sheets
               </div>
             )}
-          </div>
+          </>
         )}
 
         {/* Delete Confirmation Modal */}
