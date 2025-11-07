@@ -5,6 +5,8 @@ from .models import Attendance, AttendanceSheet
 
 class AttendanceSerializer(serializers.ModelSerializer):
     member_name = serializers.CharField(source="member.full_name", read_only=True)
+    member_gender = serializers.CharField(source="member.gender", read_only=True)
+    member_ministry = serializers.CharField(source="member.ministry.name", read_only=True)
     event_title = serializers.CharField(source="sheet.event.title", read_only=True)
     sheet_date = serializers.DateField(source="sheet.date", read_only=True)
 
@@ -17,6 +19,8 @@ class AttendanceSerializer(serializers.ModelSerializer):
             "event_title",
             "member",
             "member_name",
+            "member_gender",
+            "member_ministry",
             "attended",
             "check_in_time",
             "notes",
