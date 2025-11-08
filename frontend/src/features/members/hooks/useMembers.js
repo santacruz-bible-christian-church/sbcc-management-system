@@ -59,11 +59,11 @@ export const useMembers = () => {
 
         setMembers(filteredResults);
         setPagination({
-          count: filteredResults.length, // Use filtered count
+          count: data.count,
           next: data.next,
           previous: data.previous,
           currentPage: page,
-          totalPages: Math.ceil(filteredResults.length / 10),
+          totalPages: Math.ceil(data.count / 10),
         });
       } else {
         // Fallback for non-paginated response
