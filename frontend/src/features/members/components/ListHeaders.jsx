@@ -1,31 +1,26 @@
 import SCBCSidebar from '../../../components/layout/Sidebar';
 import { useState } from 'react';
+import { useSideBar } from '../../../context/SideBarContext';
 
 
 export const ListHeaders = () => {
-    const [collapsed, setCollapsed] = useState(false);
-
-    const handleSidebarToggle = () => {
-        setCollapsed(!collapsed);
-    };
-
-
+    const { collapsed, toggleSidebar } = useSideBar()
     return (
 
         <div class="flex gap-3 font-[15px] font-bold text-[#A0A0A0]">
-            <h1 class="mr-[18.7%]">
+            <h1 className={`${collapsed ? 'mr-[18.7%]' : 'mr-[12.6%]'} transition-all dureation-500 ease-in-out`}>
                 Name
             </h1>
-            <h1 class="mr-[9.2%]">
+            <h1 className={`${collapsed ? 'mr-[9%]' : 'mr-[7%]'} transition-all duration-500 ease-in-out`}>
                 Gender
             </h1>
-            <h1 class="mr-[8.8%]">
+            <h1 className={`${collapsed ? 'mr-[8.8%]' : 'mr-[8%]'} transition-all duration-500 ease-in-out`}>
                 Contact No.
             </h1>
-            <h1 class="mr-[8.9%]">
+            <h1 className={`${collapsed ? 'mr-[10.1%]' : 'mr-[10%]'} transition-all duration-500 ease-in-out`}>
                 Birthday
             </h1>
-            <h1 class="mr-[9.2%]">
+            <h1 className={`${collapsed ? 'mr-[8%]' : 'mr-[7%]'} transition-all duration-500 ease-in-out`}>
                 Ministry
             </h1>
             <h1>

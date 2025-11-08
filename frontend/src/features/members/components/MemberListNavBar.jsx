@@ -1,9 +1,11 @@
 import { PrimaryButton, SecondaryButton, IconButton } from '../../../components/ui/Button';
 import { FaPlus } from 'react-icons/fa';
 import { FaSliders } from "react-icons/fa6";
+import { useSideBar } from "../../../context/SideBarContext"
 
 
 export const MemberListNavBar = () => {
+    const { collapsed, toggleSidebar } = useSideBar();
 
     return (
         <div className='flex justify-around gap-3'>
@@ -25,7 +27,7 @@ export const MemberListNavBar = () => {
                 </div>
             </form>
 
-            <div className=" w-2/3 flex shadow-[2px_2px_10px_rgba(0,0,0,0.15)] rounded-lg">
+            <div className=' w-2/3 flex shadow-[2px_2px_10px_rgba(0,0,0,0.15)] rounded-lg'>
                 <PrimaryButton className="text-[#FDB54A]">
                     <FaSliders />
                 </PrimaryButton>

@@ -1,24 +1,27 @@
+import { useSideBar } from '../../../context/SideBarContext'
 
 export const ListCards = () => {
+    const { collapsed, toggleSideBar } = useSideBar()
+
     return (
         <div>
-            <div class="flex gap-3 pr-3 pl-3 pt-6 pb-6 rounded-[20px] shadow-[2px_2px_10px_rgba(0,0,0,0.2)]">
-                <p className="font-[15px] font-bold text-[#383838] mr-[5.3%] pl-7">
+            <div className='flex gap-3 pr-3 pl-3 pt-6 pb-6 rounded-[20px] shadow-[2px_2px_10px_rgba(0,0,0,0.2)]'>
+                <p className={`font-bold text-[#383838] text-left ${collapsed ? 'w-[210px] line-clamp-2 overflow-hidden text-ellipsis pl-7 mr-[0%]' : 'line-clamp-2 overflow-hidden text-ellipsis w-[160px] pl-3 mr-[1.5%]'} transition-all duration-500 ease-in-out`}>
                     Ross Cedric Nazareno
                 </p>
-                <p className="font-[15px] font-regular text-[#383838] mr-[9.9%]">
-                    Male
+                <p className={`flex justify-center ${collapsed ? 'w-[110px] pt-0 mr-[1.5%]' : 'w-[100px] pt-3 mr-[1%]'}  transition-all duration-500 ease-in-out font-regular text-[#383838]`}>
+                    female
                 </p>
-                <p className="font-[15px] font-regular text-[#383838] mr-[8.5%]">
-                    09686326314
+                <p className={`truncate text-center ${collapsed ? 'w-[210px] pt-0 mr-[1%]' : 'w-[250px] pt-3 mr-[2%]'}  transition-all duration-500 ease-in-out font-regular text-[#383838]`}>
+                    0968 632 6314
                 </p>
-                <p className="font-[15px] font-regular text-[#383838] mr-[5%]">
+                <p className={`flex justify-center ${collapsed ? 'w-[130px] pt-0 mr-[2.3%]' : 'pt-3 mr-[4%]'}  transition-all duration-500 ease-in-out font-regular text-[#383838]`}>
                     05/12/2004
                 </p>
-                <div className="bg-blue-100 text-[#0092FF] font-[15px] font-regular rounded-full pl-4 pr-4 mr-[5%]">
+                <div className="border bg-blue-100 text-[#0092FF] text-[15px] font-regular rounded-full pl-8 pr-8 pt-1 pb-1 mr-[2.5%] text-center">
                     Music Ministry
                 </div>
-                <div class="flex gap-5">
+                <div className={`${collapsed ? 'pt-0' : 'pt-3.5 pr-5'}  transition-all duration-500 ease-in-out flex gap-5`}>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5 text-[#FFB039]">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
                     </svg>
@@ -36,6 +39,6 @@ export const ListCards = () => {
                 <p>05/12/2004</p>
                 <p>Music Ministry</p> */}
             </div>
-        </div>
+        </div >
     )
 }
