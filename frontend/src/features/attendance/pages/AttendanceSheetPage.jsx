@@ -112,7 +112,6 @@ export default function AttendanceSheetPage() {
         {/* Page Header */}
         <div className="mb-6">
           <div>
-            <h2 className="text-gray-600 text-sm">Page/Attendance</h2>
             <h1 className="text-3xl font-semibold text-gray-800">Attendance Sheets</h1>
           </div>
 
