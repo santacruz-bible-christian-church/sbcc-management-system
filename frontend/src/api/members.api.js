@@ -30,6 +30,52 @@ export const membersApi = {
     const response = await apiClient.delete(`/members/${id}/`);
     return response.data;
   },
+
+  // Archive member
+  archiveMember: async (id) => {
+    const response = await apiClient.post(`/members/${id}/archive/`);
+    return response.data;
+  },
+
+  // Restore archived member
+  restoreMember: async (id) => {
+    const response = await apiClient.post(`/members/${id}/restore/`);
+    return response.data;
+  },
+
+  // Bulk archive members
+  bulkArchive: async (ids) => {
+    const response = await apiClient.post('/members/bulk_archive/', { ids });
+    return response.data;
+  },
+
+  // Import CSV
+  importCSV: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post('/members/import_csv/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Get upcoming birthdays
+  upcomingBirthdays: async (days = 7) => {
+    const response = await apiClient.get('/members/upcoming_birthdays/', {
+      params: { days },
+    });
+    return response.data;
+  },
+
+  // Get upcoming anniversaries
+  upcomingAnniversaries: async (days = 7) => {
+    const response = await apiClient.get('/members/upcoming_anniversaries/', {
+      params: { days },
+    });
+    return response.data;
+  },
 };
 
 export default membersApi;

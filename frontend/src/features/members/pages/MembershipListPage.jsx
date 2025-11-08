@@ -1,14 +1,18 @@
 import { useCallback, useState } from 'react';
 import { Spinner } from 'flowbite-react';
-import { HiOutlinePlus } from 'react-icons/hi';
+import { HiOutlinePlus, HiOutlineUpload } from 'react-icons/hi';
 import { FaSliders } from 'react-icons/fa6';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useMembers } from '../hooks/useMembers';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
 import { MemberTable } from '../components/MemberTable';
 import { ConfirmationModal } from '../../../components/ui/Modal';
+import { CSVImportModal } from '../components/CSVImportModal';
+import { MemberFormModal } from '../components/MemberFormModal';
+import { MemberDetailsModal } from '../components/MemberDetailsModal';
+import { membersApi } from '../../../api/members.api';
 
-const MANAGER_ROLES = ['admin', 'pastor', 'staff'];
+const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
 
 export const MembershipListPage = () => {
   const { user } = useAuth();
@@ -25,13 +29,22 @@ export const MembershipListPage = () => {
     setSearch,
     resetFilters,
     deleteMember,
+    createMember,
+    updateMember,
     goToPage,
+    refresh: refreshMembers,
   } = useMembers();
 
-  const { ministries, loading: ministriesLoading } = useMinistries(); // Add this
+  const { ministries, loading: ministriesLoading } = useMinistries();
 
   const [searchDraft, setSearchDraft] = useState(search);
   const [deleteState, setDeleteState] = useState({ open: false, member: null });
+  const [archiveState, setArchiveState] = useState({ open: false, member: null });
+  const [csvImportOpen, setCsvImportOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [formModalState, setFormModalState] = useState({ open: false, member: null });
+  const [detailsModalState, setDetailsModalState] = useState({ open: false, member: null });
+  const [formLoading, setFormLoading] = useState(false);
 
   const handleSearchSubmit = useCallback((e) => {
     e.preventDefault();
@@ -47,6 +60,7 @@ export const MembershipListPage = () => {
     setSearchDraft('');
   }, [resetFilters]);
 
+  // Delete handlers
   const openDeleteModal = useCallback((member) => {
     setDeleteState({ open: true, member });
   }, []);
@@ -58,36 +72,102 @@ export const MembershipListPage = () => {
   const handleDeleteConfirm = useCallback(async () => {
     if (!deleteState.member) return;
 
-    let cancelled = false;
-
     try {
       await deleteMember(deleteState.member.id);
-      if (!cancelled) {
-        closeDeleteModal();
-      }
+      closeDeleteModal();
     } catch (err) {
-      if (!cancelled) {
-        console.error('Delete member error:', err);
-      }
+      console.error('Delete member error:', err);
     }
-
-    return () => {
-      cancelled = true;
-    };
   }, [deleteState.member, deleteMember, closeDeleteModal]);
 
+  // Archive handlers
+  const openArchiveModal = useCallback((member) => {
+    setArchiveState({ open: true, member });
+  }, []);
+
+  const closeArchiveModal = useCallback(() => {
+    setArchiveState({ open: false, member: null });
+  }, []);
+
+  const handleArchiveConfirm = useCallback(async () => {
+    if (!archiveState.member) return;
+
+    try {
+      await membersApi.archiveMember(archiveState.member.id);
+      await refreshMembers(pagination.currentPage);
+      closeArchiveModal();
+    } catch (err) {
+      console.error('Archive member error:', err);
+      alert(err.response?.data?.detail || 'Failed to archive member');
+    }
+  }, [archiveState.member, refreshMembers, pagination.currentPage, closeArchiveModal]);
+
+  // Restore handler
+  const handleRestoreMember = useCallback(async (member) => {
+    try {
+      await membersApi.restoreMember(member.id);
+      await refreshMembers(pagination.currentPage);
+    } catch (err) {
+      console.error('Restore member error:', err);
+      alert(err.response?.data?.detail || 'Failed to restore member');
+    }
+  }, [refreshMembers, pagination.currentPage]);
+
+  // CSV Import
+  const handleCSVImport = useCallback(async (file) => {
+    setImporting(true);
+    try {
+      await membersApi.importCSV(file);
+      setCsvImportOpen(false);
+      await refreshMembers(pagination.currentPage);
+      alert('Members imported successfully!');
+    } catch (err) {
+      console.error('CSV import error:', err);
+      alert(err.response?.data?.detail || 'Failed to import CSV');
+    } finally {
+      setImporting(false);
+    }
+  }, [refreshMembers, pagination.currentPage]);
+
+  // Form Modal handlers
   const handleCreateMember = useCallback(() => {
-    // TODO: Open create modal
+    setFormModalState({ open: true, member: null });
   }, []);
 
   const handleEditMember = useCallback((member) => {
-    // TODO: Open edit modal with member data
-    console.log('Edit member:', member);
+    setFormModalState({ open: true, member });
   }, []);
 
+  const closeFormModal = useCallback(() => {
+    setFormModalState({ open: false, member: null });
+  }, []);
+
+  const handleFormSubmit = useCallback(async (formData) => {
+    setFormLoading(true);
+    try {
+      if (formModalState.member) {
+        // Update existing member
+        await updateMember(formModalState.member.id, formData);
+      } else {
+        // Create new member
+        await createMember(formData);
+      }
+      closeFormModal();
+    } catch (err) {
+      console.error('Form submit error:', err);
+      alert(err.response?.data?.detail || 'Failed to save member');
+    } finally {
+      setFormLoading(false);
+    }
+  }, [formModalState.member, createMember, updateMember, closeFormModal]);
+
+  // Details Modal handlers
   const handleViewDetails = useCallback((member) => {
-    // TODO: Open details modal with member data
-    console.log('View member:', member);
+    setDetailsModalState({ open: true, member });
+  }, []);
+
+  const closeDetailsModal = useCallback(() => {
+    setDetailsModalState({ open: false, member: null });
   }, []);
 
   return (
@@ -104,22 +184,34 @@ export const MembershipListPage = () => {
 
       {/* Search & Filter Bar */}
       <div className="flex gap-3 mb-6">
-        {/* Add Button */}
+        {/* Add & Import Buttons */}
         {canManage && (
-          <button
-            className="border rounded-lg p-3 bg-[#FDB54A] text-white hover:bg-[#e5a43b] transition-colors flex items-center justify-center"
-            onClick={handleCreateMember}
-            aria-label="Add new member"
-          >
-            <HiOutlinePlus className="w-5 h-5" />
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="rounded-lg p-3 bg-[#FDB54A] text-white hover:bg-[#e5a43b] transition-colors flex items-center justify-center"
+              onClick={handleCreateMember}
+              title="Add new member"
+              aria-label="Add new member"
+            >
+              <HiOutlinePlus className="w-5 h-5" />
+            </button>
+
+            <button
+              className="rounded-lg p-3 bg-[#4CAF50] text-white hover:bg-[#45a049] transition-colors flex items-center justify-center"
+              onClick={() => setCsvImportOpen(true)}
+              title="Import CSV"
+              aria-label="Import members from CSV"
+            >
+              <HiOutlineUpload className="w-5 h-5" />
+            </button>
+          </div>
         )}
 
         {/* Search Form */}
-        <form onSubmit={handleSearchSubmit} className="flex-1 shadow-[2px_2px_10px_rgba(0,0,0,0.15)] rounded-lg">
-          <div className="relative rounded-lg h-full">
-            <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-              <svg className="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20" aria-hidden="true">
+        <form onSubmit={handleSearchSubmit} className="flex-1">
+          <div className="relative flex items-center h-full bg-white rounded-lg shadow-[2px_2px_10px_rgba(0,0,0,0.15)]">
+            <div className="absolute left-3 pointer-events-none">
+              <svg className="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
               </svg>
             </div>
@@ -127,13 +219,13 @@ export const MembershipListPage = () => {
               type="search"
               value={searchDraft}
               onChange={(e) => setSearchDraft(e.target.value)}
-              className="block w-full h-full ps-10 text-sm text-[#383838] placeholder:text-[#A0A0A0] rounded-lg bg-gray-50 focus:ring-[#FDB54A] border-none focus:border-[#FDB54A]"
+              className="flex-1 pl-10 pr-3 py-3 text-sm text-[#383838] placeholder:text-[#A0A0A0] bg-transparent border-none focus:ring-0 focus:outline-none rounded-lg"
               placeholder="Search members..."
               aria-label="Search members"
             />
             <button
               type="submit"
-              className="text-white absolute end-0 bottom-0 h-full bg-[#FDB54A] hover:bg-[#e5a43b] focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-l-none rounded-r-lg border-none text-sm px-8"
+              className="px-8 py-3 bg-[#FDB54A] hover:bg-[#e5a43b] text-white text-sm font-medium rounded-r-lg transition-colors"
               aria-label="Submit search"
             >
               Search
@@ -142,21 +234,33 @@ export const MembershipListPage = () => {
         </form>
 
         {/* Filter Section */}
-        <div className="flex-1 flex shadow-[2px_2px_10px_rgba(0,0,0,0.15)] rounded-lg">
+        <div className="flex items-center gap-0 bg-white rounded-lg shadow-[2px_2px_10px_rgba(0,0,0,0.15)] overflow-hidden">
           {/* Filter Icon */}
-          <button
-            className="p-3 text-[#FDB54A] hover:bg-gray-50 flex items-center justify-center transition-colors"
-            type="button"
-            aria-label="Filter options"
+          <div className="px-3 flex items-center justify-center">
+            <FaSliders className="w-5 h-5 text-[#FDB54A]" />
+          </div>
+
+          {/* Status Dropdown - ADD THIS */}
+          <select
+            value={filters.status}
+            onChange={(e) => handleFilterChange('status', e.target.value)}
+            className="px-4 py-3 text-sm text-[#383838] bg-transparent border-none focus:ring-0 focus:outline-none cursor-pointer min-w-[120px]"
+            aria-label="Filter by status"
           >
-            <FaSliders className="w-5 h-5" />
-          </button>
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="archived">Archived</option>
+          </select>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-gray-200" />
 
           {/* Gender Dropdown */}
           <select
             value={filters.gender}
             onChange={(e) => handleFilterChange('gender', e.target.value)}
-            className="flex-1 text-[#383838] border rounded-full bg-white text-sm m-2 px-3 focus:ring-[#FDB54A] focus:border-[#FDB54A]"
+            className="px-4 py-3 text-sm text-[#383838] bg-transparent border-none focus:ring-0 focus:outline-none cursor-pointer min-w-[120px]"
             aria-label="Filter by gender"
           >
             <option value="">Gender</option>
@@ -164,11 +268,14 @@ export const MembershipListPage = () => {
             <option value="female">Female</option>
           </select>
 
-          {/* Ministry Dropdown - UPDATED */}
+          {/* Divider */}
+          <div className="w-px h-6 bg-gray-200" />
+
+          {/* Ministry Dropdown */}
           <select
             value={filters.ministry}
             onChange={(e) => handleFilterChange('ministry', e.target.value)}
-            className="flex-1 text-[#383838] border rounded-full bg-white text-sm m-2 px-3 focus:ring-[#FDB54A] focus:border-[#FDB54A]"
+            className="px-4 py-3 text-sm text-[#383838] bg-transparent border-none focus:ring-0 focus:outline-none cursor-pointer min-w-[140px]"
             aria-label="Filter by ministry"
             disabled={ministriesLoading}
           >
@@ -183,7 +290,7 @@ export const MembershipListPage = () => {
           {/* Clear Button */}
           <button
             onClick={handleClearFilters}
-            className="text-white bg-[#FDB54A] hover:bg-[#e5a43b] focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-l-none rounded-r-lg border-none text-sm px-8 m-0 transition-colors"
+            className="px-8 py-3 bg-[#FDB54A] hover:bg-[#e5a43b] text-white text-sm font-medium transition-colors"
             type="button"
             aria-label="Clear all filters"
           >
@@ -211,6 +318,8 @@ export const MembershipListPage = () => {
           canManage={canManage}
           onEdit={handleEditMember}
           onDelete={openDeleteModal}
+          onArchive={openArchiveModal}
+          onRestore={handleRestoreMember}
           onViewDetails={handleViewDetails}
           pagination={pagination}
           onPageChange={goToPage}
@@ -221,12 +330,49 @@ export const MembershipListPage = () => {
       <ConfirmationModal
         open={deleteState.open}
         title="Delete Member?"
-        message={`Are you sure you want to delete ${deleteState.member?.name}? This action cannot be undone.`}
+        message={`Are you sure you want to permanently delete ${deleteState.member?.full_name || deleteState.member?.first_name}? This action cannot be undone.`}
         confirmText="Delete"
         confirmVariant="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={closeDeleteModal}
         loading={loading}
+      />
+
+      {/* Archive Confirmation Modal */}
+      <ConfirmationModal
+        open={archiveState.open}
+        title="Archive Member?"
+        message={`Are you sure you want to archive ${archiveState.member?.full_name || archiveState.member?.first_name}? You can restore them later.`}
+        confirmText="Archive"
+        confirmVariant="warning"
+        onConfirm={handleArchiveConfirm}
+        onCancel={closeArchiveModal}
+        loading={loading}
+      />
+
+      {/* CSV Import Modal */}
+      <CSVImportModal
+        open={csvImportOpen}
+        onClose={() => setCsvImportOpen(false)}
+        onImport={handleCSVImport}
+        loading={importing}
+      />
+
+      {/* Member Form Modal (Add/Edit) */}
+      <MemberFormModal
+        open={formModalState.open}
+        onClose={closeFormModal}
+        onSubmit={handleFormSubmit}
+        member={formModalState.member}
+        loading={formLoading}
+        ministries={ministries}
+      />
+
+      {/* Member Details Modal */}
+      <MemberDetailsModal
+        open={detailsModalState.open}
+        onClose={closeDetailsModal}
+        member={detailsModalState.member}
       />
     </div>
   );
