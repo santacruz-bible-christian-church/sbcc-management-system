@@ -32,7 +32,7 @@ export const LoginForm = ({ onSuccess }) => {
       onSuccess();
     } catch (err) {
       console.error('Login error:', err);
-      
+
       if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK') {
         setError('Cannot connect to server. Make sure the backend is running on port 8000.');
       } else if (err.response?.status === 401) {
@@ -66,7 +66,7 @@ export const LoginForm = ({ onSuccess }) => {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           disabled={loading}
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#F6A62B] focus:ring-1 focus:ring-[#F6A62B] outline-none transition-colors disabled:bg-gray-100"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#FDB54A] focus:ring-1 focus:ring-[#FDB54A] outline-none transition-colors disabled:bg-gray-100"
           placeholder="Enter your username"
         />
       </div>
@@ -82,7 +82,7 @@ export const LoginForm = ({ onSuccess }) => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           disabled={loading}
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#F6A62B] focus:ring-1 focus:ring-[#F6A62B] outline-none transition-colors disabled:bg-gray-100"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#FDB54A] focus:ring-1 focus:ring-[#FDB54A] outline-none transition-colors disabled:bg-gray-100"
           placeholder="••••••••••"
         />
       </div>
@@ -90,7 +90,7 @@ export const LoginForm = ({ onSuccess }) => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-[#F6A62B] text-white py-3 px-4 rounded-lg hover:bg-[#E8973D] transition-colors font-medium text-base shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+        className="w-full bg-[#FDB54A] text-white py-3 px-4 rounded-lg hover:bg-[#e5a43b] transition-colors font-medium text-base shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         {loading ? 'Logging in...' : 'Log In'}
       </button>
