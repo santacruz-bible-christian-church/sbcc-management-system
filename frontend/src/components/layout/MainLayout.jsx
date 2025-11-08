@@ -14,6 +14,8 @@ export const MainLayout = ({ children }) => {
   };
 
   return (
+
+    // Added SideBarProvider to pass around the value of sideBarCollapsed from side bar to all other children
     <SideBarProvider value={{ collapsed: sidebarCollapsed, toggleSidebar }}>
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar Navigation */}
