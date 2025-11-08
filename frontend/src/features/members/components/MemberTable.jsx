@@ -1,10 +1,12 @@
 import {
   HiOutlineFolder,
   HiOutlinePencil,
-  HiOutlineTrash
+  HiOutlineTrash,
+  HiOutlineArchive,
 } from 'react-icons/hi';
+import { HiArrowPath } from 'react-icons/hi2'; // Add this - HiOutlineRefresh doesn't exist
 
-export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetails, pagination, onPageChange }) => {
+export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetails, onRestore, onArchive, pagination, onPageChange }) => {
   const getMinistryColor = (ministry) => {
     const colors = {
       'Music Ministry': 'bg-[#D4EFFF] text-[#0092FF]',
@@ -137,6 +139,24 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
                 >
                   <HiOutlinePencil className="w-5 h-5 text-[#FFB039] hover:text-[#e59e2f] transition-colors" />
                 </button>
+
+                {member.status === 'archived' ? (
+                  <button
+                    onClick={() => onRestore(member)}
+                    title="Restore"
+                    className="transition-colors"
+                  >
+                    <HiArrowPath className="w-5 h-5 text-[#4CAF50] hover:text-[#45a049] transition-colors" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => onArchive(member)}
+                    title="Archive"
+                    className="transition-colors"
+                  >
+                    <HiOutlineArchive className="w-5 h-5 text-[#FF9800] hover:text-[#e68900] transition-colors" />
+                  </button>
+                )}
 
                 <button
                   onClick={() => onDelete(member)}

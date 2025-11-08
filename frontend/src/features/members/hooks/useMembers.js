@@ -36,23 +36,45 @@ export const useMembers = () => {
         }
       });
 
+      // If no status filter is explicitly set, exclude archived members
+      // We'll handle this by not sending status param and filtering client-side
+      const includeArchived = filters.status === 'archived';
+      const statusFilter = filters.status;
+
+      // Remove status from params if it's empty
+      if (!statusFilter) {
+        delete params.status;
+      }
+
       const data = await membersApi.listMembers(params);
 
       // Handle paginated response
       if (data.results) {
-        setMembers(data.results);
+        // Filter out archived members unless explicitly requested
+        let filteredResults = data.results;
+        if (!statusFilter) {
+          // When "All Status" is selected, exclude archived
+          filteredResults = data.results.filter(m => m.status !== 'archived');
+        }
+
+        setMembers(filteredResults);
         setPagination({
-          count: data.count,
+          count: filteredResults.length, // Use filtered count
           next: data.next,
           previous: data.previous,
           currentPage: page,
-          totalPages: Math.ceil(data.count / 10), // Backend PAGE_SIZE is 10
+          totalPages: Math.ceil(filteredResults.length / 10),
         });
       } else {
         // Fallback for non-paginated response
-        setMembers(Array.isArray(data) ? data : []);
+        let filteredData = Array.isArray(data) ? data : [];
+        if (!statusFilter) {
+          filteredData = filteredData.filter(m => m.status !== 'archived');
+        }
+
+        setMembers(filteredData);
         setPagination({
-          count: Array.isArray(data) ? data.length : 0,
+          count: filteredData.length,
           next: null,
           previous: null,
           currentPage: 1,
