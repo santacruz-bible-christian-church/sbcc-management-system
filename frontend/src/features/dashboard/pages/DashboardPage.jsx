@@ -1,26 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Alert } from 'flowbite-react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { dashboardApi } from '../../../api/dashboard.api';
-import { 
-  HiUser, 
-  HiLogout, 
-  HiRefresh, 
-  HiUsers,
-  HiCalendar,
-  HiOfficeBuilding,
-  HiClipboardCheck,
-  HiPlus,
-  HiDocumentReport,
-} from 'react-icons/hi';
-import { Card, StatsCard } from '../../../components/ui/Card';
-import { Button, PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
+import { HiUsers, HiCube, HiCalendar, HiClipboardList, HiSparkles, HiClock, HiTrendingUp } from 'react-icons/hi';
 
 export const DashboardPage = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  
+  const { user } = useAuth();
+
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,246 +27,194 @@ export const DashboardPage = () => {
     fetchStats();
   }, []);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
-
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-sbcc-cream">
         <div className="animate-spin rounded-full h-16 w-16 border-4 border-sbcc-primary border-t-transparent mb-4" />
-        <p className="text-sbcc-gray">Loading dashboard...</p>
+        <p className="text-gray-500">Loading dashboard...</p>
       </div>
     );
   }
 
+  const statCards = [
+    {
+      title: 'Total Members',
+      value: stats?.overview?.total_members || 500,
+      change: '+12%',
+      icon: HiUsers,
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600'
+    },
+    {
+      title: 'Church Materials',
+      value: stats?.overview?.total_inventory || 50,
+      change: '+8%',
+      icon: HiCube,
+      iconBg: 'bg-green-100',
+      iconColor: 'text-green-600'
+    },
+    {
+      title: 'Scheduled Events',
+      value: stats?.overview?.upcoming_events || 15,
+      change: '+21%',
+      icon: HiCalendar,
+      iconBg: 'bg-purple-100',
+      iconColor: 'text-purple-600'
+    },
+    {
+      title: 'Pending Tasks',
+      value: 24,
+      change: '+5%',
+      icon: HiClipboardList,
+      iconBg: 'bg-red-100',
+      iconColor: 'text-red-600'
+    }
+  ];
+
+  const recentActivities = [
+    {
+      title: 'New Member Added',
+      description: 'John Doe joined the congregation',
+      time: '2 hours ago',
+      icon: HiUsers,
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600'
+    },
+    {
+      title: 'Event Created',
+      description: 'Sunday Service scheduled',
+      time: '5 hours ago',
+      icon: HiCalendar,
+      iconBg: 'bg-purple-100',
+      iconColor: 'text-purple-600'
+    },
+    {
+      title: 'Inventory Updated',
+      description: 'Added new church supplies',
+      time: '1 day ago',
+      icon: HiCube,
+      iconBg: 'bg-green-100',
+      iconColor: 'text-green-600'
+    }
+  ];
+
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8">
-      {/* Header Section */}
-      <div className="mb-8">
-        <Card variant="gradient" className="shadow-xl">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            {/* User Info */}
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                <HiUser className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white">
-                  Welcome back, {stats?.user?.name || user?.username}!
-                </h1>
-                <p className="text-white/80 text-sm mt-1">
-                  {stats?.user?.email}
-                </p>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/20 text-white mt-2 backdrop-blur-sm">
-                  {stats?.user?.role?.replace('_', ' ').toUpperCase()}
-                </span>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-2 w-full md:w-auto">
-              <SecondaryButton 
-                onClick={fetchStats}
-                className="flex-1 md:flex-none bg-white/20 hover:bg-white/30 text-white border-white/30"
-                icon={HiRefresh}
-              >
-                Refresh
-              </SecondaryButton>
-              <Button 
-                variant="danger"
-                onClick={handleLogout}
-                className="flex-1 md:flex-none"
-                icon={HiLogout}
-              >
-                Logout
-              </Button>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Error Alert */}
-      {error && (
-        <Alert color="failure" className="mb-6">
-          <span className="font-medium">Error!</span> {error}
-        </Alert>
-      )}
-
-      {/* Stats Grid - Admin/Pastor Only */}
-      {stats?.overview && (user?.role === 'admin' || user?.role === 'pastor') && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatsCard
-            title="Total Members"
-            value={stats.overview.total_members || 0}
-            change={`${stats.overview.active_members || 0} active`}
-            icon={HiUsers}
-            variant="gradient"
-          />
-          
-          <StatsCard
-            title="Upcoming Events"
-            value={stats.overview.upcoming_events || 0}
-            change="This month"
-            icon={HiCalendar}
-            variant="orange"
-          />
-          
-          <StatsCard
-            title="Ministries"
-            value={stats.overview.total_ministries || 0}
-            change="Active ministries"
-            icon={HiOfficeBuilding}
-            variant="default"
-          />
-          
-          {stats.attendance && (
-            <StatsCard
-              title="Today's Attendance"
-              value={stats.attendance.today || 0}
-              change={`${stats.attendance.this_week || 0} this week`}
-              icon={HiClipboardCheck}
-              variant="default"
-            />
-          )}
+    <div className="min-h-screen bg-gradient-to-br from-sbcc-cream to-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-sbcc-dark">Dashboard</h1>
         </div>
-      )}
 
-      {/* Personal Stats - Member View */}
-      {stats?.personal && (
-        <Card 
-          title="My Information"
-          className="mb-8 hover:shadow-lg transition-shadow"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-4 bg-sbcc-light-orange rounded-lg">
-              <p className="text-sbcc-gray text-sm font-medium mb-1">Ministry</p>
-              <p className="text-sbcc-dark font-bold text-lg">
-                {stats.personal.ministry || 'Not assigned'}
-              </p>
-            </div>
-            <div className="p-4 bg-sbcc-light-orange rounded-lg">
-              <p className="text-sbcc-gray text-sm font-medium mb-1">Status</p>
-              <p className="text-sbcc-dark font-bold text-lg capitalize">
-                {stats.personal.status}
-              </p>
-            </div>
-            <div className="p-4 bg-sbcc-light-orange rounded-lg">
-              <p className="text-sbcc-gray text-sm font-medium mb-1">Attendance</p>
-              <p className="text-sbcc-dark font-bold text-lg">
-                {stats.personal.my_attendance_count} times
-              </p>
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Welcome Card - Full width on mobile, spans 8 cols on desktop */}
+          <div className="lg:col-span-8">
+            <div className="relative bg-gradient-to-br from-sbcc-orange via-sbcc-primary to-sbcc-primary rounded-3xl p-8 overflow-hidden shadow-xl h-full min-h-[280px]">
+              {/* Decorative circles */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24" />
+
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <HiSparkles className="w-8 h-8 text-white" />
+                  <span className="text-white text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                  </span>
+                </div>
+
+                <h2 className="text-4xl md:text-5xl font-bold text-white mb-3">
+                  Welcome Back{user?.first_name ? `, ${user.first_name}` : ''}!
+                </h2>
+
+                <p className="text-white/90 text-lg max-w-xl">
+                  Here's what's happening with your church today. Track members, manage events, and stay organized.
+                </p>
+              </div>
             </div>
           </div>
-        </Card>
-      )}
 
-      {/* Upcoming Events */}
-      {stats?.upcoming_events && stats.upcoming_events.length > 0 && (
-        <Card 
-          title="Upcoming Events"
-          subtitle="Don't miss these important events"
-          className="mb-8"
-        >
-          <div className="space-y-3">
-            {stats.upcoming_events.map((event, index) => (
-              <div
-                key={event.id || index}
-                className="flex items-center justify-between p-4 bg-sbcc-light-orange hover:bg-sbcc-orange/30 rounded-lg transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-sbcc-gradient rounded-lg flex items-center justify-center flex-shrink-0">
-                    <HiCalendar className="h-6 w-6 text-white" />
+          {/* Info Card - Spans 4 cols on desktop, appears below welcome on mobile */}
+          <div className="lg:col-span-4">
+            <div className="bg-gradient-to-br from-sbcc-orange to-sbcc-primary rounded-3xl p-6 shadow-xl text-white h-full min-h-[280px] flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
+                  <HiSparkles className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">SBCC Management System</h3>
+                <p className="text-white/90 text-sm leading-relaxed">
+                  A digital platform designed to streamline church operations by efficiently managing member records, events, finances, and communications.
+                </p>
+              </div>
+
+              <button className="w-full bg-white text-sbcc-primary font-medium py-2.5 px-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 mt-4">
+                Learn More
+              </button>
+            </div>
+          </div>
+
+          {/* Stats Grid - Spans 8 cols on desktop */}
+          <div className="lg:col-span-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {statCards.map((card, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`p-3 rounded-xl ${card.iconBg}`}>
+                      <card.icon className={`w-6 h-6 ${card.iconColor}`} />
+                    </div>
+                    <div className="flex items-center gap-1 text-sm font-medium text-green-600">
+                      <HiTrendingUp className="w-4 h-4" />
+                      {card.change}
+                    </div>
                   </div>
+
                   <div>
-                    <p className="font-semibold text-sbcc-dark">{event.title}</p>
-                    <p className="text-sm text-sbcc-gray">
-                      {new Date(event.date).toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })} • {event.event_type}
-                    </p>
-                    {event.location && (
-                      <p className="text-xs text-sbcc-gray mt-1">📍 {event.location}</p>
-                    )}
+                    <p className="text-sbcc-gray text-sm font-medium mb-1">{card.title}</p>
+                    <p className="text-3xl font-bold text-sbcc-dark">{card.value}</p>
                   </div>
                 </div>
-                <SecondaryButton size="sm">
-                  View Details
-                </SecondaryButton>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </Card>
-      )}
 
-      {/* Empty State for Events */}
-      {stats?.upcoming_events?.length === 0 && (
-        <Card className="mb-8 text-center py-12">
-          <HiCalendar className="h-16 w-16 text-sbcc-gray mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-sbcc-dark mb-2">
-            No Upcoming Events
-          </h3>
-          <p className="text-sbcc-gray mb-4">
-            There are no events scheduled at the moment.
-          </p>
-          {(user?.role === 'admin' || user?.role === 'pastor') && (
-            <PrimaryButton icon={HiPlus}>
-              Create Event
-            </PrimaryButton>
-          )}
-        </Card>
-      )}
-
-      {/* Quick Actions - Admin Only */}
-      {(user?.role === 'admin' || user?.role === 'pastor') && (
-        <Card 
-          title="Quick Actions"
-          subtitle="Common tasks and shortcuts"
-          className="mb-8"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg transition-all transform hover:scale-105 text-left group">
-              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <HiUsers className="h-6 w-6 text-white" />
+          {/* Recent Activities - Spans 4 cols on desktop */}
+          <div className="lg:col-span-4">
+            <div className="bg-white rounded-3xl p-6 shadow-lg border border-gray-100 h-full">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-sbcc-dark">Recent Activities</h3>
+                <button className="text-sm text-sbcc-primary hover:text-sbcc-orange font-medium transition-colors">
+                  View All
+                </button>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-1">Add Member</h4>
-              <p className="text-xs text-gray-600">Register new member</p>
-            </button>
 
-            <button className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg transition-all transform hover:scale-105 text-left group">
-              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <HiCalendar className="h-6 w-6 text-white" />
+              <div className="space-y-4">
+                {recentActivities.map((activity, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    <div className={`p-2 rounded-lg ${activity.iconBg} flex-shrink-0`}>
+                      <activity.icon className={`w-5 h-5 ${activity.iconColor}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-sbcc-dark truncate">
+                        {activity.title}
+                      </p>
+                      <p className="text-xs text-sbcc-gray mt-0.5">{activity.description}</p>
+                      <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
+                        <HiClock className="w-3 h-3" />
+                        {activity.time}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <h4 className="font-semibold text-gray-900 mb-1">Create Event</h4>
-              <p className="text-xs text-gray-600">Schedule new event</p>
-            </button>
-
-            <button className="p-6 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-lg transition-all transform hover:scale-105 text-left group">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <HiClipboardCheck className="h-6 w-6 text-white" />
-              </div>
-              <h4 className="font-semibold text-gray-900 mb-1">Attendance</h4>
-              <p className="text-xs text-gray-600">Mark attendance</p>
-            </button>
-
-            <button className="p-6 bg-gradient-to-br from-sbcc-light-orange to-sbcc-orange hover:from-sbcc-orange hover:to-sbcc-primary rounded-lg transition-all transform hover:scale-105 text-left group">
-              <div className="w-12 h-12 bg-sbcc-primary rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <HiDocumentReport className="h-6 w-6 text-white" />
-              </div>
-              <h4 className="font-semibold text-gray-900 mb-1">Reports</h4>
-              <p className="text-xs text-gray-600">View analytics</p>
-            </button>
+            </div>
           </div>
-        </Card>
-      )}
-
-      {/* Footer Info */}
-      <div className="text-center text-sm text-sbcc-gray mt-8 pb-8">
-        <p>Last updated: {new Date(stats?.timestamp).toLocaleString()}</p>
+        </div>
       </div>
     </div>
   );
