@@ -219,7 +219,6 @@ export const EventsPage = () => {
       <div className="space-y-8">
         <header className="events-header-card">
           <div>
-            <p className="text-sm font-semibold text-sbcc-gray uppercase tracking-wide">Page / Events</p>
             <h1 className="text-3xl md:text-4xl font-bold text-sbcc-dark">Events &amp; Attendance</h1>
             <p className="mt-2 text-sbcc-gray max-w-2xl">
               Coordinate ministry gatherings, track attendance, and keep your church community informed.
