@@ -65,79 +65,81 @@ export const Card = ({
   );
 };
 
-// Stats Card with SBCC styling
+// Stats Card - Completely custom without Flowbite
 export const StatsCard = ({
   title,
   value,
   change,
   icon: Icon,
-  variant = 'default', // default, orange, gradient, blue, green, purple
+  variant = 'default', // default, orange, blue, green, purple
 }) => {
-  const backgroundMap = {
-    default: 'bg-white',
-    orange: 'bg-sbcc-light-orange',
-    gradient: 'bg-gradient-to-br from-[#F6C67E] to-[#FDB54A]',
-    blue: 'bg-blue-50',
-    green: 'bg-emerald-50',
-    purple: 'bg-purple-50',
+  const variantStyles = {
+    default: {
+      bg: 'bg-white',
+      label: 'text-gray-500',
+      value: 'text-gray-900',
+      change: 'text-gray-500',
+      icon: 'bg-sbcc-primary text-white',
+    },
+    orange: {
+      bg: 'bg-orange-50',
+      label: 'text-orange-600',
+      value: 'text-orange-900',
+      change: 'text-orange-600',
+      icon: 'bg-orange-500 text-white',
+    },
+    blue: {
+      bg: 'bg-blue-50',
+      label: 'text-blue-600',
+      value: 'text-blue-900',
+      change: 'text-blue-600',
+      icon: 'bg-blue-500 text-white',
+    },
+    green: {
+      bg: 'bg-emerald-50',
+      label: 'text-emerald-600',
+      value: 'text-emerald-900',
+      change: 'text-emerald-600',
+      icon: 'bg-emerald-500 text-white',
+    },
+    purple: {
+      bg: 'bg-purple-50',
+      label: 'text-purple-600',
+      value: 'text-purple-900',
+      change: 'text-purple-600',
+      icon: 'bg-purple-500 text-white',
+    },
   };
 
-  const labelTextMap = {
-    gradient: 'text-white/80',
-    default: 'text-sbcc-gray',
-    orange: 'text-sbcc-gray',
-    blue: 'text-blue-600',
-    green: 'text-emerald-600',
-    purple: 'text-purple-600',
-  };
-
-  const valueTextMap = {
-    gradient: 'text-white',
-    default: 'text-sbcc-dark',
-    orange: 'text-sbcc-dark',
-    blue: 'text-blue-900',
-    green: 'text-emerald-900',
-    purple: 'text-purple-900',
-  };
-
-  const iconColorMap = {
-    gradient: 'bg-white/20 text-white',
-    default: 'bg-sbcc-orange text-white',
-    orange: 'bg-sbcc-orange text-white',
-    blue: 'bg-blue-500 text-white',
-    green: 'bg-emerald-500 text-white',
-    purple: 'bg-purple-500 text-white',
-  };
-
-  const changeTextMap = {
-    gradient: 'text-white/70',
-    default: 'text-sbcc-gray',
-    orange: 'text-sbcc-gray',
-    blue: 'text-blue-500',
-    green: 'text-emerald-600',
-    purple: 'text-purple-600',
-  };
-
-  const bgClass = backgroundMap[variant] ?? backgroundMap.default;
-  const labelText = labelTextMap[variant] ?? labelTextMap.default;
-  const valueText = valueTextMap[variant] ?? valueTextMap.default;
-  const iconClasses = iconColorMap[variant] ?? iconColorMap.default;
-  const changeText = changeTextMap[variant] ?? changeTextMap.default;
+  const styles = variantStyles[variant] || variantStyles.default;
 
   return (
-    <Card className={bgClass}>
+    <div
+      className={clsx(
+        'rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100',
+        styles.bg
+      )}
+    >
       <div className="flex items-center justify-between">
-        <div>
-          <p className={clsx('text-sm font-medium', labelText)}>{title}</p>
-          <p className={clsx('text-2xl font-bold mt-1', valueText)}>{value}</p>
-          {change && <p className={clsx('text-sm mt-1', changeText)}>{change}</p>}
+        <div className="flex-1">
+          <p className={clsx('text-sm font-medium uppercase tracking-wide', styles.label)}>
+            {title}
+          </p>
+          <p className={clsx('text-3xl font-bold mt-2', styles.value)}>
+            {value}
+          </p>
+          {change && (
+            <p className={clsx('text-xs mt-2 font-medium', styles.change)}>
+              {change}
+            </p>
+          )}
         </div>
         {Icon && (
-          <div className={clsx('p-3 rounded-full shadow-sm', iconClasses)}>
-            <Icon className="h-6 w-6" />
+          <div className={clsx('p-3 rounded-xl shadow-sm', styles.icon)}>
+            <Icon className="h-7 w-7" />
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 };

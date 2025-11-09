@@ -1,4 +1,3 @@
-import { Spinner, Table } from 'flowbite-react';
 import { HiClipboardCheck } from 'react-icons/hi';
 import { PrimaryButton } from '../../../components/ui/Button';
 import { formatDateTimeDisplay } from '../utils/format';
@@ -13,7 +12,7 @@ export const AttendanceModalContent = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Spinner size="xl" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-sbcc-primary border-t-transparent"></div>
       </div>
     );
   }
@@ -47,52 +46,68 @@ export const AttendanceModalContent = ({
         </div>
       </div>
 
-      <Table className="events-table">
-        <Table.Head>
-          <Table.HeadCell>Member</Table.HeadCell>
-          <Table.HeadCell>Email</Table.HeadCell>
-          <Table.HeadCell>Status</Table.HeadCell>
-          <Table.HeadCell>Checked In</Table.HeadCell>
-          <Table.HeadCell>
-            <span className="sr-only">Actions</span>
-          </Table.HeadCell>
-        </Table.Head>
-        <Table.Body className="divide-y">
-          {report.registrations.map((registration) => (
-            <Table.Row key={registration.id} className="bg-white">
-              <Table.Cell className="font-medium text-sbcc-dark">
-                {registration.member_name}
-              </Table.Cell>
-              <Table.Cell>{registration.member_email}</Table.Cell>
-              <Table.Cell>
-                {registration.attended ? (
-                  <span className="events-status-chip events-status-chip--success">Attended</span>
-                ) : (
-                  <span className="events-status-chip events-status-chip--warning">
-                    Not marked
-                  </span>
-                )}
-              </Table.Cell>
-              <Table.Cell>
-                {registration.check_in_time
-                  ? formatDateTimeDisplay(registration.check_in_time)
-                  : '—'}
-              </Table.Cell>
-              <Table.Cell className="text-right">
-                {canManage && !registration.attended && (
-                  <PrimaryButton
-                    size="sm"
-                    icon={HiClipboardCheck}
-                    onClick={() => onMarkAttended(registration.id)}
-                  >
-                    Mark attended
-                  </PrimaryButton>
-                )}
-              </Table.Cell>
-            </Table.Row>
-          ))}
-        </Table.Body>
-      </Table>
+      <div className="overflow-x-auto rounded-xl border border-gray-200">
+        <table className="w-full bg-white">
+          <thead>
+            <tr className="bg-orange-50 border-b border-gray-200">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Member
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Checked In
+              </th>
+              <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {report.registrations.map((registration) => (
+              <tr key={registration.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                  {registration.member_name}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                  {registration.member_email}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {registration.attended ? (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
+                      Attended
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">
+                      Not marked
+                    </span>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                  {registration.check_in_time
+                    ? formatDateTimeDisplay(registration.check_in_time)
+                    : '—'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right">
+                  {canManage && !registration.attended && (
+                    <PrimaryButton
+                      size="sm"
+                      icon={HiClipboardCheck}
+                      onClick={() => onMarkAttended(registration.id)}
+                    >
+                      Mark attended
+                    </PrimaryButton>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

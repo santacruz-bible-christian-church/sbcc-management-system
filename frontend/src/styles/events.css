@@ -104,6 +104,7 @@
   backdrop-filter: blur(6px);
   box-shadow: 0 24px 60px color-mix(in srgb, var(--sbcc-text-dark) 12%, transparent);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
 }
 
 .events-card:hover {
@@ -131,6 +132,8 @@
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .events-card-title {
@@ -138,18 +141,30 @@
   font-size: 1.35rem;
   font-weight: 700;
   color: var(--sbcc-text-dark);
+  line-height: 1.3;
 }
 
 .events-card-description {
   margin: 0;
+  margin-top: 0.5rem;
   color: color-mix(in srgb, var(--sbcc-text-dark) 70%, transparent);
   line-height: 1.6;
 }
 
 .events-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
+}
+
+.events-meta-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.events-meta-grid dt {
+  margin: 0;
 }
 
 .events-meta-grid dd {
@@ -159,16 +174,17 @@
 }
 
 .events-card-actions {
-  display: grid;
-  grid-template-columns: minmax(160px, 1fr) auto;
-  align-items: center;
-  column-gap: 0.75rem;
-  row-gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
 }
 
 .events-card-actions__left {
   display: flex;
   align-items: stretch;
+  width: 100%;
 }
 
 .events-card-actions__left > * {
@@ -180,7 +196,6 @@
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
-  justify-content: flex-end;
 }
 
 .attendance-card {
@@ -314,10 +329,11 @@
   }
 
   .events-card-actions {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .events-card-actions__right {
     justify-content: flex-start;
+    width: 100%;
   }
 }
