@@ -174,9 +174,6 @@ export const MembershipListPage = () => {
     <div className="max-w-[95%] mx-auto p-4 md:p-8">
       {/* Breadcrumb & Title */}
       <div className="mb-6">
-        <p className="text-[15px] text-[#A0A0A0] leading-none mb-1">
-          Pages/Membership
-        </p>
         <h1 className="text-[30px] text-[#383838] leading-none font-bold">
           Member List
         </h1>
