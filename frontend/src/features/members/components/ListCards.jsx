@@ -6,6 +6,7 @@ import {
     HiOutlineTrash,
     HiOutlinePhone,
 } from 'react-icons/hi';
+import { HiArrowPath } from 'react-icons/hi2';
 
 
 export const ListCards = ({ members, canManage, onEdit, onDelete, onViewDetails, onRestore, onArchive, pagination, onPageChange }) => {
@@ -73,39 +74,39 @@ export const ListCards = ({ members, canManage, onEdit, onDelete, onViewDetails,
     return (
         <div className="space-y-3.5">
             {members.map((member) => (
-                <div className='flex gap-3 pr-3 pl-3 pt-6 pb-6 rounded-[20px] shadow-[2px_2px_10px_rgba(0,0,0,0.2)]'>
+                <div className='flex justify-between pr-3 pl-3 pt-6 pb-6 rounded-[20px] shadow-[2px_2px_10px_rgba(0,0,0,0.2)]'>
                     {/* Name */}
-                    <p className={`flex font-bold text-[#383838] text-left items-center ${collapsed ? 'w-[210px] truncate overflow-hidden text-ellipsis pl-7 mr-[0%]' : 'line-clamp-2 overflow-hidden text-ellipsis w-[160px] pl-3 mr-[0.5%]'} transition-all duration-500 ease-in-out`}>
+                    <p className='font-bold text-[#383838] text-left items-center w-[18%] transition-all duration-500 ease-in-out'>
                         {member.full_name || `${member.first_name} ${member.last_name}`}
                     </p>
                     {/* Gender */}
-                    <p className={`flex items-center justify-center ${collapsed ? 'w-[110px] mr-[1%]' : 'w-[100px] mr-[0%]'}  transition-all duration-500 ease-in-out font-regular text-[#383838]`}>
+                    <p className={`${collapsed ? 'smd-collapsed:hidden' : 'smd-not-collapsed:hidden'} flex items-center justify-center w-[10%]  transition-all duration-500 ease-in-out font-regular text-[#383838]`}>
                         {member.gender || 'N/A'}
                     </p>
-                    {/* Phone Number */}
-                    <p className={`flex items-center justify-center truncate text-center ${collapsed ? 'w-[210px] mr-[1.5%]' : 'w-[240px] mr-[0%]'}  transition-all duration-500 ease-in-out font-regular text-[#383838]`}>
+                    {/* Conact Number */}
+                    <p className={`${collapsed ? 'w-[15%] smd-collapsed:w-[35%]' : 'smd-not-collapsed:w-[30%]'} w-[15%] flex items-center justify-center text-center transition-all duration-500 ease-in-out font-regular text-[#383838]`}>
                         <HiOutlinePhone className="mr-1 h-4 w-4 text-sbcc-gray" />
-                        <span className="text-sbcc-dark">{member.phone || 'N/A'}</span>
+                        <span className="text-sbcc-dark truncate">{member.phone || 'N/A'}</span>
                     </p>
 
                     {/* Birthday */}
-                    <p className={`flex items-center justify-center ${collapsed ? 'w-[130px] mr-[2.3%]' : 'w-[160px] mr-[1.8%]'}  transition-all duration-500 ease-in-out font-regular text-[#383838]`}>
+                    <p className={`${collapsed ? 'smd-collapsed:hidden' : 'smd-not-collapsed:hidden'} flex items-center justify-center text-center w-[15%]  transition-all duration-500 ease-in-out font-regular text-[#383838]`}>
                         {formatDate(member.date_of_birth)}
                     </p>
 
                     {/* Ministry */}
-                    <div>
+                    <div className={`${getMinistryColor(member.ministry_name)} flex w-[20%] text-[#0092FF] text-[15px] [@media(max-width:600px)]:text-[13px] font-regular rounded-full pl-1 pr-1 pt-1 pb-1 items-center text-center justify-center`}>
                         {member.ministry_name ? (
-                            <div className={`${getMinistryColor(member.ministry_name)} ${collapsed ? 'w-[130px]' : 'w-[100px] mr-[10%]'} text-[#0092FF] text-[15px] font-regular rounded-full pl-1 pr-1 pt-1 pb-1 mr-[2.5%] text-center`}>
+                            <div>
                                 {member.ministry_name}
                             </div>
                         ) : (
-                            <div className={`${collapsed ? ' mr-[10%] w-[130px]' : 'pt-3 mr-[10%] w-[100px]'} text-[#A0A0A0] text-center`}>Unassigned</div>
+                            <div className='flex w-[5%] text-[#A0A0A0] justify-center'>Unassigned</div>
                         )}
                     </div>
 
                     {/* Actions */}
-                    <div className={`${collapsed ? 'pt-0.5 ml-[30px]' : 'pt-1 pr-2 ml-[2%]'}  transition-all duration-500 ease-in-out flex gap-5`}>
+                    <div className={`${collapsed ? 'gap-5 [@media(max-width:950px)]:gap-2' : 'gap-3 [@media(max-width:1000px)]:gap-2'} transition-all duration-3000 ease-in-out flex justify-center w-[18%]  transition-all duration-500 ease-in-out flex `}>
                         <button
                             onClick={() => onViewDetails(member)}
                             title="View Details"
@@ -121,7 +122,7 @@ export const ListCards = ({ members, canManage, onEdit, onDelete, onViewDetails,
                                     title="Edit"
                                     className="transition-colors"
                                 >
-                                    <HiOutlinePencil className="w-5 h-5 text-[#FFB039] hover:text-[#e59e2f] transition-colors" />
+                                    <HiOutlinePencil className="w-5 h-5  text-[#FFB039] hover:text-[#e59e2f] transition-colors" />
                                 </button>
 
                                 {member.status === 'archived' ? (
@@ -130,15 +131,15 @@ export const ListCards = ({ members, canManage, onEdit, onDelete, onViewDetails,
                                         title="Restore"
                                         className="transition-colors"
                                     >
-                                        <HiArrowPath className="w-5 h-5 text-[#4CAF50] hover:text-[#45a049] transition-colors" />
+                                        <HiArrowPath className="w-5 h-5  text-[#4CAF50] hover:text-[#45a049] transition-colors" />
                                     </button>
                                 ) : (
                                     <button
                                         onClick={() => onArchive(member)}
                                         title="Archive"
-                                        className="transition-colors"
+                                        className={`transition-colors ${collapsed ? 'hidden md:block' : 'smd-not-collapsed:hidden'} `}
                                     >
-                                        <HiOutlineArchive className="w-5 h-5 text-[#FF9800] hover:text-[#e68900] transition-colors" />
+                                        <HiOutlineArchive className="w-5 h-5  text-[#FF9800] hover:text-[#e68900] transition-colors" />
                                     </button>
                                 )}
 
@@ -147,7 +148,7 @@ export const ListCards = ({ members, canManage, onEdit, onDelete, onViewDetails,
                                     title="Delete"
                                     className="transition-colors"
                                 >
-                                    <HiOutlineTrash className="w-5 h-5 text-[#E55050] hover:text-[#d13e3e] transition-colors" />
+                                    <HiOutlineTrash className="w-5 h-5  text-[#E55050] hover:text-[#d13e3e] transition-colors" />
                                 </button>
                             </>
                         )}

@@ -44,9 +44,15 @@ export default {
       backgroundImage: {
         'sbcc-gradient': 'linear-gradient(135deg, #F6C67E 0%, #FDB54A 100%)',
       },
+      // custom screen size
+      screens: {
+        'smd-not-collapsed': { 'max': '950px' },
+        'smd-collapsed': { 'max': '670px' },
+        'max-800': { 'max': '800px' },
+      }
     },
   },
   plugins: [
-    require('flowbite/plugin')
+    require('flowbite/plugin'),
   ],
 }

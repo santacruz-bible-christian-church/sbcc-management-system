@@ -6,16 +6,19 @@ import { useMembers } from '../hooks/useMembers';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useCallback, useState, useEffect } from 'react';
 import { ConfirmationModal } from '../../../components/ui/Modal';
-
+import { membersApi } from '../../../api/members.api';
+import { MemberDetailsModal } from '../components/MemberDetailsModal';
+import { MemberFormModal } from '../components/MemberFormModal';
+import { useMinistries } from '../../ministries/hooks/useMinistries';
 
 const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
 
 export const MembershipListPage = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [collapsed, setCollapsed] = useState(false)
     const { user } = useAuth();
     const canManage = MANAGER_ROLES.includes(user?.role);
+    const { ministries, loading: ministriesLoading } = useMinistries();
 
     const {
         members,
@@ -212,6 +215,22 @@ export const MembershipListPage = () => {
                 onConfirm={handleArchiveConfirm}
                 onCancel={closeArchiveModal}
                 loading={loading}
+            />
+
+            <MemberFormModal
+                open={formModalState.open}
+                onClose={closeFormModal}
+                onSubmit={handleFormSubmit}
+                member={formModalState.member}
+                loading={formLoading}
+                ministries={ministries}
+            />
+
+            {/* Member Details Modal */}
+            <MemberDetailsModal
+                open={detailsModalState.open}
+                onClose={closeDetailsModal}
+                member={detailsModalState.member}
             />
 
         </div>
