@@ -1,16 +1,23 @@
 import { PrimaryButton } from '../../../components/ui/Button';
 import { FaSliders } from "react-icons/fa6";
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { membersApi } from '../../../api/members.api';
 import { HiOutlinePlus, HiOutlineUpload } from 'react-icons/hi';
 import CSVImportModal from './CSVImportModal';
 import { useAuth } from '../../auth/hooks/useAuth';
-import { MemberFormModal } from '../components/MemberFormModal';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
 
 const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
 
-export const MemberListNavBar = ({ pagination, refreshMembers, filters, setFilters, searchTerm, setSearchTerm, createMember, updateMember }) => {
+export const MemberListNavBar = ({
+    pagination,
+    refreshMembers,
+    filters,
+    setFilters,
+    searchTerm,
+    setSearchTerm,
+    onCreateClick  // ← New prop from parent
+}) => {
     const [isGenderOpen, setGenderIsOpen] = useState(false)
     const [MinistryIsOpen, setMinistryIsOpen] = useState(false)
     const [isStatusOpen, setIsStatusOpen] = useState(false)
@@ -18,8 +25,6 @@ export const MemberListNavBar = ({ pagination, refreshMembers, filters, setFilte
     const [csvModalOpen, setCsvModalOpen] = useState(false);
     const { user } = useAuth();
     const canManage = MANAGER_ROLES.includes(user?.role);
-    const [formModalState, setFormModalState] = useState({ open: false, member: null });
-    const [formLoading, setFormLoading] = useState(false);
     const { ministries, loading: ministriesLoading } = useMinistries();
     const [selectedMinistryName, setSelectedMinistryName] = useState('');
 
@@ -68,34 +73,9 @@ export const MemberListNavBar = ({ pagination, refreshMembers, filters, setFilte
         setIsStatusOpen(false);
     };
 
-    const handleCreateMember = useCallback(() => {
-        setFormModalState({ open: true, member: null });
-    }, []);
-
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
     };
-
-    const closeFormModal = useCallback(() => {
-        setFormModalState({ open: false, member: null });
-    }, []);
-
-    const handleFormSubmit = useCallback(async (formData) => {
-        setFormLoading(true);
-        try {
-            if (formModalState.member) {
-                await updateMember(formModalState.member.id, formData);
-            } else {
-                await createMember(formData);
-            }
-            closeFormModal();
-        } catch (err) {
-            console.error('Form submit error:', err);
-            alert(err.response?.data?.detail || 'Failed to save member');
-        } finally {
-            setFormLoading(false);
-        }
-    }, [formModalState.member, createMember, updateMember, closeFormModal]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -125,7 +105,7 @@ export const MemberListNavBar = ({ pagination, refreshMembers, filters, setFilte
                     <div className="flex gap-2">
                         <button
                             className="rounded-lg p-3 bg-[#FDB54A] text-white hover:bg-[#e5a43b] transition-colors flex items-center justify-center"
-                            onClick={handleCreateMember}
+                            onClick={onCreateClick}
                             title="Add new member"
                             aria-label="Add new member"
                         >
@@ -369,14 +349,6 @@ export const MemberListNavBar = ({ pagination, refreshMembers, filters, setFilte
                 onClose={() => setCsvModalOpen(false)}
                 onImport={handleCSVImport}
                 loading={importing}
-            />
-            <MemberFormModal
-                open={formModalState.open}
-                onClose={closeFormModal}
-                onSubmit={handleFormSubmit}
-                member={formModalState.member}
-                loading={formLoading}
-                ministries={ministries}
             />
         </div>
     )
