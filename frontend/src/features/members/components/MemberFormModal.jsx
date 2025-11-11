@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { HiX } from 'react-icons/hi';
+import { formatPhoneNumber, validatePhoneNumber, getPhoneErrorMessage } from '../../../utils/phoneFormatter';
 
 export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loading, ministries }) => {
   const isEdit = !!member;
@@ -12,9 +13,7 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
     phone: '',
     date_of_birth: '',
     gender: '',
-    address: '',
     ministry: '',
-    membership_date: '',
     is_active: true,
   });
 
@@ -29,10 +28,8 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
         phone: member.phone || '',
         date_of_birth: member.date_of_birth || '',
         gender: member.gender || '',
-        address: member.address || '',
-        ministry: member.ministry || '',
-        membership_date: member.membership_date || '',
-        is_active: member.is_active !== undefined ? member.is_active : true, // Add this
+        ministry: member.ministry ? String(member.ministry) : '',
+        is_active: member.is_active !== undefined ? member.is_active : true,
       });
     } else {
       setFormData({
@@ -42,10 +39,8 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
         phone: '',
         date_of_birth: '',
         gender: '',
-        address: '',
         ministry: '',
-        membership_date: new Date().toISOString().split('T')[0],
-        is_active: true, // Add this
+        is_active: true,
       });
     }
     setErrors({});
@@ -53,16 +48,27 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value // Handle checkbox
-    }));
+
+    // Special handling for phone number
+    if (name === 'phone') {
+      const formatted = formatPhoneNumber(value);
+      setFormData(prev => ({
+        ...prev,
+        phone: formatted
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  const validate = () => {
+  const validate = useCallback(() => {
     const newErrors = {};
 
     if (!formData.first_name.trim()) newErrors.first_name = 'First name is required';
@@ -72,21 +78,48 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    if (formData.phone && !/^\d{10,15}$/.test(formData.phone.replace(/[-\s]/g, ''))) {
-      newErrors.phone = 'Phone number is invalid';
+
+    // Philippine mobile number validation
+    if (!formData.phone || !formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!validatePhoneNumber(formData.phone)) {
+      newErrors.phone = getPhoneErrorMessage();
+    }
+
+    if (!formData.date_of_birth) {
+      newErrors.date_of_birth = 'Date of birth is required';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
 
     if (!validate()) return;
 
-    await onSubmit(formData);
-  };
+    // Clean the data - only send fields that exist in backend model
+    const cleanData = {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      email: formData.email,
+      phone: formData.phone,
+      date_of_birth: formData.date_of_birth,
+      gender: formData.gender || null,
+      ministry: formData.ministry || null,
+      is_active: formData.is_active,
+    };
+
+    // Convert empty strings to null
+    Object.keys(cleanData).forEach(key => {
+      if (cleanData[key] === '') {
+        cleanData[key] = null;
+      }
+    });
+
+    await onSubmit(cleanData);
+  }, [formData, onSubmit]);
 
   const handleCancel = () => {
     setFormData({
@@ -96,9 +129,7 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
       phone: '',
       date_of_birth: '',
       gender: '',
-      address: '',
       ministry: '',
-      membership_date: '',
       is_active: true,
     });
     setErrors({});
@@ -145,8 +176,9 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
                   name="first_name"
                   value={formData.first_name}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${errors.first_name ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
+                    errors.first_name ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   disabled={loading}
                 />
                 {errors.first_name && (
@@ -164,8 +196,9 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${errors.last_name ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
+                    errors.last_name ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   disabled={loading}
                 />
                 {errors.last_name && (
@@ -183,8 +216,9 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${errors.email ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
+                    errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   disabled={loading}
                 />
                 {errors.email && (
@@ -195,16 +229,17 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
               {/* Phone */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone
+                  Phone <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder="09123456789"
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${errors.phone ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                  placeholder="0912-345-6789"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
+                    errors.phone ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   disabled={loading}
                 />
                 {errors.phone && (
@@ -215,16 +250,21 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
               {/* Date of Birth */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date of Birth
+                  Date of Birth <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
                   name="date_of_birth"
                   value={formData.date_of_birth}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
+                    errors.date_of_birth ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   disabled={loading}
                 />
+                {errors.date_of_birth && (
+                  <p className="mt-1 text-sm text-red-500">{errors.date_of_birth}</p>
+                )}
               </div>
 
               {/* Gender */}
@@ -242,11 +282,12 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
 
               {/* Ministry */}
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Ministry
                 </label>
@@ -258,7 +299,7 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
                   disabled={loading}
                 >
                   <option value="">Select Ministry</option>
-                  {ministries.map((ministry) => (
+                  {ministries?.map((ministry) => (
                     <option key={ministry.id} value={ministry.id}>
                       {ministry.name}
                     </option>
@@ -266,37 +307,7 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
                 </select>
               </div>
 
-              {/* Membership Date */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Membership Date
-                </label>
-                <input
-                  type="date"
-                  name="membership_date"
-                  value={formData.membership_date}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
-                  disabled={loading}
-                />
-              </div>
-
-              {/* Address - Full Width */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address
-                </label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
-                  disabled={loading}
-                />
-              </div>
-
-              {/* Active Status Toggle - Full Width - Only show when editing */}
+              {/* Active Status Toggle - Only show when editing */}
               {isEdit && (
                 <div className="md:col-span-2">
                   <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
@@ -311,7 +322,7 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
                     <div>
                       <p className="text-sm font-medium text-gray-900">Active Member</p>
                       <p className="text-xs text-gray-500">
-                        Uncheck to mark this member as inactive (they will still appear in records)
+                        Uncheck to mark this member as inactive
                       </p>
                     </div>
                   </label>

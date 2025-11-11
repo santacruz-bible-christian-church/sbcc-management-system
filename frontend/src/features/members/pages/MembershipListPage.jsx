@@ -1,4 +1,3 @@
-// import { useState } from "react";
 import { MemberListNavBar } from '../components/MemberListNavBar';
 import { ListHeaders } from '../components/ListHeaders';
 import { ListCards } from '../components/ListCards';
@@ -112,6 +111,7 @@ export const MembershipListPage = () => {
     }, []);
 
     const handleEditMember = useCallback((member) => {
+        console.log('Editing member:', member);  // ADD THIS
         setFormModalState({ open: true, member });
     }, []);
 
@@ -124,16 +124,43 @@ export const MembershipListPage = () => {
         try {
             if (formModalState.member) {
                 // Update existing member
+                console.log('=== UPDATING MEMBER ===');
+                console.log('Member ID:', formModalState.member.id);
+                console.log('Form data being sent:', formData);
                 await updateMember(formModalState.member.id, formData);
             } else {
                 // Create new member
+                console.log('=== CREATING MEMBER ===');
+                console.log('Form data being sent:', formData);
                 await createMember(formData);
             }
             closeFormModal();
         } catch (err) {
-            console.log('PUT data:', formData);
-            console.error('Form submit error:', err);
-            alert(err.response?.data?.detail || 'Failed to save member');
+            console.error('=== ERROR DETAILS ===');
+            console.error('Status:', err.response?.status);
+            console.error('Backend error data:', err.response?.data);
+            console.error('Full error:', err);
+
+            // Show the actual backend error
+            if (err.response?.data) {
+                const errorData = err.response.data;
+
+                // If it's a validation error object
+                if (typeof errorData === 'object' && !errorData.detail) {
+                    const errorMessages = Object.entries(errorData)
+                        .map(([field, messages]) => {
+                            const msg = Array.isArray(messages) ? messages.join(', ') : messages;
+                            return `${field}: ${msg}`;
+                        })
+                        .join('\n');
+                    alert(`Validation Error:\n\n${errorMessages}`);
+                } else {
+                    // Simple error message
+                    alert(errorData.detail || JSON.stringify(errorData));
+                }
+            } else {
+                alert('Failed to save member - Unknown error');
+            }
         } finally {
             setFormLoading(false);
         }
@@ -164,12 +191,11 @@ export const MembershipListPage = () => {
                     setSearchTerm={setSearchTerm}
                     setFilters={setFilters}
                     pagination={pagination}
-                    createMember={createMember}
-                    updateMember={updateMember}
                     refreshMembers={refreshMembers}
+                    onCreateClick={handleCreateMember}
                 />
 
-                <ListHeaders />  {/* No props needed */}
+                <ListHeaders />
 
                 <ListCards
                     members={members}

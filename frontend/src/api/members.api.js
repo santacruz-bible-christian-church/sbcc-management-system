@@ -21,7 +21,7 @@ export const membersApi = {
 
   // Update member
   updateMember: async (id, data) => {
-    const response = await apiClient.put(`/members/${id}/`, data);
+    const response = await apiClient.patch(`/members/${id}/`, data);
     return response.data;
   },
 
