@@ -145,9 +145,8 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
                   name="first_name"
                   value={formData.first_name}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
-                    errors.first_name ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${errors.first_name ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   disabled={loading}
                 />
                 {errors.first_name && (
@@ -165,9 +164,8 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
-                    errors.last_name ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${errors.last_name ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   disabled={loading}
                 />
                 {errors.last_name && (
@@ -185,9 +183,8 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
-                    errors.email ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${errors.email ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   disabled={loading}
                 />
                 {errors.email && (
@@ -206,9 +203,8 @@ export const MemberFormModal = ({ open, onClose, onSubmit, member = null, loadin
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="09123456789"
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
-                    errors.phone ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${errors.phone ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   disabled={loading}
                 />
                 {errors.phone && (

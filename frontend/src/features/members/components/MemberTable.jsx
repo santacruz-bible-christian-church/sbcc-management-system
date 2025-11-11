@@ -178,11 +178,10 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
           <button
             onClick={() => onPageChange(pagination.currentPage - 1)}
             disabled={!pagination.previous}
-            className={`px-3 py-2 rounded transition-colors ${
-              !pagination.previous
+            className={`px-3 py-2 rounded transition-colors ${!pagination.previous
                 ? 'text-gray-300 cursor-not-allowed'
                 : 'hover:bg-gray-100'
-            }`}
+              }`}
             aria-label="Previous page"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,11 +197,10 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
               <button
                 key={page}
                 onClick={() => onPageChange(page)}
-                className={`px-3 py-2 rounded transition-colors ${
-                  page === pagination.currentPage
+                className={`px-3 py-2 rounded transition-colors ${page === pagination.currentPage
                     ? 'bg-[#FDB54A] text-white'
                     : 'hover:bg-gray-100'
-                }`}
+                  }`}
                 aria-label={`Go to page ${page}`}
               >
                 {page}
@@ -214,11 +212,10 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
           <button
             onClick={() => onPageChange(pagination.currentPage + 1)}
             disabled={!pagination.next}
-            className={`px-3 py-2 rounded transition-colors ${
-              !pagination.next
+            className={`px-3 py-2 rounded transition-colors ${!pagination.next
                 ? 'text-gray-300 cursor-not-allowed'
                 : 'hover:bg-gray-100'
-            }`}
+              }`}
             aria-label="Next page"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,6 +231,7 @@ export const MemberTable = ({ members, canManage, onEdit, onDelete, onViewDetail
           Showing {Math.min((pagination.currentPage - 1) * 10 + 1, pagination.count)} - {Math.min(pagination.currentPage * 10, pagination.count)} of {pagination.count} members
         </div>
       )}
+
     </div>
   );
 };
