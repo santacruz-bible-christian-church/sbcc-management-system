@@ -3,16 +3,24 @@ from django.utils import timezone
 
 
 class AttendanceSheet(models.Model):
-    """Attendance Sheet for tracking attendance"""
+    """
+    Attendance tracking for REGULAR worship services and ministry meetings
+
+    Examples: Sunday Service, Bible Study, Prayer Meeting, Ministry Gatherings
+    NOT for special one-time events (use Event model for those)
+
+    This tracks recurring services where member participation is measured
+    for engagement statistics and alerts.
+    """
 
     event = models.ForeignKey(
         "events.Event",
         on_delete=models.CASCADE,
         related_name="attendance_sheets",
-        help_text="Event this sheet is for",
+        help_text="Link to the event type (e.g., 'Sunday Service')",
     )
     date = models.DateField(default=timezone.now)
-    notes = models.TextField(blank=True, help_text="Additional notes about this attendance session")
+    notes = models.TextField(blank=True, help_text="Additional notes about this session")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

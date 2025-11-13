@@ -81,11 +81,16 @@ class Event(models.Model):
             return None
         return max(0, self.max_attendees - self.registrations.count())
 
+    @property
+    def registered_count(self):
+        """Number of members who registered (RSVP'd)"""
+        return self.registrations.count()
+
 
 class EventRegistration(models.Model):
     """
-    Track event-specific registrations and attendance
-    For members registering for special church events
+    RSVP tracking for special church events
+    For attendance tracking of regular services, use the Attendance model
     """
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="registrations")
@@ -95,15 +100,13 @@ class EventRegistration(models.Model):
 
     # Registration
     registered_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True, help_text="Notes about registration")
 
     # Attendance tracking (DEPRECATED - use Attendance model instead)
     attended = models.BooleanField(default=False, help_text="DEPRECATED: Use Attendance model")
     check_in_time = models.DateTimeField(
         null=True, blank=True, help_text="DEPRECATED: Use Attendance model"
     )
-
-    # Additional info
-    notes = models.TextField(blank=True, help_text="Notes about registration/attendance")
 
     class Meta:
         db_table = "event_registrations"
