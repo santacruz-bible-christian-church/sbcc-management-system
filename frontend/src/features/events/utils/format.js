@@ -115,14 +115,12 @@ export const summarizeEvents = (events) =>
       const statusKey = event.status && STATUS_METADATA[event.status] ? event.status : 'draft';
       acc.byStatus[statusKey] = (acc.byStatus[statusKey] || 0) + 1;
       acc.registered += event.attendee_count ?? 0;
-      acc.attended += event.attended_count ?? 0;
       return acc;
     },
     {
       total: 0,
       byStatus: { draft: 0, published: 0, completed: 0, cancelled: 0 },
       registered: 0,
-      attended: 0,
     }
   );
 
@@ -131,11 +129,6 @@ export const calculateCompletionRate = (summary) => {
     summary.byStatus.draft + summary.byStatus.published + summary.byStatus.completed;
   if (baseline === 0) return 0;
   return Math.round((summary.byStatus.completed / baseline) * 100);
-};
-
-export const calculateAttendanceRate = (summary) => {
-  if (!summary.registered) return 0;
-  return Math.round((summary.attended / summary.registered) * 100);
 };
 
 export const getEventTypeLabel = (value) =>

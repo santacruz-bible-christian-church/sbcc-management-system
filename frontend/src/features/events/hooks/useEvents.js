@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { eventsApi } from '../../../api/events.api';
 import { DEFAULT_FILTERS, DEFAULT_ORDERING } from '../utils/constants';
 import {
-  calculateAttendanceRate,
   calculateCompletionRate,
   cleanFilters,
   summarizeEvents,
@@ -48,7 +47,6 @@ export const useEvents = () => {
 
   const summary = useMemo(() => summarizeEvents(events), [events]);
   const completionRate = useMemo(() => calculateCompletionRate(summary), [summary]);
-  const attendanceRate = useMemo(() => calculateAttendanceRate(summary), [summary]);
 
   const setFilters = (updater) => {
     setQuery((prev) => ({
@@ -100,9 +98,6 @@ export const useEvents = () => {
   const unregisterFromEvent = (id) =>
     runAndRefresh(() => eventsApi.unregisterFromEvent(id));
 
-  const getAttendanceReport = (eventId) => eventsApi.getAttendanceReport(eventId);
-  const markRegistrationAttended = (registrationId) =>
-    runAndRefresh(() => eventsApi.markRegistrationAttended(registrationId));
   const listRegistrations = (eventId) => eventsApi.listEventRegistrations(eventId);
 
   return {
@@ -114,7 +109,6 @@ export const useEvents = () => {
     ordering: query.ordering,
     summary,
     completionRate,
-    attendanceRate,
     setFilters,
     setSearch,
     setOrdering,
@@ -125,8 +119,6 @@ export const useEvents = () => {
     deleteEvent,
     registerForEvent,
     unregisterFromEvent,
-    getAttendanceReport,
-    markRegistrationAttended,
     listRegistrations,
   };
 };
