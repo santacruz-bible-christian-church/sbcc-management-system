@@ -3,19 +3,21 @@ import { Spinner } from 'flowbite-react';
 import { HiOutlineCalendar, HiOutlineFilter, HiOutlinePlusCircle, HiOutlineRefresh } from 'react-icons/hi';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useEvents } from '../hooks/useEvents';
+import { useSnackbar } from '../../../hooks/useSnackbar';
 import {
-  AttendanceModalContent,
   EventModal,
   EventsBoard,
   EventsCalendar,
   EventsFilters,
   EventsForm,
   EventsSummaryCards,
+  RegistrationModal,
 } from '../components';
 import { MANAGER_ROLES } from '../utils/constants';
 import { prepareEventFormValues } from '../utils/format';
 import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
 import { ConfirmationModal } from '../../../components/ui/Modal';
+import Snackbar from '../../../components/ui/Snackbar';
 import '../../../styles/events.css';
 import '../../../styles/calendar.css';
 
@@ -25,6 +27,12 @@ export const EventsPage = () => {
   const { user } = useAuth();
   const canManageEvents = MANAGER_ROLES.includes(user?.role);
   const {
+    snackbar,
+    hideSnackbar,
+    showSuccess,
+    showError,
+  } = useSnackbar();
+  const {
     events,
     loading,
     error,
@@ -33,7 +41,6 @@ export const EventsPage = () => {
     ordering,
     summary,
     completionRate,
-    attendanceRate,
     setFilters,
     setSearch,
     setOrdering,
@@ -43,8 +50,7 @@ export const EventsPage = () => {
     deleteEvent,
     registerForEvent,
     unregisterFromEvent,
-    getAttendanceReport,
-    markRegistrationAttended,
+    listRegistrations,
     refresh,
   } = useEvents();
 
@@ -52,7 +58,7 @@ export const EventsPage = () => {
   const [searchDraft, setSearchDraft] = useState(search);
   const [formState, setFormState] = useState({ open: false, mode: 'create', event: null });
   const [deleteState, setDeleteState] = useState({ open: false, event: null });
-  const [attendanceState, setAttendanceState] = useState({
+  const [registrationState, setRegistrationState] = useState({
     open: false,
     event: null,
     loading: false,
@@ -60,7 +66,7 @@ export const EventsPage = () => {
     error: null,
   });
   const [submitting, setSubmitting] = useState(false);
-  const [mutating, setMutating] = useState(false);
+  const [actionLoading, setActionLoading] = useState({});
   const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
@@ -102,13 +108,18 @@ export const EventsPage = () => {
     try {
       if (formState.mode === 'create') {
         await createEvent(payload);
+        showSuccess('Event created successfully!');
       } else if (formState.event?.id) {
         await updateEvent(formState.event.id, payload);
+        showSuccess('Event updated successfully!');
       }
       closeFormModal();
     } catch (err) {
-      // Error already handled by useEvents hook
       console.error('Form submission error:', err);
+      const errorMsg = err.response?.data?.detail ||
+                       err.response?.data?.message ||
+                       'Failed to save event. Please try again.';
+      showError(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -125,22 +136,25 @@ export const EventsPage = () => {
   const handleDeleteConfirm = async () => {
     if (!deleteState.event) return;
 
-    setMutating(true);
+    setSubmitting(true);
     try {
       await deleteEvent(deleteState.event.id);
+      showSuccess('Event deleted successfully!');
       closeDeleteModal();
     } catch (err) {
       console.error('Delete error:', err);
+      const errorMsg = err.response?.data?.detail || 'Failed to delete event. Please try again.';
+      showError(errorMsg);
     } finally {
-      setMutating(false);
+      setSubmitting(false);
     }
   };
 
-  const openAttendanceModal = useCallback(
+  const openRegistrationModal = useCallback(
     async (event) => {
       let cancelled = false;
 
-      setAttendanceState({
+      setRegistrationState({
         open: true,
         event,
         loading: true,
@@ -148,16 +162,17 @@ export const EventsPage = () => {
         error: null,
       });
       try {
-        const report = await getAttendanceReport(event.id);
+        const registrations = await listRegistrations(event.id);
         if (!cancelled) {
-          setAttendanceState((prev) => ({ ...prev, loading: false, data: report }));
+          setRegistrationState((prev) => ({ ...prev, loading: false, data: registrations }));
         }
       } catch (err) {
         if (!cancelled) {
-          setAttendanceState((prev) => ({
+          const errorMsg = err.response?.data?.detail || 'Unable to load registrations.';
+          setRegistrationState((prev) => ({
             ...prev,
             loading: false,
-            error: err.response?.data?.detail || 'Unable to load attendance report.',
+            error: errorMsg,
           }));
         }
       }
@@ -166,62 +181,61 @@ export const EventsPage = () => {
         cancelled = true;
       };
     },
-    [getAttendanceReport]
+    [listRegistrations]
   );
 
-  const closeAttendanceModal = useCallback(() => {
-    setAttendanceState({ open: false, event: null, loading: false, data: null, error: null });
+  const closeRegistrationModal = useCallback(() => {
+    setRegistrationState({ open: false, event: null, loading: false, data: null, error: null });
   }, []);
-
-  const handleMarkAttended = async (registrationId) => {
-    try {
-      await markRegistrationAttended(registrationId);
-      if (attendanceState.event) {
-        const refreshed = await getAttendanceReport(attendanceState.event.id);
-        setAttendanceState((prev) => ({ ...prev, data: refreshed }));
-      }
-    } catch (err) {
-      setAttendanceState((prev) => ({
-        ...prev,
-        error: err.response?.data?.detail || 'Unable to mark attendance.',
-      }));
-    }
-  };
 
   const handleRegister = useCallback(
     async (event) => {
-      setMutating(true);
+      const eventId = event.id;
+      setActionLoading((prev) => ({ ...prev, [`register-${eventId}`]: true }));
       try {
-        await registerForEvent(event.id);
+        await registerForEvent(eventId);
+        showSuccess(`Successfully registered for "${event.title}"!`);
+      } catch (err) {
+        const errorMsg = err.response?.data?.detail ||
+                         err.response?.data?.message ||
+                         'Failed to register. Please try again.';
+        showError(errorMsg);
       } finally {
-        setMutating(false);
+        setActionLoading((prev) => ({ ...prev, [`register-${eventId}`]: false }));
       }
     },
-    [registerForEvent]
+    [registerForEvent, showSuccess, showError]
   );
 
   const handleUnregister = useCallback(
     async (event) => {
-      setMutating(true);
+      const eventId = event.id;
+      setActionLoading((prev) => ({ ...prev, [`unregister-${eventId}`]: true }));
       try {
-        await unregisterFromEvent(event.id);
+        await unregisterFromEvent(eventId);
+        showSuccess(`Successfully unregistered from "${event.title}".`);
+      } catch (err) {
+        const errorMsg = err.response?.data?.detail ||
+                         err.response?.data?.message ||
+                         'Failed to unregister. Please try again.';
+        showError(errorMsg);
       } finally {
-        setMutating(false);
+        setActionLoading((prev) => ({ ...prev, [`unregister-${eventId}`]: false }));
       }
     },
-    [unregisterFromEvent]
+    [unregisterFromEvent, showSuccess, showError]
   );
 
-  const isLoading = loading || mutating;
+  const isLoading = loading || submitting;
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8">
       <div className="space-y-8">
         <header className="events-header-card">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-sbcc-dark">Events &amp; Attendance</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-sbcc-dark">Events Management</h1>
             <p className="mt-2 text-sbcc-gray max-w-2xl">
-              Coordinate ministry gatherings, track attendance, and keep your church community informed.
+              Coordinate ministry gatherings, manage RSVPs, and keep your church community informed.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -264,7 +278,6 @@ export const EventsPage = () => {
         <EventsSummaryCards
           summary={summary}
           completionRate={completionRate}
-          attendanceRate={attendanceRate}
         />
 
         <EventsFilters
@@ -298,13 +311,14 @@ export const EventsPage = () => {
             <EventsBoard
               events={events}
               loading={isLoading}
+              actionLoading={actionLoading}
               canManage={canManageEvents}
               onCreate={openCreateModal}
               onEdit={openEditModal}
               onDelete={openDeleteModal}
               onRegister={handleRegister}
               onUnregister={handleUnregister}
-              onAttendance={openAttendanceModal}
+              onViewRegistrations={openRegistrationModal}
             />
           )}
         </section>
@@ -334,24 +348,33 @@ export const EventsPage = () => {
         confirmVariant="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={closeDeleteModal}
-        loading={mutating}
+        loading={submitting}
       />
 
-      {/* Attendance Modal */}
+      {/* Registration Modal */}
       <EventModal
-        open={attendanceState.open}
-        size="5xl"
-        title="Attendance Overview"
-        onClose={closeAttendanceModal}
+        open={registrationState.open}
+        size="4xl"
+        title="Event Registrations"
+        onClose={closeRegistrationModal}
       >
-        <AttendanceModalContent
-          loading={attendanceState.loading}
-          error={attendanceState.error}
-          report={attendanceState.data}
-          canManage={canManageEvents}
-          onMarkAttended={handleMarkAttended}
+        <RegistrationModal
+          loading={registrationState.loading}
+          error={registrationState.error}
+          event={registrationState.event}
+          registrations={registrationState.data}
         />
       </EventModal>
+
+      {/* Snackbar Notifications */}
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          variant={snackbar.variant}
+          duration={snackbar.duration}
+          onClose={hideSnackbar}
+        />
+      )}
     </div>
   );
 };

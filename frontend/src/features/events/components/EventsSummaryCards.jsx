@@ -27,23 +27,23 @@ const SUMMARY_CONFIG = [
     value: (summary) => summary.byStatus.completed,
   },
   {
-    key: 'attendance',
-    title: 'Attendance',
-    description: (summary) => `${summary.attended}/${summary.registered || 0} attended`,
+    key: 'registrations',
+    title: 'Total RSVPs',
+    description: () => 'Across all events',
     icon: HiUserGroup,
     variant: 'purple',
-    value: (_, __, attendanceRate) => `${attendanceRate}%`,
+    value: (summary) => summary.registered,
   },
 ];
 
-export const EventsSummaryCards = ({ summary, completionRate, attendanceRate }) => (
+export const EventsSummaryCards = ({ summary, completionRate }) => (
   <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
     {SUMMARY_CONFIG.map((card) => (
       <StatsCard
         key={card.key}
         title={card.title}
-        value={card.value(summary, completionRate, attendanceRate)}
-        change={card.description(summary, completionRate, attendanceRate)}
+        value={card.value(summary, completionRate)}
+        change={card.description(summary, completionRate)}
         icon={card.icon}
         variant={card.variant}
       />

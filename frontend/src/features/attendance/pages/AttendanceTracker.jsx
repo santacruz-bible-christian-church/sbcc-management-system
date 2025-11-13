@@ -205,7 +205,6 @@ export default function AttendanceTracker() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <div>
-            <h2 className="text-gray-600 text-sm">Page/Attendance</h2>
             <h1 className="text-3xl font-semibold text-gray-800">Attendance Tracker</h1>
           </div>
 

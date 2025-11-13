@@ -52,14 +52,14 @@ body {
   .bg-sbcc-gradient {
     background: linear-gradient(135deg, #F6C67E 0%, #FDB54A 100%);
   }
-  
+
   .text-sbcc-gradient {
     background: linear-gradient(135deg, #F6C67E 0%, #FDB54A 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  
+
   .border-sbcc-primary {
     border-color: var(--sbcc-primary);
   }
@@ -82,4 +82,20 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--sbcc-dark-orange);
+}
+
+/* ✅ Slide-in-right Animation */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
 }
