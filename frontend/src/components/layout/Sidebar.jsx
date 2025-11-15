@@ -13,17 +13,29 @@ import {
     ChevronUp,
     Menu,
     X,
+    LogOut,
 } from 'lucide-react';
+import { useAuth } from '../../features/auth/hooks/useAuth';
 
 export default function SCBCSidebar({ collapsed = false, onToggle }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user, logout } = useAuth();
     const [membershipOpen, setMembershipOpen] = useState(false);
     const [supportOpen, setSupportOpen] = useState(false);
 
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/login');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
+    };
+
     const NavButton = ({ id, icon: Icon, label, badge, isOpen, onClick, path }) => {
         const isActive = path ? location.pathname === path : false;
-        
+
         return (
             <div>
                 <button
@@ -64,9 +76,9 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
 
     const SubLink = ({ id, path, children }) => {
         const isActive = location.pathname === path;
-        
+
         if (collapsed) return null;
-        
+
         return (
             <button
                 onClick={() => navigate(path)}
@@ -79,8 +91,22 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
         );
     };
 
+    // Get user initials for avatar
+    const getUserInitials = () => {
+        if (!user) return 'U';
+        const firstName = user.first_name || '';
+        const lastName = user.last_name || '';
+        if (firstName && lastName) {
+            return `${firstName[0]}${lastName[0]}`.toUpperCase();
+        }
+        if (user.email) {
+            return user.email.substring(0, 2).toUpperCase();
+        }
+        return 'U';
+    };
+
     return (
-        <aside 
+        <aside
             className={`${
                 collapsed ? 'w-20' : 'w-72'
             } h-screen bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out`}
@@ -95,7 +121,7 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         <h1 className="text-lg font-semibold text-gray-900 whitespace-nowrap">SBCC Management</h1>
                     )}
                 </div>
-                
+
                 {/* Toggle Button */}
                 <button
                     onClick={onToggle}
@@ -129,9 +155,9 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         path="/dashboard"
                     />
 
-                    <NavButton 
-                        id="events" 
-                        icon={Calendar} 
+                    <NavButton
+                        id="events"
+                        icon={Calendar}
                         label="Events"
                         path="/events"
                     />
@@ -160,16 +186,16 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         )}
                     </div>
 
-                    <NavButton 
-                        id="inventory" 
-                        icon={Package} 
+                    <NavButton
+                        id="inventory"
+                        icon={Package}
                         label="Inventory"
                         path="/inventory"
                     />
 
-                    <NavButton 
-                        id="documents" 
-                        icon={FileText} 
+                    <NavButton
+                        id="documents"
+                        icon={FileText}
                         label="Documents"
                         path="/documents"
                     />
@@ -185,19 +211,19 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                     )}
 
                     <div className="mt-1">
-                        <NavButton 
-                            id="support" 
-                            icon={Headphones} 
-                            label="Support" 
+                        <NavButton
+                            id="support"
+                            icon={Headphones}
+                            label="Support"
                             isOpen={!collapsed && supportOpen}
                             onClick={!collapsed ? () => setSupportOpen(!supportOpen) : undefined}
                             path={collapsed ? '/support/helpdesk' : undefined}
                         />
                         {!collapsed && (
-                            <div 
-                                id="support-submenu" 
-                                role="region" 
-                                aria-labelledby="support" 
+                            <div
+                                id="support-submenu"
+                                role="region"
+                                aria-labelledby="support"
                                 className={`${supportOpen ? 'block' : 'hidden'} mt-1 space-y-1`}
                             >
                                 <SubLink id="support-helpdesk" path="/support/helpdesk">Helpdesk</SubLink>
@@ -206,39 +232,58 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         )}
                     </div>
 
-                    <NavButton 
-                        id="docs" 
-                        icon={File} 
+                    <NavButton
+                        id="docs"
+                        icon={File}
                         label="Documentation"
                         path="/docs"
                     />
-                    
-                    <NavButton 
-                        id="help" 
-                        icon={HelpCircle} 
+
+                    <NavButton
+                        id="help"
+                        icon={HelpCircle}
                         label="Help Center"
                         path="/help"
                     />
                 </div>
             </nav>
 
-            {/* Footer - User Info */}
-            <div className="p-4 border-t border-gray-200">
+            {/* Footer - User Info & Logout */}
+            <div className="p-4 border-t border-gray-200 space-y-2">
+                {/* User Info */}
                 <div className={`flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
                     collapsed ? 'justify-center' : ''
                 }`}>
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                        JG
+                        {getUserInitials()}
                     </div>
                     {!collapsed && (
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
-                            <p className="text-xs text-gray-500 truncate">admin@sbcc.com</p>
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                                {user?.first_name && user?.last_name
+                                    ? `${user.first_name} ${user.last_name}`
+                                    : user?.email || 'User'
+                                }
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                                {user?.email || 'user@sbcc.com'}
+                            </p>
                         </div>
                     )}
                 </div>
+
+                {/* Logout Button */}
+                <button
+                    onClick={handleLogout}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors rounded-lg hover:bg-red-50 text-red-600 hover:text-red-700 ${
+                        collapsed ? 'justify-center' : ''
+                    }`}
+                    title={collapsed ? 'Logout' : undefined}
+                >
+                    <LogOut size={18} className="flex-shrink-0" />
+                    {!collapsed && <span className="font-medium">Logout</span>}
+                </button>
             </div>
         </aside>
     );
 }
-

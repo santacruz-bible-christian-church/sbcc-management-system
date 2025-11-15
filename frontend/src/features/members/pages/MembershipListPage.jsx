@@ -145,6 +145,18 @@ export const MembershipListPage = () => {
             if (err.response?.data) {
                 const errorData = err.response.data;
 
+                // Check for specific "user already exists" error
+                if (errorData.user && Array.isArray(errorData.user)) {
+                    if (errorData.user[0].includes('already exists')) {
+                        alert(
+                            `A member with this email already exists.\n\n` +
+                            `Please check if this person is already in the system, ` +
+                            `or use a different email address.`
+                        );
+                        return;
+                    }
+                }
+
                 // If it's a validation error object
                 if (typeof errorData === 'object' && !errorData.detail) {
                     const errorMessages = Object.entries(errorData)

@@ -1,3 +1,5 @@
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
@@ -9,6 +11,8 @@ from rest_framework.response import Response
 from .models import Member
 from .serializers import MemberSerializer
 from .services import get_upcoming_anniversaries, get_upcoming_birthdays
+
+User = get_user_model()
 
 
 class MemberViewSet(viewsets.ModelViewSet):
@@ -26,14 +30,62 @@ class MemberViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
-        if not data.get("user"):
-            data["user"] = request.user.pk
-        # default status to 'active' if not provided
+
+        # Generate unique username from email or name
+        email = data.get("email", "")
+        first_name = data.get("first_name", "")
+        last_name = data.get("last_name", "")
+
+        # Create username from email or name
+        if email:
+            username_base = email.split("@")[0]
+        else:
+            username_base = f"{first_name.lower()}{last_name.lower()}"
+
+        # Make username unique
+        username = username_base
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{username_base}{counter}"
+            counter += 1
+
+        # Check if user with this email already exists
+        existing_user = User.objects.filter(email=email).first() if email else None
+
+        if existing_user:
+            # Check if this user already has a member profile
+            if hasattr(existing_user, "member_profile"):
+                return Response(
+                    {"detail": f"A member profile already exists for {email}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            # Use existing user
+            data["user"] = existing_user.pk
+        else:
+            # Create new user with random password
+            # FIX: Use Django's get_random_string instead
+            from django.utils.crypto import get_random_string
+
+            random_password = get_random_string(length=12)
+
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                role="member",
+                password=random_password,  # Use the random string
+            )
+            data["user"] = user.pk
+
+        # Default status to 'active' if not provided
         if not data.get("status"):
             data["status"] = "active"
+
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @transaction.atomic
@@ -41,15 +93,35 @@ class MemberViewSet(viewsets.ModelViewSet):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
         data = request.data.copy()
-        # Prevent non-admins from changing the user relation
-        if "user" in data and not request.user.is_staff:
+
+        # Prevent changing the user relation
+        if "user" in data:
             data.pop("user")
+
         # Restrict changing status to staff only
         if "status" in data and not request.user.is_staff:
             data.pop("status")
+
+        # Update user model fields if provided
+        if instance.user:
+            user_updated = False
+            if "first_name" in data:
+                instance.user.first_name = data["first_name"]
+                user_updated = True
+            if "last_name" in data:
+                instance.user.last_name = data["last_name"]
+                user_updated = True
+            if "email" in data:
+                instance.user.email = data["email"]
+                user_updated = True
+
+            if user_updated:
+                instance.user.save()
+
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @transaction.atomic
@@ -61,10 +133,6 @@ class MemberViewSet(viewsets.ModelViewSet):
     def archive(self, request, pk=None):
         """Soft-archive a member (set status to 'archived', set archived_at and deactivate)."""
         member = self.get_object()
-        if member.status == "archived":
-            return Response(
-                {"detail": "Member already archived."}, status=status.HTTP_400_BAD_REQUEST
-            )
         member.status = "archived"
         member.archived_at = timezone.now()
         member.is_active = False
@@ -102,32 +170,17 @@ class MemberViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"], permission_classes=[permissions.IsAuthenticated])
     def set_status(self, request):
         """
-        Set status for one or multiple members.
-        Payload: { "ids": [1,2], "status": "inactive" }
-        Only staff can set status.
+        Set status for one or more members.
+        Payload: { "ids": [1,2,3], "status": "active" }
         """
-        if not request.user.is_staff:
-            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
         ids = request.data.get("ids") or []
-        status_value = request.data.get("status")
-        if not status_value or status_value not in dict(Member.STATUS_CHOICES):
-            return Response({"detail": "Invalid status."}, status=status.HTTP_400_BAD_REQUEST)
+        new_status = request.data.get("status")
         if not isinstance(ids, (list, tuple)):
             return Response({"detail": "ids must be a list."}, status=status.HTTP_400_BAD_REQUEST)
+        if new_status not in dict(Member.STATUS_CHOICES):
+            return Response({"detail": "Invalid status value."}, status=status.HTTP_400_BAD_REQUEST)
         qs = self.get_queryset().filter(id__in=ids)
-        now = timezone.now()
-        if status_value == "archived":
-            updated = qs.update(
-                status=status_value, archived_at=now, is_active=False, updated_at=now
-            )
-        else:
-            # clear archived_at for non-archived statuses; set is_active only for 'active'
-            updated = qs.update(
-                status=status_value,
-                archived_at=None,
-                is_active=(status_value == "active"),
-                updated_at=now,
-            )
+        updated = qs.update(status=new_status, updated_at=timezone.now())
         return Response({"updated_count": updated}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
