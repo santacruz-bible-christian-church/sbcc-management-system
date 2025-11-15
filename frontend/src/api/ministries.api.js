@@ -32,8 +32,8 @@ export const ministriesApi = {
   },
 
   // Rotate shifts for a ministry
-  rotateShifts: async (id, data) => {
-    const response = await apiClient.post(`/ministries/${id}/rotate_shifts/`, data);
+  rotateShifts: async (ministryId, data) => {
+    const response = await apiClient.post(`/ministries/${ministryId}/rotate_shifts/`, data);
     return response.data;
   },
 

@@ -1,14 +1,29 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Spinner, Tabs } from 'flowbite-react';
-import { HiOutlineArrowLeft, HiOutlinePencil, HiOutlineTrash, HiOutlineUsers, HiOutlineClock } from 'react-icons/hi';
+import {
+  HiOutlineArrowLeft,
+  HiOutlinePencil,
+  HiOutlineTrash,
+  HiOutlineUsers,
+  HiOutlineClock,
+  HiRefresh,
+  HiInformationCircle,
+  HiUsers,
+  HiCalendar,
+  HiChartBar
+} from 'react-icons/hi';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { ministriesApi } from '../../../api/ministries.api';
 import { MinistryFormModal } from '../components/MinistryFormModal';
-import { MinistryMembersTab } from '../components/MinistryMembersTab';
+import MinistryMembersTab from '../components/MinistryMembersTab';
 import { MinistryShiftsTab } from '../components/MinistryShiftsTab';
 import { MinistryOverviewTab } from '../components/MinistryOverviewTab';
 import { ConfirmationModal } from '../../../components/ui/Modal';
+import Snackbar from '../../../components/ui/Snackbar';
+import { useSnackbar } from '../../../hooks/useSnackbar';
+import ShiftRotationModal from '../components/ShiftRotationModal';
+import { SecondaryButton } from '../../../components/ui/Button';
 
 const MANAGER_ROLES = ['admin', 'pastor', 'staff'];
 
@@ -17,6 +32,7 @@ export const MinistryDetailsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canManage = MANAGER_ROLES.includes(user?.role);
+  const { snackbar, hideSnackbar } = useSnackbar();
 
   const [ministry, setMinistry] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,6 +40,7 @@ export const MinistryDetailsPage = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [rotationModalOpen, setRotationModalOpen] = useState(false);
 
   const fetchMinistry = useCallback(async () => {
     setLoading(true);
@@ -110,24 +127,33 @@ export const MinistryDetailsPage = () => {
               {ministry.description || 'No description provided'}
             </p>
           </div>
-          {canManage && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setEditModal(true)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Edit Ministry"
-              >
-                <HiOutlinePencil className="w-5 h-5 text-[#FFB039]" />
-              </button>
-              <button
-                onClick={() => setDeleteModal(true)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Delete Ministry"
-              >
-                <HiOutlineTrash className="w-5 h-5 text-[#E55050]" />
-              </button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            {canManage && (
+              <>
+                <SecondaryButton
+                  icon={HiRefresh}
+                  onClick={() => setRotationModalOpen(true)}
+                  size="sm"
+                >
+                  Rotate Shifts
+                </SecondaryButton>
+                <button
+                  onClick={() => setEditModal(true)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Edit Ministry"
+                >
+                  <HiOutlinePencil className="w-5 h-5 text-[#FFB039]" />
+                </button>
+                <button
+                  onClick={() => setDeleteModal(true)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Delete Ministry"
+                >
+                  <HiOutlineTrash className="w-5 h-5 text-[#E55050]" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -188,7 +214,7 @@ export const MinistryDetailsPage = () => {
           </Tabs.Item>
           <Tabs.Item title="Members">
             <MinistryMembersTab
-              ministryId={ministry.id}
+              ministry={ministry}
               canManage={canManage}
               onRefresh={fetchMinistry}
             />
@@ -223,6 +249,23 @@ export const MinistryDetailsPage = () => {
         onCancel={() => setDeleteModal(false)}
         loading={loading}
       />
+
+      {/* Shift Rotation Modal */}
+      <ShiftRotationModal
+        open={rotationModalOpen}
+        onClose={() => setRotationModalOpen(false)}
+        ministry={ministry}
+      />
+
+      {/* Snackbar */}
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          variant={snackbar.variant}
+          duration={snackbar.duration}
+          onClose={hideSnackbar}
+        />
+      )}
     </div>
   );
 };
