@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Spinner, Tabs } from 'flowbite-react';
-import { HiOutlineArrowLeft, HiOutlinePencil, HiOutlineTrash, HiOutlineUsers, HiOutlineClock } from 'react-icons/hi';
+import { HiOutlineArrowLeft, HiOutlinePencil, HiOutlineTrash, HiOutlineUsers, HiOutlineClock, HiRefresh } from 'react-icons/hi';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { ministriesApi } from '../../../api/ministries.api';
+import { useSnackbar } from '../../../hooks/useSnackbar';
 import { MinistryFormModal } from '../components/MinistryFormModal';
 import { MinistryMembersTab } from '../components/MinistryMembersTab';
 import { MinistryShiftsTab } from '../components/MinistryShiftsTab';
 import { MinistryOverviewTab } from '../components/MinistryOverviewTab';
 import { ConfirmationModal } from '../../../components/ui/Modal';
+import { SecondaryButton } from '../../../components/ui/Button';
+import { ShiftRotationModal } from '../components/ShiftRotationModal';
+import Snackbar from '../../../components/ui/Snackbar';
 
 const MANAGER_ROLES = ['admin', 'pastor', 'staff'];
 
@@ -16,27 +20,35 @@ export const MinistryDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
   const canManage = MANAGER_ROLES.includes(user?.role);
 
   const [ministry, setMinistry] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState(0);
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [rotationModalOpen, setRotationModalOpen] = useState(false);
 
   const fetchMinistry = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
+      console.log('=== FETCHING MINISTRY ===');
+      console.log('Ministry ID:', id);
+
       const data = await ministriesApi.getMinistry(id);
+
+      console.log('Fetched ministry:', data);
+      console.log('Ministry ID:', data.id);
+      console.log('Ministry Name:', data.name);
+
       setMinistry(data);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Unable to load ministry details');
+      console.error('Failed to load ministry:', err);
+      showError('Failed to load ministry details');
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, showError]);
 
   useEffect(() => {
     fetchMinistry();
@@ -47,43 +59,40 @@ export const MinistryDetailsPage = () => {
       await ministriesApi.updateMinistry(id, data);
       await fetchMinistry();
       setEditModal(false);
+      showSuccess('Ministry updated successfully');
     } catch (err) {
-      console.error('Update error:', err);
-      throw err;
+      showError('Failed to update ministry');
     }
-  }, [id, fetchMinistry]);
+  }, [id, fetchMinistry, showSuccess, showError]);
 
   const handleDelete = useCallback(async () => {
     try {
       await ministriesApi.deleteMinistry(id);
+      showSuccess('Ministry deleted successfully');
       navigate('/ministries');
     } catch (err) {
-      console.error('Delete error:', err);
-      setError(err.response?.data?.detail || 'Unable to delete ministry');
+      showError('Failed to delete ministry');
     }
-  }, [id, navigate]);
+  }, [id, navigate, showSuccess, showError]);
 
   if (loading) {
     return (
-      <div className="max-w-[95%] mx-auto p-4 md:p-8">
-        <div className="flex flex-col items-center justify-center py-20">
-          <Spinner size="xl" />
-          <p className="mt-3 text-[#A0A0A0]">Loading ministry details...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Spinner size="xl" />
       </div>
     );
   }
 
-  if (error || !ministry) {
+  if (!ministry) {
     return (
       <div className="max-w-[95%] mx-auto p-4 md:p-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4" role="alert">
-          <p className="text-red-800">{error || 'Ministry not found'}</p>
+        <div className="text-center py-12">
+          <p className="text-gray-500">Ministry not found</p>
           <button
             onClick={() => navigate('/ministries')}
-            className="mt-4 text-[#FDB54A] hover:underline"
+            className="mt-4 text-sbcc-primary hover:underline"
           >
-            ← Back to Ministries
+            Back to Ministries
           </button>
         </div>
       </div>
@@ -110,24 +119,33 @@ export const MinistryDetailsPage = () => {
               {ministry.description || 'No description provided'}
             </p>
           </div>
-          {canManage && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setEditModal(true)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Edit Ministry"
-              >
-                <HiOutlinePencil className="w-5 h-5 text-[#FFB039]" />
-              </button>
-              <button
-                onClick={() => setDeleteModal(true)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Delete Ministry"
-              >
-                <HiOutlineTrash className="w-5 h-5 text-[#E55050]" />
-              </button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            {canManage && (
+              <>
+                <SecondaryButton
+                  icon={HiRefresh}
+                  onClick={() => setRotationModalOpen(true)}
+                  size="sm"
+                >
+                  Rotate Shifts
+                </SecondaryButton>
+                <button
+                  onClick={() => setEditModal(true)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Edit Ministry"
+                >
+                  <HiOutlinePencil className="w-5 h-5 text-[#FFB039]" />
+                </button>
+                <button
+                  onClick={() => setDeleteModal(true)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Delete Ministry"
+                >
+                  <HiOutlineTrash className="w-5 h-5 text-[#E55050]" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -181,14 +199,13 @@ export const MinistryDetailsPage = () => {
         <Tabs
           aria-label="Ministry tabs"
           variant="underline"
-          onActiveTabChange={(tab) => setActiveTab(tab)}
         >
           <Tabs.Item active title="Overview">
             <MinistryOverviewTab ministry={ministry} onRefresh={fetchMinistry} />
           </Tabs.Item>
           <Tabs.Item title="Members">
             <MinistryMembersTab
-              ministryId={ministry.id}
+              ministry={ministry}
               canManage={canManage}
               onRefresh={fetchMinistry}
             />
@@ -196,6 +213,7 @@ export const MinistryDetailsPage = () => {
           <Tabs.Item title="Shifts">
             <MinistryShiftsTab
               ministryId={ministry.id}
+              ministry={ministry}
               canManage={canManage}
               onRefresh={fetchMinistry}
             />
@@ -223,6 +241,24 @@ export const MinistryDetailsPage = () => {
         onCancel={() => setDeleteModal(false)}
         loading={loading}
       />
+
+      {/* Shift Rotation Modal */}
+      <ShiftRotationModal
+        open={rotationModalOpen}
+        onClose={() => setRotationModalOpen(false)}
+        ministry={ministry}
+        onSuccess={fetchMinistry}
+      />
+
+      {/* Snackbar */}
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          variant={snackbar.variant}
+          duration={snackbar.duration}
+          onClose={hideSnackbar}
+        />
+      )}
     </div>
   );
 };

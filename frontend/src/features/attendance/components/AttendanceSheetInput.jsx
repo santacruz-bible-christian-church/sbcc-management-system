@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Calendar as CalIcon } from 'lucide-react';
+import { X, Calendar as CalIcon, AlertCircle } from 'lucide-react';
 import { eventsApi } from '../../../api/events.api';
 
 const ACCENT = '#FDB54A';
@@ -111,16 +111,24 @@ export default function AttendanceSheetInput({ open = false, onClose = () => {},
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [date, setDate] = useState('');
+  const [dateError, setDateError] = useState('');
   const [notes, setNotes] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
 
   const parseMMDDYYYY = (s) => {
     if (!s) return null;
     const parts = String(s).split('/');
     if (parts.length !== 3) return null;
-    const mm = parseInt(parts[0], 10) - 1;
+    const mm = parseInt(parts[0], 10);
     const dd = parseInt(parts[1], 10);
     const yyyy = parseInt(parts[2], 10);
-    const d = new Date(yyyy, mm, dd);
+
+    // Validation
+    if (mm < 1 || mm > 12) return null;
+    if (dd < 1 || dd > 31) return null;
+    if (yyyy < 1900 || yyyy > 2100) return null;
+
+    const d = new Date(yyyy, mm - 1, dd);
     return isNaN(d) ? null : d;
   };
 
@@ -130,7 +138,56 @@ export default function AttendanceSheetInput({ open = false, onClose = () => {},
     return `${pad(d.getMonth() + 1)}/${pad(d.getDate())}/${d.getFullYear()}`;
   };
 
-  const [selectedDate, setSelectedDate] = useState(null);
+  const validateDate = (value) => {
+    if (!value) {
+      setDateError('Date is required');
+      return false;
+    }
+
+    // Check format MM/DD/YYYY
+    const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
+    if (!dateRegex.test(value)) {
+      setDateError('Please use MM/DD/YYYY format');
+      return false;
+    }
+
+    const parsed = parseMMDDYYYY(value);
+    if (!parsed) {
+      setDateError('Invalid date');
+      return false;
+    }
+
+    setDateError('');
+    return true;
+  };
+
+  const handleDateChange = (value) => {
+    setDate(value);
+
+    // Auto-format: add slashes
+    let formatted = value.replace(/\D/g, ''); // Remove non-digits
+    if (formatted.length >= 2) {
+      formatted = formatted.slice(0, 2) + '/' + formatted.slice(2);
+    }
+    if (formatted.length >= 5) {
+      formatted = formatted.slice(0, 5) + '/' + formatted.slice(5, 9);
+    }
+
+    if (formatted !== value) {
+      setDate(formatted);
+    }
+
+    // Validate if complete
+    if (formatted.length === 10) {
+      const isValid = validateDate(formatted);
+      if (isValid) {
+        const parsed = parseMMDDYYYY(formatted);
+        setSelectedDate(parsed);
+      }
+    } else {
+      setDateError('');
+    }
+  };
 
   // Load events on mount
   useEffect(() => {
@@ -153,19 +210,54 @@ export default function AttendanceSheetInput({ open = false, onClose = () => {},
   };
 
   const handleSubmit = () => {
-    if (!eventId || !date) {
-      alert('Please select an event and date');
+    // Validate event
+    if (!eventId) {
+      alert('Please select an event');
       return;
     }
+
+    // Validate date
+    if (!validateDate(date)) {
+      return;
+    }
+
     onCreate({ eventId: parseInt(eventId), date, selectedDate, notes });
   };
 
   const handleClose = () => {
     setEventId('');
     setDate('');
+    setDateError('');
     setNotes('');
     setSelectedDate(null);
     onClose();
+  };
+
+  // ✅ NEW: Auto-fill date when event is selected
+  const handleEventChange = (eventIdValue) => {
+    setEventId(eventIdValue);
+
+    if (eventIdValue) {
+      // Find selected event
+      const selectedEvent = events.find(e => e.id === parseInt(eventIdValue));
+
+      if (selectedEvent && selectedEvent.date) {
+        // Auto-fill with event's date
+        const eventDate = new Date(selectedEvent.date);
+        const formatted = formatMMDDYYYY(eventDate);
+
+        setDate(formatted);
+        setSelectedDate(eventDate);
+        validateDate(formatted);
+
+        console.log('📅 Auto-filled date from event:', formatted);
+      }
+    } else {
+      // Clear date if no event selected
+      setDate('');
+      setSelectedDate(null);
+      setDateError('');
+    }
   };
 
   if (!open) return null;
@@ -187,13 +279,14 @@ export default function AttendanceSheetInput({ open = false, onClose = () => {},
             <div className="mt-6 space-y-4">
               {/* Event Selection */}
               <div>
-                <label className="block text-sm text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Event <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={eventId}
-                  onChange={(e) => setEventId(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50"
+                  onChange={(e) => handleEventChange(e.target.value)} // ← Use new handler
+                  className="w-full px-4 py-3 rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-[#FDB54A] focus:outline-none transition-all"
+                  style={{ border: '1px solid #e5e7eb' }}
                   disabled={loadingEvents}
                 >
                   <option value="">Select an event...</option>
@@ -208,35 +301,66 @@ export default function AttendanceSheetInput({ open = false, onClose = () => {},
                 )}
               </div>
 
-              {/* Date */}
+              {/* Date - REDESIGNED */}
               <div>
-                <label className="block text-sm text-gray-700 mb-2">
-                  Date <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Attendance Date <span className="text-red-500">*</span>
                 </label>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-orange-200 w-56 bg-white">
-                  <CalIcon className="w-4 h-4 text-[#FDB54A]" />
-                  <input
-                    type="text"
-                    value={date}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setDate(v);
-                      const parsed = parseMMDDYYYY(v);
-                      setSelectedDate(parsed);
-                    }}
-                    placeholder="MM/DD/YYYY"
-                    className="outline-none text-sm text-gray-700 w-full"
-                  />
+                <p className="text-xs text-gray-500 mb-2">
+                  💡 Auto-filled from event. Change if recording attendance on a different day.
+                </p>
+                <div className="relative">
+                  <div
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg bg-white shadow-sm transition-all ${
+                      dateError
+                        ? 'ring-2 ring-red-500'
+                        : 'focus-within:ring-2 focus-within:ring-[#FDB54A]'
+                    }`}
+                    style={{ border: dateError ? 'none' : '1px solid #e5e7eb' }}
+                  >
+                    <CalIcon className="w-5 h-5 text-[#FDB54A] flex-shrink-0" />
+                    <input
+                      type="text"
+                      value={date}
+                      onChange={(e) => handleDateChange(e.target.value)}
+                      onBlur={() => date && validateDate(date)}
+                      placeholder="MM/DD/YYYY"
+                      maxLength={10}
+                      className="flex-1 outline-none text-sm text-gray-900 placeholder:text-gray-400"
+                      style={{ border: 'none' }}
+                    />
+                    {dateError && (
+                      <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                    )}
+                  </div>
+                  {dateError && (
+                    <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                      <span>•</span> {dateError}
+                    </p>
+                  )}
+                  {selectedDate && !dateError && (
+                    <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                      <span>✓</span> {selectedDate.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* Notes */}
               <div>
-                <label className="block text-sm text-gray-700 mb-2">Notes (Optional)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notes (Optional)
+                </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50"
+                  className="w-full px-4 py-3 rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-[#FDB54A] focus:outline-none transition-all resize-none"
+                  style={{ border: '1px solid #e5e7eb' }}
                   rows={3}
                   placeholder="Add any notes about this attendance sheet..."
                 />
@@ -246,7 +370,8 @@ export default function AttendanceSheetInput({ open = false, onClose = () => {},
               <div className="pt-4">
                 <button
                   onClick={handleSubmit}
-                  className="w-44 py-3 rounded-lg text-white font-medium"
+                  disabled={!eventId || !date || dateError}
+                  className="w-44 py-3 rounded-lg text-white font-medium transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: ACCENT }}
                 >
                   Create Sheet
@@ -261,7 +386,7 @@ export default function AttendanceSheetInput({ open = false, onClose = () => {},
               onClick={handleClose}
               aria-label="Close modal"
               title="Close"
-              className="absolute top-4 right-6 p-2 rounded-full hover:bg-gray-100"
+              className="absolute top-4 right-6 p-2 rounded-full hover:bg-gray-200 transition-colors"
             >
               <X className="w-5 h-5 text-gray-600" />
             </button>
@@ -271,7 +396,13 @@ export default function AttendanceSheetInput({ open = false, onClose = () => {},
                 selected={selectedDate}
                 onSelect={(d) => {
                   setSelectedDate(d);
-                  setDate(d ? formatMMDDYYYY(d) : '');
+                  const formatted = d ? formatMMDDYYYY(d) : '';
+                  setDate(formatted);
+                  if (formatted) {
+                    validateDate(formatted);
+                  } else {
+                    setDateError('');
+                  }
                 }}
               />
             </div>

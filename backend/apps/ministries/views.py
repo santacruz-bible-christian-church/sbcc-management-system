@@ -70,14 +70,19 @@ class MinistryMemberViewSet(viewsets.ModelViewSet):
 class ShiftViewSet(viewsets.ModelViewSet):
     """ViewSet for Shift model"""
 
-    queryset = Shift.objects.select_related("ministry").prefetch_related("assignment").all()
+    queryset = Shift.objects.select_related("ministry").all()
     serializer_class = ShiftSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["ministry", "date", "role"]
-    search_fields = ["role", "ministry__name"]
-    ordering_fields = ["date", "ministry"]
-    ordering = ["date"]
+
+    # Remove 'role' from filterset_fields
+    filterset_fields = ["ministry", "date"]
+
+    # Remove 'role' from search_fields
+    search_fields = ["ministry__name", "notes"]
+
+    ordering_fields = ["date", "start_time"]
+    ordering = ["date", "start_time"]
 
 
 class AssignmentViewSet(viewsets.ModelViewSet):
@@ -87,7 +92,12 @@ class AssignmentViewSet(viewsets.ModelViewSet):
     serializer_class = AssignmentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["shift__ministry", "user", "notified", "reminded"]
-    search_fields = ["user__first_name", "user__last_name", "shift__role"]
+
+    # Update filterset_fields - remove notified, reminded, shift__role
+    filterset_fields = ["shift__ministry", "user", "attended"]
+
+    # Update search_fields - remove shift__role
+    search_fields = ["user__first_name", "user__last_name", "shift__ministry__name"]
+
     ordering_fields = ["assigned_at"]
     ordering = ["-assigned_at"]

@@ -32,10 +32,17 @@ export const useEvents = () => {
       });
 
       const results = Array.isArray(data) ? data : data.results ?? [];
-      setEvents(results);
+
+      const normalizedEvents = results.map(event => ({
+        ...event,
+        date: event.start_datetime || event.date,
+        end_date: event.end_datetime || event.end_date,
+      }));
+
+      setEvents(normalizedEvents);
     } catch (err) {
-      setEvents([]);
-      setError(err.response?.data?.detail || 'Unable to load events right now.');
+      console.error('Failed to fetch events:', err);
+      setError(err.response?.data?.detail || 'Unable to load events.');
     } finally {
       setLoading(false);
     }

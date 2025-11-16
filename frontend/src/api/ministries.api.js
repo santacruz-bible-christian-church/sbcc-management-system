@@ -2,88 +2,58 @@ import apiClient from './client';
 
 export const ministriesApi = {
   // Get all ministries with pagination and filters
-  listMinistries: async (params = {}) => {
-    const response = await apiClient.get('/ministries/', { params });
-    return response.data;
-  },
+  listMinistries: (params = {}) =>
+    apiClient.get('/ministries/', { params }).then(res => res.data),
 
   // Get single ministry
-  getMinistry: async (id) => {
-    const response = await apiClient.get(`/ministries/${id}/`);
-    return response.data;
-  },
+  getMinistry: (id) =>
+    apiClient.get(`/ministries/${id}/`).then(res => res.data),
 
   // Create ministry
-  createMinistry: async (data) => {
-    const response = await apiClient.post('/ministries/', data);
-    return response.data;
-  },
+  createMinistry: (data) =>
+    apiClient.post('/ministries/', data).then(res => res.data),
 
   // Update ministry
-  updateMinistry: async (id, data) => {
-    const response = await apiClient.put(`/ministries/${id}/`, data);
-    return response.data;
-  },
+  updateMinistry: (id, data) =>
+    apiClient.put(`/ministries/${id}/`, data).then(res => res.data),
 
   // Delete ministry
-  deleteMinistry: async (id) => {
-    const response = await apiClient.delete(`/ministries/${id}/`);
-    return response.data;
-  },
+  deleteMinistry: (id) =>
+    apiClient.delete(`/ministries/${id}/`).then(res => res.data),
 
   // Rotate shifts for a ministry
-  rotateShifts: async (id, data) => {
-    const response = await apiClient.post(`/ministries/${id}/rotate_shifts/`, data);
-    return response.data;
-  },
+  rotateShifts: (ministryId, data) =>
+    apiClient.post(`/ministries/${ministryId}/rotate_shifts/`, data).then(res => res.data),
 
   // Ministry Members
-  listMembers: async (params = {}) => {
-    const response = await apiClient.get('/ministries/members/', { params });
-    return response.data;
-  },
+  listMembers: (params = {}) =>
+    apiClient.get('/ministries/members/', { params }).then(res => res.data),
 
-  createMember: async (data) => {
-    const response = await apiClient.post('/ministries/members/', data);
-    return response.data;
-  },
+  createMember: (data) =>
+    apiClient.post('/ministries/members/', data).then(res => res.data),
 
-  updateMember: async (id, data) => {
-    const response = await apiClient.put(`/ministries/members/${id}/`, data);
-    return response.data;
-  },
+  updateMember: (id, data) =>
+    apiClient.put(`/ministries/members/${id}/`, data).then(res => res.data),
 
-  deleteMember: async (id) => {
-    const response = await apiClient.delete(`/ministries/members/${id}/`);
-    return response.data;
-  },
+  deleteMember: (id) =>
+    apiClient.delete(`/ministries/members/${id}/`).then(res => res.data),
 
   // Shifts
-  listShifts: async (params = {}) => {
-    const response = await apiClient.get('/ministries/shifts/', { params });
-    return response.data;
-  },
+  listShifts: (params = {}) =>
+    apiClient.get('/ministries/shifts/', { params }).then(res => res.data),
 
-  createShift: async (data) => {
-    const response = await apiClient.post('/ministries/shifts/', data);
-    return response.data;
-  },
+  createShift: (data) =>
+    apiClient.post('/ministries/shifts/', data).then(res => res.data),
 
-  updateShift: async (id, data) => {
-    const response = await apiClient.put(`/ministries/shifts/${id}/`, data);
-    return response.data;
-  },
+  updateShift: (id, data) =>
+    apiClient.put(`/ministries/shifts/${id}/`, data).then(res => res.data),
 
-  deleteShift: async (id) => {
-    const response = await apiClient.delete(`/ministries/shifts/${id}/`);
-    return response.data;
-  },
+  deleteShift: (id) =>
+    apiClient.delete(`/ministries/shifts/${id}/`).then(res => res.data),
 
   // Assignments
-  listAssignments: async (params = {}) => {
-    const response = await apiClient.get('/ministries/assignments/', { params });
-    return response.data;
-  },
+  listAssignments: (params = {}) =>
+    apiClient.get('/ministries/assignments/', { params }).then(res => res.data),
 };
 
 export default ministriesApi;
