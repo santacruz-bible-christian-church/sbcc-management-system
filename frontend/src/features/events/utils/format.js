@@ -78,14 +78,20 @@ export const serializeEventForm = (values) => {
     is_recurring: Boolean(values.is_recurring),
   };
 
+  // ✅ FIX: Use 'date' and 'end_date' (not start_datetime/end_datetime)
   payload.date = values.date ? new Date(values.date).toISOString() : null;
   payload.end_date = values.end_date ? new Date(values.end_date).toISOString() : null;
-  payload.ministry = values.ministry ? Number(values.ministry) : null;
+
+  // ✅ FIX: Add organizer (current user ID from context)
+  // This will be added in the component
+
+  payload.ministry = values.ministry && values.ministry !== '' ? Number(values.ministry) : null;
   payload.max_attendees =
     values.max_attendees !== '' && values.max_attendees !== null
       ? Number(values.max_attendees)
       : null;
 
+  console.log('📤 Event payload:', payload);
   return payload;
 };
 
@@ -97,8 +103,9 @@ export const prepareEventFormValues = (event) => {
   return {
     ...DEFAULT_FORM_VALUES,
     ...event,
-    date: event.date ?? '',
-    end_date: event.end_date ?? '',
+    // Map backend fields to form fields
+    date: event.date || event.start_datetime || '',
+    end_date: event.end_date || event.end_datetime || '',
     ministry: event.ministry ?? '',
     max_attendees:
       event.max_attendees !== null && event.max_attendees !== undefined

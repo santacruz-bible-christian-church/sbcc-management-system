@@ -106,19 +106,51 @@ export const EventsPage = () => {
   const handleFormSubmit = async (payload) => {
     setSubmitting(true);
     try {
+      console.log('📤 Submitting event (before adding organizer):', payload);
+
+      // ✅ FIX: Add organizer (current user ID)
+      const finalPayload = {
+        ...payload,
+        organizer: user.id,  // ← Add current user as organizer
+      };
+
+      console.log('📤 Final payload with organizer:', finalPayload);
+
       if (formState.mode === 'create') {
-        await createEvent(payload);
+        await createEvent(finalPayload);
         showSuccess('Event created successfully!');
       } else if (formState.event?.id) {
-        await updateEvent(formState.event.id, payload);
+        await updateEvent(formState.event.id, finalPayload);
         showSuccess('Event updated successfully!');
       }
       closeFormModal();
     } catch (err) {
-      console.error('Form submission error:', err);
-      const errorMsg = err.response?.data?.detail ||
-                       err.response?.data?.message ||
-                       'Failed to save event. Please try again.';
+      console.error('❌ Form submission error:', err);
+      console.error('Response data:', err.response?.data);
+      console.error('Response status:', err.response?.status);
+      console.error('Payload sent:', payload);
+
+      // Show detailed error
+      const errorData = err.response?.data;
+      let errorMsg = 'Failed to save event.';
+
+      if (errorData) {
+        if (typeof errorData === 'string') {
+          errorMsg = errorData;
+        } else if (errorData.detail) {
+          errorMsg = errorData.detail;
+        } else {
+          // Show all field errors
+          const fieldErrors = Object.entries(errorData)
+            .map(([field, errors]) => {
+              const errorList = Array.isArray(errors) ? errors : [errors];
+              return `${field}: ${errorList.join(', ')}`;
+            })
+            .join('\n');
+          errorMsg = fieldErrors || 'Validation failed.';
+        }
+      }
+
       showError(errorMsg);
     } finally {
       setSubmitting(false);
