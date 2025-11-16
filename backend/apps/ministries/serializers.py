@@ -51,10 +51,10 @@ class ShiftSerializer(serializers.ModelSerializer):
             "id",
             "ministry",
             "ministry_name",
-            "role",
             "date",
             "start_time",
             "end_time",
+            "notes",
             "created_at",
             "assignment_info",
         ]
@@ -70,8 +70,8 @@ class ShiftSerializer(serializers.ModelSerializer):
                 "user": getattr(user, "username", str(user)),
                 "user_id": user.pk,
                 "user_name": f"{user.first_name} {user.last_name}".strip() or user.username,
-                "notified": assignment.notified,
-                "reminded": assignment.reminded,
+                "user_email": user.email,
+                "attended": assignment.attended,
             }
         except Assignment.DoesNotExist:
             return None
@@ -96,8 +96,9 @@ class AssignmentSerializer(serializers.ModelSerializer):
             "user",
             "user_id",
             "assigned_at",
-            "notified",
-            "reminded",
+            "attended",  # ← Changed from notified
+            "notes",  # ← Add this
+            # REMOVED: "reminded"  ← Remove this
         ]
         read_only_fields = ["assigned_at"]
 

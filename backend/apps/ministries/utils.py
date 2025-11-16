@@ -1,140 +1,281 @@
 from datetime import timedelta
+from datetime import timezone as dt_timezone
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Assignment, MinistryMember, Shift
+from .models import Assignment, Ministry, MinistryMember, Shift
 
 
-def rotate_and_assign(ministry_ids=None, days=7, dry_run=False, notify=False, limit_per_ministry=0):
+def rotate_and_assign(
+    ministry_ids=None,
+    days=7,
+    dry_run=False,
+    notify=False,
+    limit_per_ministry=0,
+):
     """
-    Rotate and assign shifts for ministries.
+    Improved rotation algorithm with smart filtering.
 
-    Args:
-        ministry_ids: List of ministry IDs (None = all ministries)
-        days: Number of days ahead to look for shifts
-        dry_run: If True, don't actually create assignments
-        notify: If True, send email notifications
-        limit_per_ministry: Max assignments per ministry (0 = unlimited)
+    Features:
+    - Checks volunteer availability (available_days)
+    - Respects consecutive shift limits
+    - Fair distribution based on last assignment
 
     Returns:
-        dict: Summary with created, emailed, skipped_no_members, errors
+        dict: Summary of created assignments, emails sent, and errors
     """
-    summary = {"created": 0, "emailed": 0, "skipped_no_members": [], "errors": []}
+    summary = {
+        "created": 0,
+        "emailed": 0,
+        "skipped_no_members": [],
+        "skipped_no_available": [],
+        "errors": [],
+    }
 
-    today = timezone.now().date()
-    end_date = today + timedelta(days=days)
+    try:
+        # Step 1: Find unassigned shifts in date range
+        today = timezone.now().date()
+        end_date = today + timedelta(days=days)
 
-    shifts_qs = Shift.objects.filter(date__gte=today, date__lte=end_date, assignment__isnull=True)
+        print(f"\n=== ROTATION STARTED ===")
+        print(f"Date range: {today} to {end_date}")
+        print(f"Ministry IDs: {ministry_ids}")
+        print(f"Dry run: {dry_run}")
+        print(f"Notify: {notify}")
 
-    if ministry_ids is not None:
-        shifts_qs = shifts_qs.filter(ministry_id__in=list(ministry_ids))
+        shifts_qs = Shift.objects.filter(
+            date__gte=today, date__lte=end_date, assignment__isnull=True  # Only unassigned shifts
+        ).select_related("ministry")
 
-    shifts = shifts_qs.select_related("ministry").order_by("date", "ministry_id")
+        if ministry_ids:
+            shifts_qs = shifts_qs.filter(ministry_id__in=ministry_ids)
 
-    if not shifts.exists():
-        return summary
+        shifts_count = shifts_qs.count()
+        print(f"Found {shifts_count} unassigned shifts")
 
-    # Group shifts by ministry_id
-    shifts_by_ministry = {}
-    for s in shifts:
-        shifts_by_ministry.setdefault(s.ministry_id, []).append(s)
+        if shifts_count == 0:
+            print("No unassigned shifts found")
+            return summary
 
-    for ministry_id, shifts_list in shifts_by_ministry.items():
-        # Fetch active members
-        members = list(
-            MinistryMember.objects.filter(ministry_id=ministry_id, is_active=True).select_related(
-                "user"
+        # Step 2: Group shifts by ministry
+        shifts_by_ministry = {}
+        for shift in shifts_qs:
+            shifts_by_ministry.setdefault(shift.ministry_id, []).append(shift)
+
+        print(f"Shifts grouped into {len(shifts_by_ministry)} ministries")
+
+        # Step 3: Process each ministry
+        for ministry_id, shifts_list in shifts_by_ministry.items():
+            print(f"\n--- Processing Ministry {ministry_id} ---")
+            print(f"Shifts to assign: {len(shifts_list)}")
+
+            # Get active volunteers for this ministry
+            members = list(
+                MinistryMember.objects.filter(
+                    ministry_id=ministry_id, is_active=True
+                ).select_related("user")
             )
-        )
 
-        if not members:
-            summary["skipped_no_members"].append(ministry_id)
-            continue
+            if not members:
+                print(f"No active members for ministry {ministry_id}")
+                summary["skipped_no_members"].append(ministry_id)
+                continue
 
-        # Determine last assignment time per member (for this ministry)
-        member_last_assigned = {}
-        for mem in members:
-            last = (
-                Assignment.objects.filter(user=mem.user, shift__ministry_id=ministry_id)
-                .order_by("-assigned_at")
-                .first()
+            print(f"Found {len(members)} active volunteers")
+
+            # Step 4: Sort volunteers by last assignment (fairness)
+            member_last_assigned = {}
+            for mem in members:
+                last_assignment = (
+                    Assignment.objects.filter(user=mem.user, shift__ministry_id=ministry_id)
+                    .order_by("-assigned_at")
+                    .first()
+                )
+                member_last_assigned[mem.user.pk] = (
+                    last_assignment.assigned_at if last_assignment else None
+                )
+
+            # Sort: Never assigned (None) → Oldest → Newest
+            # Use a tuple where None sorts first
+            members_sorted = sorted(
+                members,
+                key=lambda m: (
+                    member_last_assigned.get(m.user.pk) is not None,  # False (None) sorts first
+                    member_last_assigned.get(m.user.pk) or timezone.now(),  # Then by date
+                    m.pk,  # Then by ID for consistency
+                ),
             )
-            member_last_assigned[mem.user.pk] = last.assigned_at if last else None
 
-        # Sort members so least-recently assigned come first (None => never assigned)
-        # FIXED: Make timezone-aware
-        members_sorted = sorted(
-            members,
-            key=lambda m: (
-                member_last_assigned.get(m.user.pk)
-                or timezone.datetime.min.replace(tzinfo=timezone.utc),
-                m.pk,
-            ),
-        )
+            print(f"Members sorted by fairness")
 
-        rot_index = 0
-        created_for_ministry = 0
+            # Step 5: Assign shifts with smart filtering
+            rot_index = 0
+            created_for_ministry = 0
+            max_attempts_per_shift = len(members_sorted) * 2
 
-        for shift in shifts_list:
-            if limit_per_ministry and created_for_ministry >= limit_per_ministry:
-                break
+            for shift in shifts_list:
+                if limit_per_ministry and created_for_ministry >= limit_per_ministry:
+                    print(f"Reached limit of {limit_per_ministry} assignments")
+                    break
 
-            assigned_member = members_sorted[rot_index % len(members_sorted)]
-            rot_index += 1
+                print(f"\nAssigning shift: {shift.date} {shift.start_time}-{shift.end_time}")
 
-            assignment = None
-            if not dry_run:
-                try:
-                    with transaction.atomic():
-                        assignment = Assignment.objects.create(
-                            shift=shift, user=assigned_member.user
-                        )
+                assigned = False
+                attempts = 0
+
+                while not assigned and attempts < max_attempts_per_shift:
+                    # Pick next volunteer in rotation
+                    candidate = members_sorted[rot_index % len(members_sorted)]
+                    rot_index += 1
+                    attempts += 1
+
+                    # Get shift day name (e.g., "Monday")
+                    try:
+                        shift_day = shift.date.strftime("%A")
+                    except Exception as e:
+                        print(f"Error getting shift day: {e}")
+                        shift_day = None
+
+                    print(
+                        f"  Trying {candidate.user.get_full_name() or candidate.user.username}..."
+                    )
+
+                    # === SMART FILTERING ===
+
+                    # 1. Check day availability
+                    if candidate.available_days and shift_day:
+                        if shift_day not in candidate.available_days:
+                            print(f"    ❌ Not available on {shift_day}")
+                            continue
+
+                    # 2. Check consecutive shift limit
+                    if candidate.max_consecutive_shifts:
+                        recent_days = candidate.max_consecutive_shifts
+                        cutoff_date = shift.date - timedelta(days=recent_days)
+
+                        recent_count = Assignment.objects.filter(
+                            user=candidate.user,
+                            shift__ministry_id=ministry_id,
+                            shift__date__gte=cutoff_date,
+                            shift__date__lt=shift.date,
+                        ).count()
+
+                        if recent_count >= candidate.max_consecutive_shifts:
+                            print(
+                                f"    ❌ At consecutive limit: {recent_count}/{candidate.max_consecutive_shifts}"
+                            )
+                            continue
+
+                    # === PASSED ALL CHECKS - ASSIGN! ===
+                    print(
+                        f"    ✅ ASSIGNED to {candidate.user.get_full_name() or candidate.user.username}"
+                    )
+
+                    if not dry_run:
+                        try:
+                            with transaction.atomic():
+                                assignment = Assignment.objects.create(
+                                    shift=shift, user=candidate.user
+                                )
+
+                                # Send notification if requested
+                                if notify:
+                                    try:
+                                        _send_assignment_notification(assignment, shift, candidate)
+                                        summary["emailed"] += 1
+                                        print(f"    📧 Email sent")
+                                    except Exception as email_err:
+                                        print(f"    ⚠️ Email failed: {email_err}")
+                                        summary["errors"].append(
+                                            f"Email to {candidate.user.email}: {str(email_err)}"
+                                        )
+
+                                summary["created"] += 1
+                                created_for_ministry += 1
+                                assigned = True
+
+                        except Exception as e:
+                            print(f"    ❌ Assignment failed: {e}")
+                            summary["errors"].append(f"Shift {shift.id}: {str(e)}")
+                    else:
+                        # Dry run - just count
                         summary["created"] += 1
                         created_for_ministry += 1
-                except Exception as exc:
-                    summary["errors"].append(
-                        f"Failed to create assignment for shift {shift.pk}: {exc}"
-                    )
-                    continue
+                        assigned = True
 
-            # Send notification if requested
-            if notify and assignment and not dry_run:
-                try:
-                    _send_assignment_notification(assignment, shift, assigned_member)
-                    assignment.notified = True
-                    assignment.save(update_fields=["notified"])
-                    summary["emailed"] += 1
-                except Exception as exc:
-                    summary["errors"].append(f"Failed to email {assigned_member.user.email}: {exc}")
+                # If no one could be assigned
+                if not assigned:
+                    print(f"  ⚠️ Could not assign shift (no available volunteers)")
+                    summary["skipped_no_available"].append(shift.id)
+
+            print(f"\n--- Ministry {ministry_id} complete: {created_for_ministry} assignments ---")
+
+        print(f"\n=== ROTATION COMPLETE ===")
+        print(f"Summary: {summary}")
+
+    except Exception as e:
+        print(f"\n❌ ROTATION ERROR: {e}")
+        import traceback
+
+        traceback.print_exc()
+        summary["errors"].append(f"System error: {str(e)}")
 
     return summary
 
 
 def _send_assignment_notification(assignment, shift, ministry_member):
-    """Send email notification for new assignment."""
-    user = ministry_member.user
-    subj = f"Assigned: {shift.role} on {shift.date}"
+    """Send email notification to assigned volunteer."""
+    try:
+        user = assignment.user
 
-    # IMPROVED: Include start/end time
-    body = (
-        f"Hello {user.first_name or user.username},\n\n"
-        f"You have been assigned to '{shift.role}' for the ministry "
-        f"'{shift.ministry.name}' on {shift.date}.\n\n"
-        f"Details:\n"
-        f"  Ministry: {shift.ministry.name}\n"
-        f"  Role: {shift.role}\n"
-        f"  Date: {shift.date}\n"
-    )
+        # Format time
+        try:
+            start_time = shift.start_time.strftime("%I:%M %p")
+            end_time = shift.end_time.strftime("%I:%M %p")
+        except:
+            start_time = str(shift.start_time)
+            end_time = str(shift.end_time)
 
-    if shift.start_time:
-        body += f"  Start Time: {shift.start_time.strftime('%I:%M %p')}\n"
-    if shift.end_time:
-        body += f"  End Time: {shift.end_time.strftime('%I:%M %p')}\n"
+        # Format date
+        try:
+            shift_date = shift.date.strftime("%A, %B %d, %Y")
+        except:
+            shift_date = str(shift.date)
 
-    body += "\nIf you cannot serve, please contact your ministry leader immediately.\n"
+        subject = f"Shift Assignment: {shift.ministry.name}"
 
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@sbcc.church")
-    send_mail(subj, body, from_email, [user.email], fail_silently=False)
+        message = f"""
+Hello {user.first_name or user.username},
+
+You have been assigned to a shift:
+
+Ministry: {shift.ministry.name}
+Date: {shift_date}
+Time: {start_time} - {end_time}
+
+{f'Notes: {shift.notes}' if shift.notes else ''}
+
+Thank you for serving!
+
+---
+SBCC Management System
+        """.strip()
+
+        print(f"Sending email to {user.email}")
+
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
+        print(f"Email sent successfully to {user.email}")
+
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        raise
