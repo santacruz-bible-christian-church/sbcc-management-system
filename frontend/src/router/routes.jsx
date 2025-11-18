@@ -9,6 +9,7 @@ import { MinistryDetailsPage } from '../features/ministries/pages/MinistryDetail
 import AttendanceSheetPage from '../features/attendance/pages/AttendanceSheetPage';
 import AttendanceTracker from '../features/attendance/pages/AttendanceTracker';
 import { ComingSoon } from '../components/ui/ComingSoon';
+import Inventory from '../features/inventory/pages/Inventory';
 
 export const routes = [
   {
@@ -79,7 +80,7 @@ export const routes = [
     path: '/inventory',
     element: (
       <ProtectedWithLayout>
-        <ComingSoon title="Inventory Management" />
+        <Inventory />
       </ProtectedWithLayout>
     ),
   },
