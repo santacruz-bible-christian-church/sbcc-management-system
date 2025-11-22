@@ -6,6 +6,7 @@ import {
   calculateItemMetrics,
   formatCurrency,
 } from '../utils';
+import { MinistrySelect } from './MinistrySelect';
 
 const defaultValues = {
   item_name: '',
@@ -41,12 +42,26 @@ const normalizeInitialValues = (values) => {
   }, {});
 };
 
-export const InventoryForm = ({ initialValues, submitting, onSubmit, onCancel }) => {
+export const InventoryForm = ({
+  initialValues,
+  submitting,
+  onSubmit,
+  onCancel,
+  ministryOptions = [],
+}) => {
   const [values, setValues] = useState(() => normalizeInitialValues(initialValues));
 
   useEffect(() => {
     setValues(normalizeInitialValues(initialValues));
   }, [initialValues]);
+
+  const normalizedMinistryOptions = useMemo(() => {
+    const unique = new Set(ministryOptions);
+    if (values.ministry_name) {
+      unique.add(values.ministry_name);
+    }
+    return Array.from(unique).sort((a, b) => a.localeCompare(b));
+  }, [ministryOptions, values.ministry_name]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -88,6 +103,8 @@ export const InventoryForm = ({ initialValues, submitting, onSubmit, onCancel })
     [values]
   );
 
+  const hasMinistryOptions = normalizedMinistryOptions.length > 0;
+
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -110,14 +127,23 @@ export const InventoryForm = ({ initialValues, submitting, onSubmit, onCancel })
           <label className="text-xs font-semibold uppercase text-sbcc-gray">
             Ministry
           </label>
-          <input
-            type="text"
-            name="ministry_name"
+          <MinistrySelect
             value={values.ministry_name}
-            onChange={handleChange}
-            className="w-full rounded-2xl border border-sbcc-gray/30 bg-white px-4 py-3 text-sbcc-dark placeholder:text-sbcc-gray focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[color:var(--sbcc-primary)]"
-            placeholder="e.g. Music, Events, Youth"
+            options={normalizedMinistryOptions}
+            onChange={(option) =>
+              setValues((prev) => ({
+                ...prev,
+                ministry_name: option,
+              }))
+            }
+            placeholder={hasMinistryOptions ? 'Select a ministry' : 'No ministries available'}
+            disabled={!hasMinistryOptions}
           />
+          <p className="text-xs text-sbcc-gray">
+            {hasMinistryOptions
+              ? 'Choose which ministry owns or manages this asset.'
+              : 'No ministries available yet. Add one from the Ministries module to enable assignments.'}
+          </p>
         </div>
       </div>
 

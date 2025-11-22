@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { inventoryApi } from '../../../api/inventory.api';
+import { ministriesApi } from '../../../api/ministries.api';
 import {
   DEFAULT_FILTERS,
   buildLabelBreakdown,
@@ -11,11 +12,61 @@ import {
 
 export const useInventory = () => {
   const [items, setItems] = useState([]);
+  const [ministries, setMinistries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const [filters, setFilters] = useState(() => ({ ...DEFAULT_FILTERS }));
   const [search, setSearch] = useState('');
+
+  // Fetch ALL ministries (handle pagination)
+  const fetchMinistries = useCallback(async () => {
+    try {
+      console.log('🔄 Fetching ministries...');
+
+      let allMinistries = [];
+      let page = 1;
+      let hasMore = true;
+
+      // Fetch all pages
+      while (hasMore) {
+        const response = await ministriesApi.listMinistries({ page, page_size: 100 });
+        console.log(`📦 Page ${page} response:`, response);
+
+        const pageResults = response?.results || [];
+
+        // Log first ministry to see its structure
+        if (pageResults.length > 0 && page === 1) {
+          console.log('🔍 Sample ministry object:', pageResults[0]);
+        }
+
+        allMinistries = [...allMinistries, ...pageResults];
+
+        // Check if there's a next page
+        hasMore = !!response?.next;
+        page++;
+      }
+
+      console.log(`📋 Total ministries fetched: ${allMinistries.length}`);
+      console.log('🔍 All ministries raw:', allMinistries);
+
+      // Extract names WITHOUT filtering by is_active (for now)
+      const ministryNames = allMinistries
+        .map((m) => {
+          console.log(`Ministry: ${m.name}, is_active: ${m.is_active}, active: ${m.active}`);
+          return m.name;
+        })
+        .filter(Boolean) // Remove null/undefined names
+        .sort((a, b) => a.localeCompare(b));
+
+      console.log('✅ All ministry names (unfiltered):', ministryNames);
+      setMinistries(ministryNames);
+    } catch (err) {
+      console.error('❌ Failed to fetch ministries:', err);
+      console.error('Error details:', err.response?.data);
+      setMinistries([]);
+    }
+  }, []);
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
@@ -37,18 +88,27 @@ export const useInventory = () => {
   }, []);
 
   useEffect(() => {
+    fetchMinistries();
     fetchItems();
-  }, [fetchItems]);
+  }, [fetchMinistries, fetchItems]);
 
+  // Merge API ministries with ministries found in inventory items
   const ministryOptions = useMemo(() => {
-    const unique = new Set();
+    const uniqueMinistries = new Set(ministries);
+
+    // Add any ministries from inventory items that aren't in the API response
     items.forEach((item) => {
-      if (item.ministry_name) {
-        unique.add(item.ministry_name);
+      const ministry = item.ministry_name?.trim();
+      if (ministry && ministry.toLowerCase() !== 'events') {
+        uniqueMinistries.add(ministry);
       }
     });
-    return Array.from(unique).sort((a, b) => a.localeCompare(b));
-  }, [items]);
+
+    const finalOptions = Array.from(uniqueMinistries).sort((a, b) => a.localeCompare(b));
+    console.log('🎯 Final ministry options:', finalOptions);
+
+    return finalOptions;
+  }, [ministries, items]);
 
   const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase();

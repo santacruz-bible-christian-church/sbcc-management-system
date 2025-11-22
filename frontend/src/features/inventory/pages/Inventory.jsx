@@ -219,13 +219,14 @@ const InventoryPage = () => {
           submitting={submitting}
           onSubmit={handleFormSubmit}
           onCancel={closeForm}
+          ministryOptions={ministryOptions}
         />
       </InventoryModal>
 
       <ConfirmationModal
         open={deleteState.open}
         title="Delete asset?"
-        message={`Are you sure you want to delete "${deleteState.item?.item_name}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete "${deleteState.item?.item_name || ''}"? This action cannot be undone.`}
         confirmText="Delete asset"
         confirmVariant="danger"
         onConfirm={handleDeleteConfirm}
@@ -246,3 +247,4 @@ const InventoryPage = () => {
 };
 
 export default InventoryPage;
+
