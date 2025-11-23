@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Role, Volunteer, Event, Assignment, Availability
+from .models import Role, Volunteer, Event, Assignment, Availability, Rotation, RotationMember
 from django.utils import timezone
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -81,3 +81,19 @@ class AvailabilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Availability
         fields = ("id", "volunteer", "date", "start_time", "end_time", "notes")
+
+class RotationMemberSerializer(serializers.ModelSerializer):
+    volunteer = VolunteerSerializer(read_only=True)
+    volunteer_id = serializers.PrimaryKeyRelatedField(source="volunteer", queryset=Volunteer.objects.all(), write_only=True)
+
+    class Meta:
+        model = RotationMember
+        fields = ("id", "rotation", "volunteer", "volunteer_id", "last_assigned", "priority")
+        read_only_fields = ("last_assigned",)
+
+class RotationSerializer(serializers.ModelSerializer):
+    members = RotationMemberSerializer(many=True, read_only=True)
+    class Meta:
+        model = Rotation
+        fields = ("id", "name", "description", "role", "created_at", "members")
+        read_only_fields = ("created_at",)
