@@ -2,10 +2,11 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Role, Volunteer, Event, Assignment, Availability
+from .models import Role, Volunteer, Event, Assignment, Availability, Rotation, RotationMember
 from .serializers import (
     RoleSerializer, VolunteerSerializer, EventSerializer,
-    AssignmentSerializer, AvailabilitySerializer
+    AssignmentSerializer, AvailabilitySerializer,
+    RotationSerializer, RotationMemberSerializer
 )
 from . import services
 from django.core.exceptions import ValidationError
@@ -80,3 +81,29 @@ class AvailabilityViewSet(viewsets.ModelViewSet):
     queryset = Availability.objects.select_related("volunteer").all()
     serializer_class = AvailabilitySerializer
     permission_classes = [IsAuthenticated]
+
+class RotationViewSet(viewsets.ModelViewSet):
+    queryset = Rotation.objects.prefetch_related("members__volunteer").all()
+    serializer_class = RotationSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def run_for_event(self, request, pk=None):
+        rotation = self.get_object()
+        event_id = request.data.get("event")
+        if not event_id:
+            return Response({"detail": "event id required"}, status=status.HTTP_400_BAD_REQUEST)
+        event = get_object_or_404(Event, pk=event_id)
+        role_id = request.data.get("role")
+        role = None
+        if role_id:
+            from .models import Role
+            role = get_object_or_404(Role, pk=role_id)
+        count = int(request.data.get("count", 1))
+        force = bool(request.data.get("force", False))
+        try:
+            created = services.run_rotation_for_event(rotation, event, role=role, count=count, force=force)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        out = AssignmentSerializer(created, many=True)
+        return Response({"created": out.data}, status=status.HTTP_201_CREATED)

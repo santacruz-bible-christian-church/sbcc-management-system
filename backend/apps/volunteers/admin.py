@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Role, Volunteer, Event, Assignment, Availability
+from .models import Role, Volunteer, Event, Assignment, Availability, Rotation, RotationMember
 
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
@@ -28,3 +28,15 @@ class AssignmentAdmin(admin.ModelAdmin):
 class AvailabilityAdmin(admin.ModelAdmin):
     list_display = ("volunteer", "date", "start_time", "end_time")
     search_fields = ("volunteer__first_name", "volunteer__last_name")
+
+@admin.register(Rotation)
+class RotationAdmin(admin.ModelAdmin):
+    list_display = ("name", "role", "created_at")
+    search_fields = ("name", "role__name")
+    filter_horizontal = ("required_roles",) if hasattr(Rotation, "required_roles") else ()
+
+@admin.register(RotationMember)
+class RotationMemberAdmin(admin.ModelAdmin):
+    list_display = ("rotation", "volunteer", "last_assigned", "priority")
+    search_fields = ("rotation__name", "volunteer__first_name", "volunteer__last_name", "volunteer__email")
+    list_filter = ("rotation",)

@@ -83,3 +83,28 @@ class Availability(models.Model):
 
     def __str__(self):
         return f"{self.volunteer} available {self.date} {self.start_time}-{self.end_time}"
+
+class Rotation(models.Model):
+    name = models.CharField(max_length=200, unique=True)
+    description = models.TextField(blank=True)
+    role = models.ForeignKey('Role', null=True, blank=True, on_delete=models.SET_NULL,
+                             help_text="Optional: if set, rotation is primarily for this role")
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.name
+
+class RotationMember(models.Model):
+    rotation = models.ForeignKey(Rotation, on_delete=models.CASCADE, related_name="members")
+    volunteer = models.ForeignKey(Volunteer, on_delete=models.CASCADE, related_name="rotations")
+    # A datetime of when this member was last assigned from this rotation (for fairness)
+    last_assigned = models.DateTimeField(null=True, blank=True)
+    # Optional: weight or priority to bias selection
+    priority = models.PositiveIntegerField(default=0, help_text="Higher priority is chosen earlier when last_assigned ties.")
+
+    class Meta:
+        unique_together = ("rotation", "volunteer")
+        ordering = ("last_assigned", "priority")
+
+    def __str__(self):
+        return f"{self.volunteer} in {self.rotation.name}"
