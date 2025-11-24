@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { ministriesApi } from '../../../api/ministries.api';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
-import { HiX, HiCheckCircle, HiExclamationCircle } from 'react-icons/hi';
+import { HiX, HiCheckCircle, HiExclamationCircle, HiClock } from 'react-icons/hi';
 import Snackbar from '../../../components/ui/Snackbar';
 
 export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
-  const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
+  const { snackbar, hideSnackbar, showSuccess, showError, showWarning } = useSnackbar();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [timeoutWarning, setTimeoutWarning] = useState(false);
   const [formData, setFormData] = useState({
     days: 7,
     notify: false,
@@ -20,34 +21,121 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
     e.preventDefault();
     setLoading(true);
     setResult(null);
+    setTimeoutWarning(false);
+
+    // Show processing indicator for large operations
+    const shiftCount = formData.days * 2; // Rough estimate
+    const isLargeOperation = shiftCount > 20 || formData.days > 30;
+
+    if (isLargeOperation) {
+      showWarning('Processing large operation... This may take up to 30 seconds.');
+    }
 
     try {
       console.log('=== ROTATING SHIFTS ===');
       console.log('Ministry:', ministry.name);
       console.log('Params:', formData);
 
+      const startTime = Date.now();
+
       const response = await ministriesApi.rotateShifts(ministry.id, formData);
+
+      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`Rotation completed in ${duration}s`);
       console.log('Rotation result:', response);
 
       setResult(response);
 
-      if (formData.dry_run) {
-        showSuccess(`Preview: ${response.created} assignments would be created`);
-      } else {
-        showSuccess(
-          `Successfully created ${response.created} assignments!${
-            response.emailed > 0 ? ` ${response.emailed} emails sent.` : ''
-          }`
-        );
+      // Check for partial success
+      const hasErrors = response.errors?.length > 0;
+      const hasSkipped = (response.skipped_no_members?.length > 0) ||
+                        (response.skipped_no_available?.length > 0);
 
-        // Call success callback to refresh shifts
-        if (onSuccess) {
-          onSuccess();
+      if (formData.dry_run) {
+        if (response.created === 0) {
+          showWarning('No assignments available. Check shift dates and volunteer availability.');
+        } else if (hasErrors || hasSkipped) {
+          showWarning(`Preview: ${response.created} assignments possible (with warnings)`);
+        } else {
+          showSuccess(`Preview: ${response.created} assignments would be created`);
+        }
+      } else {
+        if (response.created === 0) {
+          showError('No assignments created. Please check your shifts and volunteers.');
+        } else if (hasErrors) {
+          showWarning(
+            `Created ${response.created} assignments with ${response.errors.length} errors.${
+              response.emailed > 0 ? ` ${response.emailed} emails sent.` : ''
+            }`
+          );
+        } else {
+          showSuccess(
+            `Successfully created ${response.created} assignments!${
+              response.emailed > 0 ? ` ${response.emailed} emails sent.` : ''
+            }`
+          );
+
+          // Call success callback to refresh shifts
+          if (onSuccess) {
+            onSuccess();
+          }
         }
       }
     } catch (err) {
       console.error('Rotation error:', err);
-      showError(err.response?.data?.detail || 'Failed to rotate shifts');
+
+      // Handle timeout errors
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setTimeoutWarning(true);
+        showError(
+          'Request timed out. The operation may still be processing. Please refresh the page in a moment.'
+        );
+      }
+      // Handle network errors
+      else if (err.message === 'Network Error' || !err.response) {
+        showError(
+          'Network error. Please check your connection and try again.'
+        );
+      }
+      // Handle validation errors
+      else if (err.response?.status === 400) {
+        const errorData = err.response.data;
+        let errorMsg = 'Invalid request. ';
+
+        if (errorData.detail) {
+          errorMsg += errorData.detail;
+        } else if (errorData.days) {
+          errorMsg += `Days: ${errorData.days[0]}`;
+        } else if (errorData.limit_per_ministry) {
+          errorMsg += `Limit: ${errorData.limit_per_ministry[0]}`;
+        } else {
+          errorMsg += 'Please check your inputs.';
+        }
+
+        showError(errorMsg);
+      }
+      // Handle permission errors
+      else if (err.response?.status === 403) {
+        showError('You do not have permission to rotate shifts.');
+      }
+      // Handle not found
+      else if (err.response?.status === 404) {
+        showError('Ministry not found. Please refresh the page.');
+      }
+      // Handle server errors
+      else if (err.response?.status >= 500) {
+        showError(
+          'Server error occurred. Please try again or contact support if the issue persists.'
+        );
+      }
+      // Generic error
+      else {
+        showError(
+          err.response?.data?.detail ||
+          err.response?.data?.message ||
+          'Failed to rotate shifts. Please try again.'
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -56,32 +144,64 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
   const handleConfirm = async () => {
     setFormData({ ...formData, dry_run: false });
     setLoading(true);
+    setTimeoutWarning(false);
 
     try {
+      const startTime = Date.now();
+
       const response = await ministriesApi.rotateShifts(ministry.id, {
         ...formData,
         dry_run: false,
       });
 
+      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`Confirmation completed in ${duration}s`);
+
       setResult(response);
-      showSuccess(
-        `Successfully created ${response.created} assignments!${
-          response.emailed > 0 ? ` ${response.emailed} emails sent.` : ''
-        }`
-      );
+
+      if (response.created === 0) {
+        showError('No assignments created. Please check your shifts and volunteers.');
+      } else if (response.errors?.length > 0) {
+        showWarning(
+          `Created ${response.created} assignments with ${response.errors.length} errors.${
+            response.emailed > 0 ? ` ${response.emailed} emails sent.` : ''
+          }`
+        );
+      } else {
+        showSuccess(
+          `Successfully created ${response.created} assignments!${
+            response.emailed > 0 ? ` ${response.emailed} emails sent.` : ''
+          }`
+        );
+      }
 
       // Call success callback
       if (onSuccess) {
         onSuccess();
       }
 
-      // Close modal after successful confirmation
-      setTimeout(() => {
-        onClose();
-      }, 1500);
+      // Only close if fully successful
+      if (response.errors?.length === 0) {
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      }
 
     } catch (err) {
-      showError(err.response?.data?.detail || 'Failed to create assignments');
+      console.error('Confirmation error:', err);
+
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setTimeoutWarning(true);
+        showError(
+          'Request timed out. The assignments may still be creating. Please refresh the page in a moment.'
+        );
+      } else if (err.response?.status >= 500) {
+        showError(
+          'Server error during confirmation. Please refresh and check if assignments were created.'
+        );
+      } else {
+        showError(err.response?.data?.detail || 'Failed to create assignments');
+      }
     } finally {
       setLoading(false);
     }
@@ -96,6 +216,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
   const handleClose = () => {
     if (!loading) {
       setResult(null);
+      setTimeoutWarning(false);
       setFormData({
         days: 7,
         notify: false,
@@ -133,6 +254,32 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {/* Timeout Warning */}
+              {timeoutWarning && (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <HiClock className="w-5 h-5 text-yellow-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-yellow-900">Request Timed Out</p>
+                      <p className="text-sm text-yellow-800 mt-1">
+                        The operation is taking longer than expected. The assignments may still be processing in the background.
+                        Please refresh the shifts tab in a moment to see if they were created.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTimeoutWarning(false);
+                          if (onSuccess) onSuccess();
+                        }}
+                        className="mt-2 text-sm font-medium text-yellow-900 hover:text-yellow-700 underline"
+                      >
+                        Refresh Shifts Now
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Days Ahead */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -146,10 +293,15 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
                   onChange={(e) => setFormData({ ...formData, days: Number(e.target.value) })}
                   required
                   disabled={loading}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <p className="mt-1 text-sm text-gray-500">
                   Number of days ahead to assign shifts (default: 7)
+                  {formData.days > 30 && (
+                    <span className="block text-yellow-600 mt-1">
+                      ⚠️ Large date ranges may take longer to process
+                    </span>
+                  )}
                 </p>
               </div>
 
@@ -165,7 +317,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
                   value={formData.limit_per_ministry}
                   onChange={(e) => setFormData({ ...formData, limit_per_ministry: Number(e.target.value) })}
                   disabled={loading}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <p className="mt-1 text-sm text-gray-500">
                   Maximum number of shifts to assign (0 for no limit)
@@ -180,10 +332,15 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
                   checked={formData.notify}
                   onChange={(e) => setFormData({ ...formData, notify: e.target.checked })}
                   disabled={loading}
-                  className="rounded border-gray-300 text-sbcc-primary focus:ring-sbcc-primary"
+                  className="rounded border-gray-300 text-sbcc-primary focus:ring-sbcc-primary disabled:cursor-not-allowed"
                 />
                 <label htmlFor="notify" className="text-sm font-medium text-gray-700">
                   Send email notifications to assigned volunteers
+                  {formData.notify && (
+                    <span className="block text-xs text-gray-500 mt-0.5">
+                      Email sending may add 1-2 seconds per assignment
+                    </span>
+                  )}
                 </label>
               </div>
 
@@ -224,15 +381,20 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
 
               {/* Errors */}
               {result?.errors && result.errors.length > 0 && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg max-h-48 overflow-y-auto">
                   <div className="flex items-start gap-2">
-                    <HiExclamationCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                    <HiExclamationCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-red-900">Errors:</p>
+                      <p className="text-sm font-medium text-red-900">Errors ({result.errors.length}):</p>
                       <ul className="mt-2 space-y-1 text-sm text-red-800">
-                        {result.errors.map((error, idx) => (
+                        {result.errors.slice(0, 10).map((error, idx) => (
                           <li key={idx}>• {error}</li>
                         ))}
+                        {result.errors.length > 10 && (
+                          <li className="text-red-600 font-medium">
+                            ... and {result.errors.length - 10} more errors
+                          </li>
+                        )}
                       </ul>
                     </div>
                   </div>
@@ -246,7 +408,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
                   onClick={handleClose}
                   disabled={loading}
                 >
-                  Cancel
+                  {loading ? 'Processing...' : 'Cancel'}
                 </SecondaryButton>
 
                 {formData.dry_run && !result && (

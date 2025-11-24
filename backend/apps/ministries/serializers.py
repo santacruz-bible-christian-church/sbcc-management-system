@@ -40,6 +40,42 @@ class MinistryMemberSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["created_at"]
 
+    def update(self, instance, validated_data):
+        """Override update to sync Ministry.leader"""
+        old_role = instance.role
+        new_role = validated_data.get("role", old_role)
+
+        # Update the member
+        instance = super().update(instance, validated_data)
+
+        # If role changed to 'lead', update Ministry.leader
+        if new_role == "lead" and instance.is_active:
+            ministry = instance.ministry
+            if ministry.leader != instance.user:
+                ministry.leader = instance.user
+                ministry.save(update_fields=["leader"])
+
+        # If role changed from 'lead' to something else, remove leadership
+        elif old_role == "lead" and new_role != "lead":
+            ministry = instance.ministry
+            if ministry.leader == instance.user:
+                ministry.leader = None
+                ministry.save(update_fields=["leader"])
+
+        return instance
+
+    def create(self, validated_data):
+        """Override create to sync Ministry.leader"""
+        instance = super().create(validated_data)
+
+        # If new member is a leader, update Ministry.leader
+        if instance.role == "lead" and instance.is_active:
+            ministry = instance.ministry
+            ministry.leader = instance.user
+            ministry.save(update_fields=["leader"])
+
+        return instance
+
 
 class ShiftSerializer(serializers.ModelSerializer):
     ministry_name = serializers.CharField(source="ministry.name", read_only=True)
