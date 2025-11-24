@@ -10,8 +10,8 @@ Guide for contributing to the SBCC Management System project.
 main
 ├── develop
 │   ├── feature/feature-name
-│   ├── bugfix/bug-description
-│   ├── hotfix/urgent-fix
+│   ├── fix/bug-description
+│   ├── hotfix/urgent-fix (production)
 │   ├── docs/documentation-update
 │   ├── design/ui-improvement
 │   ├── test/test-coverage
@@ -235,9 +235,6 @@ Brief description of changes
 - [ ] Manual testing completed
 - [ ] API endpoints tested
 
-## Screenshots (if applicable)
-[Add screenshots here]
-
 ## Breaking Changes
 None / [Describe breaking changes]
 
@@ -247,97 +244,9 @@ Closes #123
 
 ## 🏗️ Development Setup
 
-### Initial Setup
-
-```bash
-# Clone repository
-git clone <repository-url>
-cd sbcc-management-system
-
-# Setup backend
-cd backend
-python3.12 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Configure .env
-cp .env.example .env
-# Update .env with your Neon database URL
-
-# Run migrations
-python manage.py makemigrations authentication
-python manage.py makemigrations ministries
-python manage.py makemigrations members
-python manage.py makemigrations events
-python manage.py makemigrations attendance
-python manage.py migrate
-
-# Create superuser
-python manage.py createsuperuser
-
-# Setup frontend (in new terminal)
-cd ../frontend
-npm install
-```
-
-### Daily Development
-
-#### Terminal 1: Backend
-
-```bash
-cd backend
-source venv/bin/activate
-python manage.py runserver
-```
-
-#### Terminal 2: Frontend
-
-```bash
-cd frontend
-npm run dev
-```
-
-#### Terminal 3: Database (if needed)
-
-Access Neon database console or use:
-```bash
-cd backend
-source venv/bin/activate
-python manage.py dbshell
-```
-
-## 🧪 Testing
-
-### Backend Tests
-
-```bash
-cd backend
-source venv/bin/activate
-
-# Run all tests
-python manage.py test
-
-# Run specific app tests
-python manage.py test apps.ministries
-python manage.py test apps.members
-python manage.py test apps.events
-python manage.py test apps.attendance
-
-# Run specific test class
-python manage.py test apps.ministries.tests.TestMinistryModel
-
-# Run with coverage
-coverage run --source='.' manage.py test
-coverage report
-coverage html  # Generate HTML report
-```
-
-### Frontend Tests (when configured)
-
-```bash
-cd frontend
-npm run test
-```
+For initial project setup, see:
+- [Backend Setup Guide](BACKEND_SETUP.md) - Complete Django/DRF installation
+- [Frontend Setup Guide](FRONTEND_SETUP.md) - Complete React/Vite installation
 
 ## 📋 Code Review Checklist
 
@@ -460,23 +369,16 @@ git push origin feature/your-feature-name --force-with-lease
 ### Creating Migrations
 
 ```bash
-cd backend
-source venv/bin/activate
-
-# After model changes, create migrations in dependency order
+# Create migrations in dependency order
 python manage.py makemigrations authentication
 python manage.py makemigrations ministries
 python manage.py makemigrations members
 python manage.py makemigrations events
 python manage.py makemigrations attendance
 
-# Review migration files before applying
+# Review and apply
 cat apps/ministries/migrations/0002_add_description.py
-
-# Apply migrations
 python manage.py migrate
-
-# Check migration status
 python manage.py showmigrations
 ```
 
@@ -493,26 +395,15 @@ python manage.py showmigrations
 
 ### Resetting Migrations (Development Only)
 
+⚠️ **WARNING: Destroys all data!**
+
 ```bash
-# ⚠️ ONLY USE DURING DEVELOPMENT - DESTROYS DATA
-
-# Drop all tables in Neon console
-
 # Delete migration files
 find ./apps -path "*/migrations/*.py" -not -name "__init__.py" -delete
-find ./core -path "*/migrations/*.py" -not -name "__init__.py" -delete
 
-# Recreate migrations
-python manage.py makemigrations authentication
-python manage.py makemigrations ministries
-python manage.py makemigrations members
-python manage.py makemigrations events
-python manage.py makemigrations attendance
-
-# Apply
+# Recreate all migrations
+python manage.py makemigrations authentication ministries members events attendance
 python manage.py migrate
-
-# Recreate superuser
 python manage.py createsuperuser
 ```
 
@@ -578,15 +469,15 @@ axios.interceptors.request.use(request => {
 def calculate_attendance_rate(member_id, start_date, end_date):
     """
     Calculate attendance rate for a member in date range.
-    
+
     Args:
         member_id (int): Member's ID
         start_date (date): Start of date range
         end_date (date): End of date range
-        
+
     Returns:
         float: Attendance rate (0.0 to 1.0)
-        
+
     Example:
         >>> calculate_attendance_rate(1, date(2024,1,1), date(2024,12,31))
         0.85
@@ -594,13 +485,13 @@ def calculate_attendance_rate(member_id, start_date, end_date):
     total_events = Event.objects.filter(
         start_datetime__range=(start_date, end_date)
     ).count()
-    
+
     attended = Attendance.objects.filter(
         member_id=member_id,
         attended=True,
         check_in_time__range=(start_date, end_date)
     ).count()
-    
+
     return attended / total_events if total_events > 0 else 0.0
 ```
 
@@ -611,7 +502,7 @@ def calculate_attendance_rate(member_id, start_date, end_date):
  * @param {string} ministryId - Ministry ID
  * @returns {Promise<Object>} Ministry data with member count
  * @throws {Error} If API request fails
- * 
+ *
  * @example
  * const ministry = await fetchMinistry('123');
  * console.log(ministry.member_count); // 25
@@ -631,26 +522,26 @@ Document endpoints in code:
 class MinistryViewSet(viewsets.ModelViewSet):
     """
     API endpoints for Ministry management.
-    
+
     list: GET /api/ministries/
         Returns paginated list of ministries
         Filters: search (name, description)
         Ordering: name, created_at
-        
+
     retrieve: GET /api/ministries/{id}/
         Returns single ministry with member_count
-        
+
     create: POST /api/ministries/
         Creates new ministry
         Required: name
         Optional: description, leader
-        
+
     update: PUT /api/ministries/{id}/
         Updates ministry
-        
+
     partial_update: PATCH /api/ministries/{id}/
         Partial update
-        
+
     destroy: DELETE /api/ministries/{id}/
         Deletes ministry (sets members.ministry to NULL)
     """
@@ -740,5 +631,6 @@ git branch --merged | grep -v "\*" | xargs -n 1 git branch -d
 
 ---
 
-**Last Updated:** October 22, 2024
+**Last Updated:** November 25, 2025
 **Architecture:** Feature-based, Domain-driven
+**Version Control:** Git/GitHub

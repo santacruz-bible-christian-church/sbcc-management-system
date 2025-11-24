@@ -68,6 +68,7 @@ Server will start at: `http://localhost:5173`
 | React | 19.1.1 | UI library |
 | React DOM | 19.1.1 | React renderer |
 | Vite | 7.1.7 | Build tool & dev server |
+| PropTypes | 15.8.1 | Runtime type checking |
 
 ### Styling
 
@@ -115,6 +116,9 @@ Server will start at: `http://localhost:5173`
 | Package | Version | Purpose |
 |---------|---------|---------|
 | date-fns | 4.1.0 | Date formatting & manipulation |
+| jsPDF | 3.0.3 | PDF generation |
+| jsPDF AutoTable | 5.0.2 | PDF table generation |
+| qrcode.react | 4.2.0 | QR code generation |
 
 ## 🗂️ Project Structure
 
@@ -249,7 +253,7 @@ export function cn(...inputs) {
 }
 
 // Usage
-<button 
+<button
   className={cn(
     "px-4 py-2 rounded",
     isPrimary ? "bg-blue-500" : "bg-gray-500",
@@ -273,7 +277,7 @@ function Example() {
         <HiPlus className="mr-2 h-5 w-5" />
         Add Ministry
       </Button>
-      
+
       <Card className="mt-4">
         <h5 className="text-2xl font-bold">Church Ministries</h5>
         <Table>
@@ -329,20 +333,20 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     // Handle 401 (token expired)
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         const { data } = await axios.post(`${API_URL}/auth/token/refresh/`, {
           refresh: refreshToken,
         });
-        
+
         localStorage.setItem('access_token', data.access);
         originalRequest.headers.Authorization = `Bearer ${data.access}`;
-        
+
         return api(originalRequest);
       } catch (refreshError) {
         // Redirect to login
@@ -352,7 +356,7 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -373,31 +377,31 @@ export const ministryService = {
     const { data } = await api.get('/ministries/', { params });
     return data;
   },
-  
+
   // GET /api/ministries/:id/
   getById: async (id) => {
     const { data } = await api.get(`/ministries/${id}/`);
     return data;
   },
-  
+
   // POST /api/ministries/
   create: async (ministryData) => {
     const { data } = await api.post('/ministries/', ministryData);
     return data;
   },
-  
+
   // PUT /api/ministries/:id/
   update: async (id, ministryData) => {
     const { data } = await api.put(`/ministries/${id}/`, ministryData);
     return data;
   },
-  
+
   // PATCH /api/ministries/:id/
   partialUpdate: async (id, ministryData) => {
     const { data } = await api.patch(`/ministries/${id}/`, ministryData);
     return data;
   },
-  
+
   // DELETE /api/ministries/:id/
   delete: async (id) => {
     const { data } = await api.delete(`/ministries/${id}/`);
@@ -434,7 +438,7 @@ export const useMinistry = (id) => {
 // Create ministry
 export const useCreateMinistry = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ministryService.create,
     onSuccess: () => {
@@ -446,7 +450,7 @@ export const useCreateMinistry = () => {
 // Update ministry
 export const useUpdateMinistry = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, data }) => ministryService.update(id, data),
     onSuccess: (data) => {
@@ -459,7 +463,7 @@ export const useUpdateMinistry = () => {
 // Delete ministry
 export const useDeleteMinistry = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ministryService.delete,
     onSuccess: () => {
@@ -481,16 +485,16 @@ import { useMinistries, useDeleteMinistry } from '../hooks/useMinistries';
 export default function MinistriesPage() {
   const { data: ministries, isLoading, error } = useMinistries();
   const deleteMutation = useDeleteMinistry();
-  
+
   const handleDelete = (id) => {
     if (confirm('Are you sure?')) {
       deleteMutation.mutate(id);
     }
   };
-  
+
   if (isLoading) return <Spinner />;
   if (error) return <div>Error: {error.message}</div>;
-  
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -500,7 +504,7 @@ export default function MinistriesPage() {
           Add Ministry
         </Button>
       </div>
-      
+
       <Table>
         <Table.Head>
           <Table.HeadCell>Name</Table.HeadCell>
@@ -544,19 +548,19 @@ export const useAuthStore = create(
       user: null,
       accessToken: null,
       refreshToken: null,
-      
+
       setAuth: (user, accessToken, refreshToken) => {
         set({ user, accessToken, refreshToken });
         localStorage.setItem('access_token', accessToken);
         localStorage.setItem('refresh_token', refreshToken);
       },
-      
+
       logout: () => {
         set({ user: null, accessToken: null, refreshToken: null });
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
       },
-      
+
       isAuthenticated: () => !!get().accessToken,
     }),
     {
@@ -576,11 +580,11 @@ import { useAuthStore } from '../store/authStore';
 
 export default function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return children;
 }
 ```
@@ -640,27 +644,27 @@ export default function MinistryForm({ onSubmit, defaultValues }) {
     resolver: zodResolver(ministrySchema),
     defaultValues,
   });
-  
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <Label htmlFor="name">Ministry Name</Label>
-        <TextInput 
-          id="name" 
-          {...register('name')} 
+        <TextInput
+          id="name"
+          {...register('name')}
           color={errors.name ? 'failure' : undefined}
           helperText={errors.name?.message}
         />
       </div>
-      
+
       <div>
         <Label htmlFor="description">Description</Label>
-        <TextInput 
-          id="description" 
-          {...register('description')} 
+        <TextInput
+          id="description"
+          {...register('description')}
         />
       </div>
-      
+
       <Button type="submit" color="blue">
         Submit
       </Button>
@@ -911,12 +915,19 @@ After setup, verify everything works:
 | `/api/events/:id/` | GET, PUT, PATCH, DELETE | Event CRUD |
 | `/api/attendance/` | GET, POST | List/create attendance |
 | `/api/attendance/:id/` | GET, PUT, PATCH, DELETE | Attendance CRUD |
+| `/api/attendance/sheets/` | GET, POST | List/create attendance sheets |
+| `/api/attendance/sheets/:id/download/` | GET | Download attendance CSV |
+| `/api/attendance/records/member_summary/` | GET | Member attendance summary |
+| `/api/attendance/records/ministry_report/` | GET | Ministry attendance report |
+| `/api/inventory/` | GET, POST | List/create inventory items |
+| `/api/inventory/:id/` | GET, PUT, PATCH, DELETE | Inventory CRUD |
 | `/api/dashboard/stats/` | GET | Dashboard statistics |
 | `/api/dashboard/activities/` | GET | Recent activities |
 
 ---
 
-**Last Updated:** October 22, 2024
+**Last Updated:** November 25, 2025
 **React Version:** 19.1.1
 **Vite Version:** 7.1.7
+**Tailwind CSS:** 3.4.18
 **Architecture:** Feature-based, matches backend structure
