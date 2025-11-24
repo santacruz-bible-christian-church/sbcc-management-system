@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ministriesApi } from '../../../api/ministries.api';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
@@ -10,6 +10,8 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [timeoutWarning, setTimeoutWarning] = useState(false);
+  const [processingTime, setProcessingTime] = useState(0);
+  const timerRef = useRef(null);
   const [formData, setFormData] = useState({
     days: 7,
     notify: false,
@@ -17,18 +19,42 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
     limit_per_ministry: 0,
   });
 
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
+  const startTimer = () => {
+    setProcessingTime(0);
+    timerRef.current = setInterval(() => {
+      setProcessingTime(prev => prev + 1);
+    }, 1000);
+  };
+
+  const stopTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setResult(null);
     setTimeoutWarning(false);
+    startTimer();
 
     // Show processing indicator for large operations
-    const shiftCount = formData.days * 2; // Rough estimate
-    const isLargeOperation = shiftCount > 20 || formData.days > 30;
+    const estimatedShifts = Math.ceil(formData.days / 7) * 4; // Rough estimate
+    const isLargeOperation = estimatedShifts > 20 || formData.days > 30;
 
     if (isLargeOperation) {
-      showWarning('Processing large operation... This may take up to 30 seconds.');
+      showWarning(`Processing ${estimatedShifts}+ shifts... This may take up to 2 minutes.`);
     }
 
     try {
@@ -36,12 +62,9 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
       console.log('Ministry:', ministry.name);
       console.log('Params:', formData);
 
-      const startTime = Date.now();
-
       const response = await ministriesApi.rotateShifts(ministry.id, formData);
 
-      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log(`Rotation completed in ${duration}s`);
+      console.log(`Rotation completed in ${processingTime}s`);
       console.log('Rotation result:', response);
 
       setResult(response);
@@ -88,7 +111,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
         setTimeoutWarning(true);
         showError(
-          'Request timed out. The operation may still be processing. Please refresh the page in a moment.'
+          'Request timed out. The operation may still be processing. Please refresh the page in a moment to check if assignments were created.'
         );
       }
       // Handle network errors
@@ -137,6 +160,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
         );
       }
     } finally {
+      stopTimer();
       setLoading(false);
     }
   };
@@ -145,17 +169,15 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
     setFormData({ ...formData, dry_run: false });
     setLoading(true);
     setTimeoutWarning(false);
+    startTimer();
 
     try {
-      const startTime = Date.now();
-
       const response = await ministriesApi.rotateShifts(ministry.id, {
         ...formData,
         dry_run: false,
       });
 
-      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log(`Confirmation completed in ${duration}s`);
+      console.log(`Confirmation completed in ${processingTime}s`);
 
       setResult(response);
 
@@ -193,7 +215,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
         setTimeoutWarning(true);
         showError(
-          'Request timed out. The assignments may still be creating. Please refresh the page in a moment.'
+          'Request timed out. The assignments may still be creating. Please wait a moment and refresh.'
         );
       } else if (err.response?.status >= 500) {
         showError(
@@ -203,6 +225,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
         showError(err.response?.data?.detail || 'Failed to create assignments');
       }
     } finally {
+      stopTimer();
       setLoading(false);
     }
   };
@@ -215,8 +238,10 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
 
   const handleClose = () => {
     if (!loading) {
+      stopTimer();
       setResult(null);
       setTimeoutWarning(false);
+      setProcessingTime(0);
       setFormData({
         days: 7,
         notify: false,
@@ -254,16 +279,35 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {/* Processing Indicator */}
+              {loading && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-sbcc-primary border-t-transparent"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-blue-900">
+                        Processing assignment rotation...
+                      </p>
+                      <p className="text-xs text-blue-700 mt-1">
+                        Elapsed time: {processingTime}s
+                        {processingTime > 10 && processingTime < 30 && " - Large operations may take up to 2 minutes"}
+                        {processingTime >= 30 && " - Still processing, please wait..."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Timeout Warning */}
               {timeoutWarning && (
                 <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <div className="flex items-start gap-2">
                     <HiClock className="w-5 h-5 text-yellow-600 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-yellow-900">Request Timed Out</p>
+                      <p className="text-sm font-medium text-yellow-900">Operation May Still Be Processing</p>
                       <p className="text-sm text-yellow-800 mt-1">
-                        The operation is taking longer than expected. The assignments may still be processing in the background.
-                        Please refresh the shifts tab in a moment to see if they were created.
+                        The request timed out after {processingTime}s, but the assignments may still be creating in the background.
+                        Please wait 30 seconds and refresh the shifts to check.
                       </p>
                       <button
                         type="button"
@@ -271,7 +315,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
                           setTimeoutWarning(false);
                           if (onSuccess) onSuccess();
                         }}
-                        className="mt-2 text-sm font-medium text-yellow-900 hover:text-yellow-700 underline"
+                        className="mt-3 px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors"
                       >
                         Refresh Shifts Now
                       </button>
@@ -288,7 +332,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
                 <input
                   type="number"
                   min="1"
-                  max="365"
+                  max="90"
                   value={formData.days}
                   onChange={(e) => setFormData({ ...formData, days: Number(e.target.value) })}
                   required
@@ -296,10 +340,10 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <p className="mt-1 text-sm text-gray-500">
-                  Number of days ahead to assign shifts (default: 7)
+                  Number of days ahead to assign shifts (recommended: 7-30 days)
                   {formData.days > 30 && (
-                    <span className="block text-yellow-600 mt-1">
-                      ⚠️ Large date ranges may take longer to process
+                    <span className="block text-yellow-600 mt-1 font-medium">
+                      ⚠️ Large date ranges ({formData.days} days) may take 30-120 seconds to process
                     </span>
                   )}
                 </p>
@@ -320,7 +364,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <p className="mt-1 text-sm text-gray-500">
-                  Maximum number of shifts to assign (0 for no limit)
+                  Limit the number of shifts to assign (helps reduce processing time)
                 </p>
               </div>
 
@@ -337,8 +381,8 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
                 <label htmlFor="notify" className="text-sm font-medium text-gray-700">
                   Send email notifications to assigned volunteers
                   {formData.notify && (
-                    <span className="block text-xs text-gray-500 mt-0.5">
-                      Email sending may add 1-2 seconds per assignment
+                    <span className="block text-xs text-yellow-600 mt-0.5">
+                      ⚠️ Email sending significantly increases processing time (2-3s per email)
                     </span>
                   )}
                 </label>
@@ -352,6 +396,9 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
                     <div className="flex-1">
                       <p className="text-sm font-medium text-blue-900">
                         {formData.dry_run ? 'Preview Results' : 'Assignments Created'}
+                        <span className="text-xs text-blue-700 ml-2">
+                          (Completed in {processingTime}s)
+                        </span>
                       </p>
                       <ul className="mt-2 space-y-1 text-sm text-blue-800">
                         <li>✅ {result.created} assignments {formData.dry_run ? 'would be created' : 'created'}</li>
@@ -417,7 +464,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
                     loading={loading}
                     disabled={loading}
                   >
-                    {loading ? 'Previewing...' : 'Preview Assignments'}
+                    {loading ? `Previewing... (${processingTime}s)` : 'Preview Assignments'}
                   </PrimaryButton>
                 )}
 
@@ -427,7 +474,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
                     loading={loading}
                     disabled={loading}
                   >
-                    {loading ? 'Creating...' : `Confirm & Create ${result.created} Assignments`}
+                    {loading ? `Creating... (${processingTime}s)` : `Confirm & Create ${result.created} Assignments`}
                   </PrimaryButton>
                 )}
               </div>

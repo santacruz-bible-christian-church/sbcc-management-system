@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Spinner, Tabs } from 'flowbite-react';
 import { HiOutlineArrowLeft, HiOutlinePencil, HiOutlineTrash, HiOutlineUsers, HiOutlineClock, HiRefresh } from 'react-icons/hi';
 import { useAuth } from '../../auth/hooks/useAuth';
-import { ministriesApi } from '../../../api/ministries.api';
+import { useMinistryDetails } from '../hooks/useMinistryDetails';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { MinistryFormModal } from '../components/MinistryFormModal';
 import { MinistryMembersTab } from '../components/MinistryMembersTab';
@@ -20,60 +20,33 @@ export const MinistryDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { ministry, loading, refresh, updateMinistry, deleteMinistry } = useMinistryDetails(id);
   const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
   const canManage = MANAGER_ROLES.includes(user?.role);
 
-  const [ministry, setMinistry] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [rotationModalOpen, setRotationModalOpen] = useState(false);
 
-  const fetchMinistry = useCallback(async () => {
-    setLoading(true);
+  const handleUpdate = async (data) => {
     try {
-      console.log('=== FETCHING MINISTRY ===');
-      console.log('Ministry ID:', id);
-
-      const data = await ministriesApi.getMinistry(id);
-
-      console.log('Fetched ministry:', data);
-      console.log('Ministry ID:', data.id);
-      console.log('Ministry Name:', data.name);
-
-      setMinistry(data);
-    } catch (err) {
-      console.error('Failed to load ministry:', err);
-      showError('Failed to load ministry details');
-    } finally {
-      setLoading(false);
-    }
-  }, [id, showError]);
-
-  useEffect(() => {
-    fetchMinistry();
-  }, [fetchMinistry]);
-
-  const handleUpdate = useCallback(async (data) => {
-    try {
-      await ministriesApi.updateMinistry(id, data);
-      await fetchMinistry();
+      await updateMinistry(data);
       setEditModal(false);
       showSuccess('Ministry updated successfully');
     } catch (err) {
       showError('Failed to update ministry');
     }
-  }, [id, fetchMinistry, showSuccess, showError]);
+  };
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = async () => {
     try {
-      await ministriesApi.deleteMinistry(id);
+      await deleteMinistry();
       showSuccess('Ministry deleted successfully');
       navigate('/ministries');
     } catch (err) {
       showError('Failed to delete ministry');
     }
-  }, [id, navigate, showSuccess, showError]);
+  };
 
   if (loading) {
     return (
@@ -201,13 +174,13 @@ export const MinistryDetailsPage = () => {
           variant="underline"
         >
           <Tabs.Item active title="Overview">
-            <MinistryOverviewTab ministry={ministry} onRefresh={fetchMinistry} />
+            <MinistryOverviewTab ministry={ministry} onRefresh={refresh} />
           </Tabs.Item>
           <Tabs.Item title="Members">
             <MinistryMembersTab
               ministry={ministry}
               canManage={canManage}
-              onRefresh={fetchMinistry}
+              onRefresh={refresh}
             />
           </Tabs.Item>
           <Tabs.Item title="Shifts">
@@ -215,7 +188,7 @@ export const MinistryDetailsPage = () => {
               ministryId={ministry.id}
               ministry={ministry}
               canManage={canManage}
-              onRefresh={fetchMinistry}
+              onRefresh={refresh}
             />
           </Tabs.Item>
         </Tabs>
@@ -247,7 +220,7 @@ export const MinistryDetailsPage = () => {
         open={rotationModalOpen}
         onClose={() => setRotationModalOpen(false)}
         ministry={ministry}
-        onSuccess={fetchMinistry}
+        onSuccess={refresh}
       />
 
       {/* Snackbar */}

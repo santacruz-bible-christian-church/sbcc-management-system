@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { HiUserAdd, HiPencil, HiTrash, HiCheckCircle, HiXCircle } from 'react-icons/hi';
-import { ministriesApi } from '../../../api/ministries.api';
+import { useMinistryMembers } from '../hooks/useMinistryMembers';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { PrimaryButton, IconButton } from '../../../components/ui/Button';
 import { ConfirmationModal } from '../../../components/ui/Modal';
@@ -21,44 +21,16 @@ const ROLE_COLORS = {
 };
 
 export const MinistryMembersTab = ({ ministry, onRefresh }) => {
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { members, loading, refresh, deleteMember } = useMinistryMembers(ministry?.id);
+  const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
+
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalState, setEditModalState] = useState({ open: false, member: null });
   const [deleteModalState, setDeleteModalState] = useState({ open: false, member: null });
-  const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
-
-  const fetchMembers = async () => {
-    setLoading(true);
-    try {
-      console.log('=== FETCHING MINISTRY MEMBERS ===');
-      console.log('Ministry ID:', ministry.id);
-
-      const data = await ministriesApi.listMembers({ ministry: ministry.id });
-      console.log('Raw response:', data);
-
-      const membersList = Array.isArray(data) ? data : data.results || [];
-      console.log('Processed members list:', membersList);
-
-      setMembers(membersList);
-    } catch (err) {
-      console.error('Failed to load volunteers:', err);
-      console.error('Error response:', err.response?.data);
-      showError('Failed to load volunteers');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (ministry?.id) {
-      fetchMembers();
-    }
-  }, [ministry?.id]);
 
   const handleAddSuccess = async () => {
     setAddModalOpen(false);
-    await fetchMembers();
+    await refresh();
     if (onRefresh) {
       await onRefresh();
     }
@@ -66,7 +38,7 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
 
   const handleEditSuccess = async () => {
     setEditModalState({ open: false, member: null });
-    await fetchMembers();
+    await refresh();
     if (onRefresh) {
       await onRefresh();
     }
@@ -76,10 +48,9 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
     if (!deleteModalState.member) return;
 
     try {
-      await ministriesApi.deleteMember(deleteModalState.member.id);
+      await deleteMember(deleteModalState.member.id);
       showSuccess('Volunteer removed from ministry');
       setDeleteModalState({ open: false, member: null });
-      await fetchMembers();
       if (onRefresh) {
         await onRefresh();
       }
