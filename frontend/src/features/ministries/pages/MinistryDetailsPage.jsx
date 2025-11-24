@@ -27,6 +27,7 @@ export const MinistryDetailsPage = () => {
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [rotationModalOpen, setRotationModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
 
   const handleUpdate = async (data) => {
     try {
@@ -46,6 +47,12 @@ export const MinistryDetailsPage = () => {
     } catch (err) {
       showError('Failed to delete ministry');
     }
+  };
+
+  // Only refresh stats, not the entire ministry data
+  const handleStatsRefresh = () => {
+    // This will only update counts in the stat cards
+    refresh();
   };
 
   if (loading) {
@@ -172,15 +179,16 @@ export const MinistryDetailsPage = () => {
         <Tabs
           aria-label="Ministry tabs"
           variant="underline"
+          onActiveTabChange={(tab) => setActiveTab(tab)}
         >
           <Tabs.Item active title="Overview">
-            <MinistryOverviewTab ministry={ministry} onRefresh={refresh} />
+            <MinistryOverviewTab ministry={ministry} onRefresh={handleStatsRefresh} />
           </Tabs.Item>
           <Tabs.Item title="Members">
             <MinistryMembersTab
               ministry={ministry}
               canManage={canManage}
-              onRefresh={refresh}
+              onRefresh={handleStatsRefresh}
             />
           </Tabs.Item>
           <Tabs.Item title="Shifts">
@@ -188,7 +196,7 @@ export const MinistryDetailsPage = () => {
               ministryId={ministry.id}
               ministry={ministry}
               canManage={canManage}
-              onRefresh={refresh}
+              onRefresh={handleStatsRefresh}
             />
           </Tabs.Item>
         </Tabs>
@@ -220,7 +228,7 @@ export const MinistryDetailsPage = () => {
         open={rotationModalOpen}
         onClose={() => setRotationModalOpen(false)}
         ministry={ministry}
-        onSuccess={refresh}
+        onSuccess={handleStatsRefresh}
       />
 
       {/* Snackbar */}
