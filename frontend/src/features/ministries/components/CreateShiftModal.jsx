@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ministriesApi } from '../../../api/ministries.api';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
-import { HiX } from 'react-icons/hi';
+import { HiX, HiPlus, HiMinus } from 'react-icons/hi';
 import Snackbar from '../../../components/ui/Snackbar';
 
 export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSuccess }) => {
@@ -13,6 +13,7 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
     start_time: '09:00',
     end_time: '11:00',
     notes: '',
+    quantity: 1,
   });
 
   // Reset form when modal opens
@@ -23,9 +24,17 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
         start_time: '09:00',
         end_time: '11:00',
         notes: '',
+        quantity: 1,
       });
     }
   }, [open]);
+
+  const handleQuantityChange = (delta) => {
+    setFormData(prev => ({
+      ...prev,
+      quantity: Math.max(1, Math.min(20, prev.quantity + delta))
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,7 +55,7 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
     setLoading(true);
 
     try {
-      const payload = {
+      const baseShiftData = {
         ministry: actualMinistryId,
         date: formData.date,
         start_time: formData.start_time,
@@ -54,14 +63,28 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
         notes: formData.notes || '',
       };
 
-      console.log('=== CREATING SHIFT ===');
-      console.log('Ministry:', ministry);
-      console.log('Payload:', payload);
+      console.log('=== CREATING SHIFTS ===');
+      console.log('Base data:', baseShiftData);
+      console.log('Quantity:', formData.quantity);
 
-      const response = await ministriesApi.createShift(payload);
-      console.log('Created shift:', response);
+      // Create multiple shifts with the same details
+      const createPromises = Array.from({ length: formData.quantity }, (_, index) => {
+        const shiftData = {
+          ...baseShiftData,
+          notes: formData.notes
+            ? `${formData.notes} (Shift ${index + 1}/${formData.quantity})`
+            : `Shift ${index + 1}/${formData.quantity}`
+        };
 
-      showSuccess('Shift created successfully!');
+        console.log(`Creating shift ${index + 1}:`, shiftData);
+        return ministriesApi.createShift(shiftData);
+      });
+
+      await Promise.all(createPromises);
+
+      showSuccess(
+        `${formData.quantity} shift${formData.quantity > 1 ? 's' : ''} created successfully!`
+      );
 
       // Reset form
       setFormData({
@@ -69,6 +92,7 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
         start_time: '09:00',
         end_time: '11:00',
         notes: '',
+        quantity: 1,
       });
 
       // Call success callback
@@ -81,7 +105,7 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
       console.error('Error:', err);
       console.error('Response:', err.response?.data);
 
-      let errorMsg = 'Failed to create shift';
+      let errorMsg = 'Failed to create shift(s)';
       if (err.response?.data) {
         const errorData = err.response.data;
         if (errorData.detail) {
@@ -115,6 +139,7 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
         start_time: '09:00',
         end_time: '11:00',
         notes: '',
+        quantity: 1,
       });
       onClose();
     }
@@ -137,7 +162,7 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Create Shift</h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Schedule a new shift for {ministry?.name || 'this ministry'}
+                  Schedule shift(s) for {ministry?.name || 'this ministry'}
                 </p>
               </div>
               <button
@@ -199,6 +224,56 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
                 </div>
               </div>
 
+              {/* Quantity */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Number of Shifts <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleQuantityChange(-1)}
+                    disabled={loading || formData.quantity <= 1}
+                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <HiMinus className="w-5 h-5 text-gray-600" />
+                  </button>
+
+                  <div className="flex-1">
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({ ...formData, quantity: Math.max(1, Math.min(20, parseInt(e.target.value) || 1)) })}
+                      required
+                      disabled={loading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent text-center text-lg font-semibold"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleQuantityChange(1)}
+                    disabled={loading || formData.quantity >= 20}
+                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <HiPlus className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  How many volunteers are needed for this shift? (1-20)
+                </p>
+
+                {formData.quantity > 1 && (
+                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-xs text-blue-800">
+                      💡 <strong>Tip:</strong> Creating {formData.quantity} shifts will allow {formData.quantity} different volunteers to serve on the same date and time. Use the "Rotate Shifts" feature to automatically assign volunteers.
+                    </p>
+                  </div>
+                )}
+              </div>
+
               {/* Notes */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -217,6 +292,18 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
                 </p>
               </div>
 
+              {/* Summary */}
+              {formData.date && (
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Summary</p>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>📅 <strong>Date:</strong> {new Date(formData.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</li>
+                    <li>⏰ <strong>Time:</strong> {formData.start_time} - {formData.end_time}</li>
+                    <li>👥 <strong>Shifts:</strong> {formData.quantity} {formData.quantity === 1 ? 'position' : 'positions'} available</li>
+                  </ul>
+                </div>
+              )}
+
               {/* Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <SecondaryButton
@@ -231,7 +318,12 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
                   loading={loading}
                   disabled={loading}
                 >
-                  {loading ? 'Creating...' : 'Create Shift'}
+                  {loading
+                    ? 'Creating...'
+                    : formData.quantity > 1
+                      ? `Create ${formData.quantity} Shifts`
+                      : 'Create Shift'
+                  }
                 </PrimaryButton>
               </div>
             </form>

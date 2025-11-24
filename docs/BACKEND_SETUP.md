@@ -22,7 +22,7 @@ brew install python@3.12
 python3.12 --version
 ```
 
-**Note:** Python 3.13 has compatibility issues with Django 5.2.7. Use Python 3.12 instead.
+**Note:** Python 3.13 has compatibility issues with Django 5.1.4. Use Python 3.12 instead.
 
 ### 2. Navigate to Backend Directory
 
@@ -181,12 +181,13 @@ Available endpoints:
 |---------|---------|---------|
 | Django | 5.2.7 | Web framework |
 | djangorestframework | 3.15.2 | REST API toolkit |
-| djangorestframework-simplejwt | 5.4.1 | JWT authentication |
+| djangorestframework-simplejwt | 5.5.1 | JWT authentication |
 | django-cors-headers | 4.5.0 | CORS handling |
 | django-filter | 24.3 | Filtering support |
 | dj-database-url | 2.2.0 | Database URL parser |
 | python-decouple | 3.8 | Environment variables |
 | psycopg2-binary | 2.9.10 | PostgreSQL adapter |
+| reportlab | 4.2.5 | PDF generation |
 
 ## 🗂️ Project Structure
 
@@ -223,9 +224,8 @@ backend/
 │   │   ├── serializers.py  # AttendanceSerializer
 │   │   ├── admin.py        # Admin config
 │   │   └── urls.py         # /api/attendance/
-│   ├── volunteers/         # 🚧 Future: Volunteer scheduling
+│   ├── inventory/          # ✅ Equipment and resource tracking
 │   ├── prayer_requests/    # 🚧 Future: Prayer tracking
-│   ├── inventory/          # 🚧 Future: Equipment management
 │   ├── tasks/              # 🚧 Future: Task assignments
 │   ├── meeting_minutes/    # 🚧 Future: Meeting records
 │   └── announcements/      # 🚧 Future: Communications
@@ -318,17 +318,17 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
-    
+
     # Local apps (in dependency order)
     'apps.authentication',      # User model
     'apps.ministries',          # Ministry model
     'apps.members',             # Member (depends on User, Ministry)
     'apps.events',              # Event (depends on User, Ministry)
     'apps.attendance',          # Attendance (depends on Member, Event)
-    
+
     # Core (dashboard only - no models)
     'core',
-    
+
     # Future apps
     'apps.announcements',
     'apps.inventory',
@@ -451,7 +451,7 @@ from .models import Event
 
 ### "ModuleNotFoundError: No module named 'django.db.migrations.migration'"
 
-**Cause:** Using Python 3.13 (not compatible with Django 5.2.7)
+**Cause:** Using Python 3.13 (not compatible with Django 5.1.4)
 
 **Solution:**
 ```bash
@@ -479,40 +479,26 @@ pip install -r requirements.txt
 ## 📝 Common Commands
 
 ```bash
-# Check for issues
-python manage.py check
+# Development
+python manage.py check                # Check for issues
+python manage.py runserver            # Start dev server
+python manage.py shell                # Django shell
+python manage.py dbshell              # Database shell
 
-# Run development server
-python manage.py runserver
+# Database
+python manage.py makemigrations       # Create migrations
+python manage.py migrate              # Apply migrations
+python manage.py showmigrations       # Migration status
 
-# Create migrations (in dependency order)
-python manage.py makemigrations authentication
-python manage.py makemigrations ministries
-python manage.py makemigrations members
-python manage.py makemigrations events
-python manage.py makemigrations attendance
+# Users & Testing
+python manage.py createsuperuser      # Create admin user
+python manage.py test                 # Run tests
 
-# Apply migrations
-python manage.py migrate
-
-# Show migration status
-python manage.py showmigrations
-
-# Create superuser
-python manage.py createsuperuser
-
-# Run tests
-python manage.py test
-
-# Access database shell
-python manage.py dbshell
-
-# Django shell
-python manage.py shell
-
-# Collect static files (production)
-python manage.py collectstatic
+# Production
+python manage.py collectstatic        # Collect static files
 ```
+
+For Git workflow and contribution guidelines, see [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
 
 ## 🚀 Quick Start Script
 
@@ -611,24 +597,36 @@ If you encounter issues:
 
 **Completed:**
 - ✅ User authentication with JWT
-- ✅ Ministry management
-- ✅ Member management
-- ✅ Event management
-- ✅ Attendance tracking
-- ✅ Dashboard statistics
+- ✅ Ministry management with member relationships
+- ✅ Volunteer shift scheduling and assignments
+- ✅ Member management with archiving
+- ✅ Event management with registration
+- ✅ Attendance tracking with sheets
+- ✅ Attendance reports and analytics
+- ✅ Inventory tracking system
+- ✅ Dashboard statistics and activities
 - ✅ Role-based access control
+- ✅ Permission-based views
+- ✅ CSV export functionality
+- ✅ PDF report generation
+
+**In Progress:**
+- 🚧 Prayer request management
+- 🚧 Meeting minutes system
+- 🚧 Announcements module
+- 🚧 Task assignment system
 
 **Next Steps:**
-1. ✅ Implement permission-based views
-2. ✅ Add sample data fixtures
-3. ✅ Connect frontend to backend APIs
-4. ✅ Implement remaining app modules (volunteers, prayer requests, etc.)
-5. ✅ Add comprehensive test coverage
+1. Complete remaining app modules
+2. Add comprehensive test coverage
+3. Implement email notifications
+4. Add advanced reporting features
+5. Performance optimization
 
 ---
 
-**Last Updated:** October 22, 2024
-**Django Version:** 5.2.7
+**Last Updated:** November 25, 2025
+**Django Version:** 5.1.4
 **Python Version:** 3.12.x
 **Database:** Neon PostgreSQL
 **Architecture:** Feature-based, Domain-driven

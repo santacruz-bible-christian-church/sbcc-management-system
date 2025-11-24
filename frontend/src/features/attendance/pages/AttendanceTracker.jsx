@@ -26,6 +26,10 @@ export default function AttendanceTracker() {
   const [page, setPage] = useState(1);
   const [hasChanges, setHasChanges] = useState(false);
 
+  // Multi-select state
+  const [selectedRecords, setSelectedRecords] = useState(new Set());
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+
   const pageSize = 8;
 
   // Fetch attendance sheet details
@@ -86,7 +90,88 @@ export default function AttendanceTracker() {
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
 
-  // Handle attendance toggle
+  // Multi-select helpers
+  const pageItemIds = useMemo(() => new Set(pageItems.map(r => r.id)), [pageItems]);
+  const isAllPageSelected = pageItems.length > 0 && pageItems.every(r => selectedRecords.has(r.id));
+  const isSomePageSelected = pageItems.some(r => selectedRecords.has(r.id)) && !isAllPageSelected;
+
+  // Toggle multi-select mode
+  const toggleMultiSelectMode = () => {
+    setIsMultiSelectMode(!isMultiSelectMode);
+    setSelectedRecords(new Set());
+  };
+
+  // Select/deselect individual record
+  const toggleRecordSelection = useCallback((recordId) => {
+    setSelectedRecords((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(recordId)) {
+        newSet.delete(recordId);
+      } else {
+        newSet.add(recordId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Select/deselect all on current page
+  const toggleAllPageSelection = useCallback(() => {
+    setSelectedRecords((prev) => {
+      const newSet = new Set(prev);
+
+      if (isAllPageSelected) {
+        // Deselect all on current page
+        pageItems.forEach(record => newSet.delete(record.id));
+      } else {
+        // Select all on current page
+        pageItems.forEach(record => newSet.add(record.id));
+      }
+
+      return newSet;
+    });
+  }, [pageItems, isAllPageSelected]);
+
+  // Bulk actions
+  const handleBulkMarkPresent = useCallback(() => {
+    if (selectedRecords.size === 0) return;
+
+    setAttendanceRecords((prev) =>
+      prev.map((record) =>
+        selectedRecords.has(record.id) ? { ...record, attended: true } : record
+      )
+    );
+    setHasChanges(true);
+    setSuccessMessage('');
+    setSelectedRecords(new Set());
+  }, [selectedRecords]);
+
+  const handleBulkMarkAbsent = useCallback(() => {
+    if (selectedRecords.size === 0) return;
+
+    setAttendanceRecords((prev) =>
+      prev.map((record) =>
+        selectedRecords.has(record.id) ? { ...record, attended: false } : record
+      )
+    );
+    setHasChanges(true);
+    setSuccessMessage('');
+    setSelectedRecords(new Set());
+  }, [selectedRecords]);
+
+  const handleBulkToggle = useCallback(() => {
+    if (selectedRecords.size === 0) return;
+
+    setAttendanceRecords((prev) =>
+      prev.map((record) =>
+        selectedRecords.has(record.id) ? { ...record, attended: !record.attended } : record
+      )
+    );
+    setHasChanges(true);
+    setSuccessMessage('');
+    setSelectedRecords(new Set());
+  }, [selectedRecords]);
+
+  // Handle attendance toggle (single click)
   const handleToggleAttendance = useCallback((recordId) => {
     setAttendanceRecords((prev) =>
       prev.map((record) =>
@@ -120,6 +205,8 @@ export default function AttendanceTracker() {
         setMinistryFilter('');
         setQuery('');
         setPage(1);
+        setSelectedRecords(new Set());
+        setIsMultiSelectMode(false);
 
         setSuccessMessage(`Successfully updated ${response.updated_count} attendance records!`);
 
@@ -133,6 +220,8 @@ export default function AttendanceTracker() {
         setMinistryFilter('');
         setQuery('');
         setPage(1);
+        setSelectedRecords(new Set());
+        setIsMultiSelectMode(false);
 
         setSuccessMessage('Attendance saved successfully!');
 
@@ -242,6 +331,57 @@ export default function AttendanceTracker() {
             </div>
           )}
 
+          {/* Multi-Select Toggle Button */}
+          <div className="mt-4">
+            <button
+              onClick={toggleMultiSelectMode}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                isMultiSelectMode
+                  ? 'bg-sbcc-primary text-white hover:bg-[#e5a43d]'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {isMultiSelectMode ? '✓ Multi-Select Mode' : 'Enable Multi-Select'}
+            </button>
+          </div>
+
+          {/* Bulk Actions Bar */}
+          {isMultiSelectMode && selectedRecords.size > 0 && (
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-blue-900">
+                  {selectedRecords.size} {selectedRecords.size === 1 ? 'member' : 'members'} selected
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleBulkMarkPresent}
+                    className="px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Mark Present
+                  </button>
+                  <button
+                    onClick={handleBulkMarkAbsent}
+                    className="px-3 py-1.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Mark Absent
+                  </button>
+                  <button
+                    onClick={handleBulkToggle}
+                    className="px-3 py-1.5 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Toggle
+                  </button>
+                  <button
+                    onClick={() => setSelectedRecords(new Set())}
+                    className="px-3 py-1.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Controls row */}
           <div className="mt-4">
             <AttendanceFilterBar
@@ -297,6 +437,13 @@ export default function AttendanceTracker() {
           onPageChange={setPage}
           onToggleAttendance={handleToggleAttendance}
           saving={saving}
+          // Multi-select props
+          isMultiSelectMode={isMultiSelectMode}
+          selectedRecords={selectedRecords}
+          onToggleSelection={toggleRecordSelection}
+          isAllPageSelected={isAllPageSelected}
+          isSomePageSelected={isSomePageSelected}
+          onToggleAllPage={toggleAllPageSelection}
         />
       </div>
     </main>
