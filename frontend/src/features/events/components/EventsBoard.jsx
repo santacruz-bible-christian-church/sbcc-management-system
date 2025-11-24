@@ -4,10 +4,7 @@ import {
   HiOutlinePencil,
   HiOutlinePlusCircle,
   HiOutlineTrash,
-  HiOutlineUserAdd,
-  HiOutlineUserRemove,
   HiUserGroup,
-  HiUsers,
 } from 'react-icons/hi';
 import { Button, PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
 import { EVENT_TYPE_METADATA, STATUS_METADATA } from '../utils/constants';
@@ -38,14 +35,10 @@ const eventTypeStyle = (eventType) => {
 export const EventsBoard = ({
   events,
   loading,
-  actionLoading = {},
   canManage,
   onCreate,
   onEdit,
   onDelete,
-  onRegister,
-  onUnregister,
-  onViewRegistrations,
 }) => {
   if (loading) {
     return null;
@@ -68,10 +61,6 @@ export const EventsBoard = ({
   return (
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
       {events.map((event) => {
-        const isRegistering = actionLoading[`register-${event.id}`];
-        const isUnregistering = actionLoading[`unregister-${event.id}`];
-        const isActionInProgress = isRegistering || isUnregistering;
-
         return (
           <article key={event.id ?? event.title} className="events-card">
             <header className="flex items-start justify-between gap-4">
@@ -104,46 +93,24 @@ export const EventsBoard = ({
                 </dt>
                 <dd>{event.location || 'To be announced'}</dd>
               </div>
-              <div>
-                <dt className="flex items-center gap-2 uppercase text-[11px] tracking-[0.12em] text-sbcc-gray">
-                  <HiUserGroup className="h-4 w-4 text-sbcc-dark-orange" />
-                  RSVPs
-                </dt>
-                <dd>{formatCapacity(event)}</dd>
-              </div>
+              {event.max_attendees && (
+                <div>
+                  <dt className="flex items-center gap-2 uppercase text-[11px] tracking-[0.12em] text-sbcc-gray">
+                    <HiUserGroup className="h-4 w-4 text-sbcc-dark-orange" />
+                    Capacity
+                  </dt>
+                  <dd>{event.max_attendees} attendees</dd>
+                </div>
+              )}
             </dl>
 
-            <footer className="events-card-actions">
-              <div className="events-card-actions__left">
-                {event.is_registered ? (
-                  <Button
-                    variant="secondary"
-                    icon={HiOutlineUserRemove}
-                    onClick={() => onUnregister(event)}
-                    disabled={isActionInProgress}
-                    loading={isUnregistering}
-                  >
-                    {isUnregistering ? 'Unregistering...' : 'Unregister'}
-                  </Button>
-                ) : (
-                  <PrimaryButton
-                    icon={HiOutlineUserAdd}
-                    onClick={() => onRegister(event)}
-                    disabled={event.is_full || isActionInProgress}
-                    loading={isRegistering}
-                  >
-                    {isRegistering ? 'Registering...' : event.is_full ? 'Event Full' : 'Register'}
-                  </PrimaryButton>
-                )}
-              </div>
-
-              {canManage && (
+            {canManage && (
+              <footer className="events-card-actions">
                 <div className="events-card-actions__right">
                   <SecondaryButton
                     size="sm"
                     icon={HiOutlinePencil}
                     onClick={() => onEdit(event)}
-                    disabled={isActionInProgress}
                   >
                     Edit
                   </SecondaryButton>
@@ -152,22 +119,12 @@ export const EventsBoard = ({
                     size="sm"
                     icon={HiOutlineTrash}
                     onClick={() => onDelete(event)}
-                    disabled={isActionInProgress}
                   >
                     Delete
                   </Button>
-                  <Button
-                    variant="info"
-                    size="sm"
-                    icon={HiUsers}
-                    onClick={() => onViewRegistrations(event)}
-                    disabled={isActionInProgress}
-                  >
-                    RSVPs
-                  </Button>
                 </div>
-              )}
-            </footer>
+              </footer>
+            )}
           </article>
         );
       })}

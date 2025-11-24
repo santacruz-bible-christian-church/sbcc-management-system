@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { HiUserAdd, HiPencil, HiTrash, HiCheckCircle, HiXCircle } from 'react-icons/hi';
 import { ministriesApi } from '../../../api/ministries.api';
 import { useSnackbar } from '../../../hooks/useSnackbar';
-import { PrimaryButton, SecondaryButton, Button } from '../../../components/ui/Button';
+import { PrimaryButton, IconButton } from '../../../components/ui/Button';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 import Snackbar from '../../../components/ui/Snackbar';
 import AddVolunteerModal from './AddVolunteerModal';
@@ -11,8 +11,13 @@ import EditVolunteerModal from './EditVolunteerModal';
 const ROLE_LABELS = {
   volunteer: 'Volunteer',
   lead: 'Lead',
-  usher: 'Usher',
-  worship: 'Worship',
+};
+
+const ROLE_COLORS = {
+  volunteer: 'bg-blue-50 text-blue-700 ring-blue-700/10',
+  lead: 'bg-purple-50 text-purple-700 ring-purple-700/10',
+  usher: 'bg-green-50 text-green-700 ring-green-700/10',
+  worship: 'bg-orange-50 text-orange-700 ring-orange-700/10',
 };
 
 export const MinistryMembersTab = ({ ministry, onRefresh }) => {
@@ -54,7 +59,6 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
   const handleAddSuccess = async () => {
     setAddModalOpen(false);
     await fetchMembers();
-    // Refresh parent to update stats
     if (onRefresh) {
       await onRefresh();
     }
@@ -63,7 +67,6 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
   const handleEditSuccess = async () => {
     setEditModalState({ open: false, member: null });
     await fetchMembers();
-    // Refresh parent to update stats
     if (onRefresh) {
       await onRefresh();
     }
@@ -77,7 +80,6 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
       showSuccess('Volunteer removed from ministry');
       setDeleteModalState({ open: false, member: null });
       await fetchMembers();
-      // Refresh parent to update stats
       if (onRefresh) {
         await onRefresh();
       }
@@ -98,7 +100,8 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Volunteer Roster</h3>
             <p className="text-sm text-gray-600 mt-1">
@@ -110,6 +113,7 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
           </PrimaryButton>
         </div>
 
+        {/* Empty State */}
         {members.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
             <HiUserAdd className="mx-auto h-12 w-12 text-gray-400" />
@@ -122,77 +126,125 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
             </div>
           </div>
         ) : (
-          <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+          /* Members Table */
+          <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 rounded-lg">
             <table className="min-w-full divide-y divide-gray-300">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Name</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Available Days</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Max Consecutive Shifts</th>
-                  <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                  <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
+                    Name
+                  </th>
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                    Role
+                  </th>
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                    Status
+                  </th>
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                    Available Days
+                  </th>
+                  <th scope="col" className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">
+                    Max Shifts
+                  </th>
+                  <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                     <span className="sr-only">Actions</span>
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {members.map((member) => {
-                  // Extract user data safely
                   const userName = member.user
-                    ? `${member.user.first_name || ''} ${member.user.last_name || ''}`.trim() || member.user.username || member.user.email
+                    ? `${member.user.first_name || ''} ${member.user.last_name || ''}`.trim() ||
+                      member.user.username ||
+                      member.user.email
                     : 'Unknown User';
 
                   const userEmail = member.user?.email || 'No email';
 
                   return (
-                    <tr key={member.id} className="hover:bg-gray-50">
+                    <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                      {/* Name */}
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm">
-                        <div className="font-medium text-gray-900">{userName}</div>
-                        <div className="text-gray-500">{userEmail}</div>
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0">
+                            <div className="h-10 w-10 rounded-full bg-sbcc-primary flex items-center justify-center text-white font-semibold">
+                              {userName.charAt(0).toUpperCase()}
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <div className="font-medium text-gray-900">{userName}</div>
+                            <div className="text-gray-500">{userEmail}</div>
+                          </div>
+                        </div>
                       </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+
+                      {/* Role */}
+                      <td className="whitespace-nowrap px-3 py-4 text-sm">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
+                          ROLE_COLORS[member.role] || ROLE_COLORS.volunteer
+                        }`}>
                           {ROLE_LABELS[member.role] || member.role}
                         </span>
                       </td>
+
+                      {/* Status */}
                       <td className="whitespace-nowrap px-3 py-4 text-sm">
                         {member.is_active ? (
-                          <div className="flex items-center gap-1 text-green-700">
+                          <div className="flex items-center gap-1.5 text-green-700">
                             <HiCheckCircle className="h-5 w-5" />
                             <span className="text-xs font-medium">Active</span>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1 text-red-700">
+                          <div className="flex items-center gap-1.5 text-gray-500">
                             <HiXCircle className="h-5 w-5" />
                             <span className="text-xs font-medium">Inactive</span>
                           </div>
                         )}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {Array.isArray(member.available_days) && member.available_days.length > 0
-                          ? member.available_days.join(', ')
-                          : 'Any day'}
+
+                      {/* Available Days */}
+                      <td className="px-3 py-4 text-sm text-gray-500">
+                        <div className="max-w-xs">
+                          {Array.isArray(member.available_days) && member.available_days.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {member.available_days.map((day) => (
+                                <span
+                                  key={day}
+                                  className="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
+                                >
+                                  {day.slice(0, 3)}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic">Any day</span>
+                          )}
+                        </div>
                       </td>
+
+                      {/* Max Consecutive Shifts */}
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">
-                        {member.max_consecutive_shifts || 'Unlimited'}
+                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                          {member.max_consecutive_shifts || '∞'}
+                        </span>
                       </td>
-                      <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium space-x-2">
-                        <SecondaryButton
-                          size="sm"
-                          icon={HiPencil}
-                          onClick={() => setEditModalState({ open: true, member })}
-                        >
-                          Edit
-                        </SecondaryButton>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          icon={HiTrash}
-                          onClick={() => setDeleteModalState({ open: true, member })}
-                        >
-                          Remove
-                        </Button>
+
+                      {/* Actions */}
+                      <td className="relative whitespace-nowrap py-4 pl-3 pr-4 sm:pr-6">
+                        <div className="flex items-center justify-end gap-2">
+                          <IconButton
+                            icon={HiPencil}
+                            onClick={() => setEditModalState({ open: true, member })}
+                            className="text-gray-600 hover:text-sbcc-primary"
+                            title="Edit volunteer"
+                          />
+                          <IconButton
+                            icon={HiTrash}
+                            onClick={() => setDeleteModalState({ open: true, member })}
+                            className="text-gray-600 hover:text-red-600"
+                            title="Remove volunteer"
+                          />
+                        </div>
                       </td>
                     </tr>
                   );

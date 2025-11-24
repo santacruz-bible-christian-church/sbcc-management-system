@@ -9,8 +9,6 @@ import Snackbar from '../../../components/ui/Snackbar';
 const ROLES = [
   { value: 'volunteer', label: 'Volunteer' },
   { value: 'lead', label: 'Lead' },
-  { value: 'usher', label: 'Usher' },
-  { value: 'worship', label: 'Worship' },
 ];
 
 const DAYS_OF_WEEK = [

@@ -1,4 +1,4 @@
-import { HiCalendar, HiClipboardCheck, HiOutlineClock, HiUserGroup } from 'react-icons/hi';
+import { HiCalendar, HiClipboardCheck, HiOutlineClock } from 'react-icons/hi';
 import { StatsCard } from '../../../components/ui/Card';
 
 const SUMMARY_CONFIG = [
@@ -26,18 +26,10 @@ const SUMMARY_CONFIG = [
     variant: 'green',
     value: (summary) => summary.byStatus.completed,
   },
-  {
-    key: 'registrations',
-    title: 'Total RSVPs',
-    description: () => 'Across all events',
-    icon: HiUserGroup,
-    variant: 'purple',
-    value: (summary) => summary.registered,
-  },
 ];
 
 export const EventsSummaryCards = ({ summary, completionRate }) => (
-  <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+  <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
     {SUMMARY_CONFIG.map((card) => (
       <StatsCard
         key={card.key}

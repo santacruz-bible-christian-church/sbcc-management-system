@@ -6,12 +6,9 @@ import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
 import { HiX } from 'react-icons/hi';
 import Snackbar from '../../../components/ui/Snackbar';
 
-// Match backend ROLE_CHOICES exactly
 const ROLES = [
   { value: 'volunteer', label: 'Volunteer' },
   { value: 'lead', label: 'Lead' },
-  { value: 'usher', label: 'Usher' },
-  { value: 'worship', label: 'Worship' },
 ];
 
 const DAYS_OF_WEEK = [
