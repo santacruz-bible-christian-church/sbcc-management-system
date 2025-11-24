@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { ministriesApi } from '../../../api/ministries.api';
 import { membersApi } from '../../../api/members.api';
+import { useLeaderValidation } from '../hooks/useLeaderValidation';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
-import { HiX } from 'react-icons/hi';
+import { HiX, HiExclamationCircle } from 'react-icons/hi';
 import Snackbar from '../../../components/ui/Snackbar';
 
 const ROLES = [
@@ -23,6 +24,8 @@ const DAYS_OF_WEEK = [
 
 export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
   const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
+  const { existingLeader, loading: loadingValidation, checkExistingLeader, canAssignLead, getLeaderName } = useLeaderValidation();
+
   const [loading, setLoading] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [members, setMembers] = useState([]);
@@ -37,6 +40,7 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
   useEffect(() => {
     if (open && ministry?.id) {
       fetchMembers();
+      checkExistingLeader(ministry.id);
       // Reset form when modal opens
       setFormData({
         user: '',
@@ -55,54 +59,59 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
       console.log('Ministry ID:', ministry.id);
       console.log('Ministry Name:', ministry.name);
 
-      // Fetch members who belong to THIS ministry as their primary ministry
+      // Step 1: Fetch ALL members who have this ministry as primary
       const membersResponse = await membersApi.listMembers({
-        ministry: ministry.id,  // ← Filter by primary ministry
+        ministry: ministry.id,
         is_active: true,
         status: 'active',
-        page_size: 1000
+        page_size: 1000  // ← Fetch all members
       });
 
       const ministryMembers = Array.isArray(membersResponse)
         ? membersResponse
         : membersResponse.results || [];
 
-      console.log(`Members with ${ministry.name} as primary ministry:`, ministryMembers.length);
+      console.log(`📋 Found ${ministryMembers.length} members with ${ministry.name} as primary ministry`);
 
-      // Fetch current ministry volunteers (MinistryMember records)
+      // Step 2: Fetch ALL current volunteers (MinistryMember records)
       const volunteersResponse = await ministriesApi.listMembers({
-        ministry: ministry.id
+        ministry: ministry.id,
+        page_size: 1000  // ← Fetch all volunteers
       });
 
       const currentVolunteers = Array.isArray(volunteersResponse)
         ? volunteersResponse
         : volunteersResponse.results || [];
 
-      console.log('Current volunteers in ministry:', currentVolunteers.length);
+      console.log(`👥 Found ${currentVolunteers.length} current volunteers in ministry roster`);
 
-      // Extract user IDs from current volunteers
-      const currentVolunteerUserIds = currentVolunteers
-        .filter(v => v.user && v.user.id)
-        .map(v => v.user.id);
-
-      console.log('Current volunteer user IDs:', currentVolunteerUserIds);
-
-      // Filter out members who are already volunteers
-      const availableMembers = ministryMembers.filter(
-        member => !currentVolunteerUserIds.includes(member.user)
+      // Step 3: Extract user IDs from volunteers using Set for fast lookup
+      const volunteerUserIds = new Set(
+        currentVolunteers
+          .filter(v => v.user && v.user.id)
+          .map(v => v.user.id)
       );
 
-      console.log('Available members to add as volunteers:', availableMembers.length);
-      console.log('Available members:', availableMembers.map(m => ({
-        id: m.id,
-        user: m.user,
-        name: `${m.first_name} ${m.last_name}`,
-        email: m.email
-      })));
+      console.log('🔑 Volunteer user IDs:', Array.from(volunteerUserIds));
+
+      // Step 4: Filter members - exclude those already in volunteer roster
+      const availableMembers = ministryMembers.filter(member => {
+        const memberUserId = member.user; // This is the user ID (number)
+        const isAlreadyVolunteer = volunteerUserIds.has(memberUserId);
+
+        if (isAlreadyVolunteer) {
+          console.log(`❌ Filtering out ${member.first_name} ${member.last_name} (User ID: ${memberUserId}) - already a volunteer`);
+        }
+
+        return !isAlreadyVolunteer;
+      });
+
+      console.log('=== FILTERING COMPLETE ===');
+      console.log(`🎯 ${availableMembers.length} members available to add as volunteers`);
 
       setMembers(availableMembers);
     } catch (err) {
-      console.error('Failed to fetch members:', err);
+      console.error('❌ Failed to fetch members:', err);
       console.error('Error details:', err.response?.data);
       showError('Failed to load members list');
     } finally {
@@ -127,6 +136,11 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
       return;
     }
 
+    if (!canAssignLead(formData.role)) {
+      showError(`Cannot assign lead role. ${getLeaderName()} is already the lead for this ministry.`);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -139,14 +153,9 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
         available_days: selectedDays.length > 0 ? selectedDays : [],
       };
 
-      console.log('=== SUBMITTING VOLUNTEER ===');
-      console.log('Payload:', payload);
-
       await ministriesApi.createMember(payload);
-
       showSuccess('Volunteer added successfully!');
 
-      // Reset form
       setFormData({
         user: '',
         role: 'volunteer',
@@ -154,50 +163,25 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
         max_consecutive_shifts: '2',
       });
       setSelectedDays([]);
-
-      // Call success callback to refresh parent
       onSuccess();
-
     } catch (err) {
-      console.error('=== ADD VOLUNTEER ERROR ===');
-      console.error('Error:', err);
-      console.error('Response data:', err.response?.data);
-
-      // Extract error message
+      console.error('Add volunteer error:', err);
       let errorMsg = 'Failed to add volunteer';
       if (err.response?.data) {
         const errorData = err.response.data;
-
-        if (errorData.detail) {
-          errorMsg = errorData.detail;
-        } else if (errorData.user_id) {
-          errorMsg = Array.isArray(errorData.user_id)
-            ? errorData.user_id[0]
-            : errorData.user_id;
-        } else if (errorData.non_field_errors) {
+        if (errorData.detail) errorMsg = errorData.detail;
+        else if (errorData.non_field_errors) {
           errorMsg = Array.isArray(errorData.non_field_errors)
             ? errorData.non_field_errors[0]
             : errorData.non_field_errors;
-        } else if (errorData.ministry) {
-          errorMsg = Array.isArray(errorData.ministry)
-            ? errorData.ministry[0]
-            : errorData.ministry;
         } else {
-          // Get first error from any field
           const firstError = Object.values(errorData)[0];
           errorMsg = Array.isArray(firstError) ? firstError[0] : firstError;
         }
       }
-
       showError(errorMsg);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleBackdropClick = (e) => {
-    if (!loading && e.target === e.currentTarget) {
-      onClose();
     }
   };
 
@@ -216,9 +200,11 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
 
   if (!open) return null;
 
+  const isLeadBlocked = !canAssignLead(formData.role);
+
   return (
     <>
-      <div className="fixed inset-0 z-50 overflow-y-auto" onClick={handleBackdropClick}>
+      <div className="fixed inset-0 z-50 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && handleClose()}>
         <div className="flex min-h-screen items-center justify-center p-4">
           <div className="fixed inset-0 bg-black bg-opacity-25" aria-hidden="true"></div>
 
@@ -231,11 +217,7 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
                   Add a volunteer from <span className="font-semibold">{ministry?.name}</span> members
                 </p>
               </div>
-              <button
-                onClick={handleClose}
-                disabled={loading}
-                className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
-              >
+              <button onClick={handleClose} disabled={loading} className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50">
                 <HiX className="w-6 h-6" />
               </button>
             </div>
@@ -255,26 +237,8 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
                   <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-sm text-yellow-800 font-medium">No available members to add</p>
                     <p className="text-xs text-yellow-700 mt-1">
-                      All members of <span className="font-semibold">{ministry?.name}</span> are already volunteers,
-                      or there are no active members assigned to this ministry.
+                      All members of <span className="font-semibold">{ministry?.name}</span> are already volunteers.
                     </p>
-                    <div className="mt-3 space-y-1">
-                      <p className="text-xs text-yellow-700">
-                        💡 <strong>Tip:</strong> To add more volunteers:
-                      </p>
-                      <ol className="text-xs text-yellow-700 ml-4 list-decimal space-y-0.5">
-                        <li>Go to the Members page</li>
-                        <li>Assign members to {ministry?.name} as their primary ministry</li>
-                        <li>Then come back here to add them as volunteers</li>
-                      </ol>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={fetchMembers}
-                      className="mt-3 text-xs text-yellow-800 underline hover:text-yellow-900 font-medium"
-                    >
-                      🔄 Refresh member list
-                    </button>
                   </div>
                 ) : (
                   <select
@@ -292,9 +256,6 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
                     ))}
                   </select>
                 )}
-                <p className="mt-1 text-xs text-gray-500">
-                  Only showing members who belong to <span className="font-medium">{ministry?.name}</span> as their primary ministry
-                </p>
               </div>
 
               {/* Role */}
@@ -306,30 +267,51 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   required
-                  disabled={loading || members.length === 0}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent"
+                  disabled={loading || members.length === 0 || loadingValidation}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent disabled:bg-gray-100"
                 >
                   {ROLES.map((role) => (
-                    <option key={role.value} value={role.value}>
-                      {role.label}
-                    </option>
+                    <option key={role.value} value={role.value}>{role.label}</option>
                   ))}
                 </select>
+
+                {/* Validation Messages */}
+                {loadingValidation && formData.role === 'lead' && (
+                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-400 border-t-transparent" />
+                    <span>Checking for existing leader...</span>
+                  </div>
+                )}
+
+                {isLeadBlocked && !loadingValidation && (
+                  <div className="mt-2 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <HiExclamationCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-red-800">Cannot assign Lead role</p>
+                      <p className="text-sm text-red-700 mt-1">
+                        {getLeaderName()} is already the lead for this ministry.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {formData.role === 'lead' && !existingLeader && !loadingValidation && (
+                  <div className="mt-2 flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <HiExclamationCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-green-800">Assigning as Lead</p>
+                      <p className="text-sm text-green-700 mt-1">This volunteer will become the ministry leader.</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Available Days */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Available Days
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Available Days</label>
                 <div className="grid grid-cols-2 gap-2">
                   {DAYS_OF_WEEK.map((day) => (
-                    <label
-                      key={day}
-                      className={`flex items-center gap-2 p-2 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer ${
-                        loading || members.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                    >
+                    <label key={day} className="flex items-center gap-2 p-2 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={selectedDays.includes(day)}
@@ -341,9 +323,6 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
                     </label>
                   ))}
                 </div>
-                <p className="mt-1 text-sm text-gray-500">
-                  Select days when this volunteer is available to serve (leave unchecked for any day)
-                </p>
               </div>
 
               {/* Max Consecutive Shifts */}
@@ -361,9 +340,6 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
                   disabled={loading || members.length === 0}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent"
                 />
-                <p className="mt-1 text-sm text-gray-500">
-                  Maximum number of consecutive shifts this volunteer can serve (1-10)
-                </p>
               </div>
 
               {/* Active Status */}
@@ -383,17 +359,13 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
 
               {/* Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t">
-                <SecondaryButton
-                  type="button"
-                  onClick={handleClose}
-                  disabled={loading}
-                >
+                <SecondaryButton type="button" onClick={handleClose} disabled={loading}>
                   Cancel
                 </SecondaryButton>
                 <PrimaryButton
                   type="submit"
                   loading={loading}
-                  disabled={loading || members.length === 0 || loadingMembers}
+                  disabled={loading || members.length === 0 || loadingMembers || isLeadBlocked || loadingValidation}
                 >
                   {loading ? 'Adding...' : 'Add Volunteer'}
                 </PrimaryButton>
@@ -403,7 +375,6 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
         </div>
       </div>
 
-      {/* Snackbar */}
       {snackbar && (
         <Snackbar
           message={snackbar.message}

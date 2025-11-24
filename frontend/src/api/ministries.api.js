@@ -23,7 +23,9 @@ export const ministriesApi = {
 
   // Rotate shifts for a ministry
   rotateShifts: (ministryId, data) =>
-    apiClient.post(`/ministries/${ministryId}/rotate_shifts/`, data).then(res => res.data),
+    apiClient.post(`/ministries/${ministryId}/rotate_shifts/`, data, {
+      timeout: 120000,
+    }).then(res => res.data),
 
   // Ministry Members
   listMembers: (params = {}) =>
