@@ -55,36 +55,64 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
   const fetchMembers = async () => {
     setLoadingMembers(true);
     try {
+      console.log('=== FETCHING AVAILABLE MEMBERS ===');
+      console.log('Ministry ID:', ministry.id);
+      console.log('Ministry Name:', ministry.name);
+
+      // Step 1: Fetch ALL members who have this ministry as primary
       const membersResponse = await membersApi.listMembers({
         ministry: ministry.id,
         is_active: true,
         status: 'active',
-        page_size: 1000
+        page_size: 1000  // ← Fetch all members
       });
 
       const ministryMembers = Array.isArray(membersResponse)
         ? membersResponse
         : membersResponse.results || [];
 
+      console.log(`📋 Found ${ministryMembers.length} members with ${ministry.name} as primary ministry`);
+
+      // Step 2: Fetch ALL current volunteers (MinistryMember records)
       const volunteersResponse = await ministriesApi.listMembers({
-        ministry: ministry.id
+        ministry: ministry.id,
+        page_size: 1000  // ← Fetch all volunteers
       });
 
       const currentVolunteers = Array.isArray(volunteersResponse)
         ? volunteersResponse
         : volunteersResponse.results || [];
 
-      const currentVolunteerUserIds = currentVolunteers
-        .filter(v => v.user && v.user.id)
-        .map(v => v.user.id);
+      console.log(`👥 Found ${currentVolunteers.length} current volunteers in ministry roster`);
 
-      const availableMembers = ministryMembers.filter(
-        member => !currentVolunteerUserIds.includes(member.user)
+      // Step 3: Extract user IDs from volunteers using Set for fast lookup
+      const volunteerUserIds = new Set(
+        currentVolunteers
+          .filter(v => v.user && v.user.id)
+          .map(v => v.user.id)
       );
+
+      console.log('🔑 Volunteer user IDs:', Array.from(volunteerUserIds));
+
+      // Step 4: Filter members - exclude those already in volunteer roster
+      const availableMembers = ministryMembers.filter(member => {
+        const memberUserId = member.user; // This is the user ID (number)
+        const isAlreadyVolunteer = volunteerUserIds.has(memberUserId);
+
+        if (isAlreadyVolunteer) {
+          console.log(`❌ Filtering out ${member.first_name} ${member.last_name} (User ID: ${memberUserId}) - already a volunteer`);
+        }
+
+        return !isAlreadyVolunteer;
+      });
+
+      console.log('=== FILTERING COMPLETE ===');
+      console.log(`🎯 ${availableMembers.length} members available to add as volunteers`);
 
       setMembers(availableMembers);
     } catch (err) {
-      console.error('Failed to fetch members:', err);
+      console.error('❌ Failed to fetch members:', err);
+      console.error('Error details:', err.response?.data);
       showError('Failed to load members list');
     } finally {
       setLoadingMembers(false);
