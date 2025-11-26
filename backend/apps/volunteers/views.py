@@ -1,109 +1,45 @@
-from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.decorators import action
+from rest_framework import generics, status
 from rest_framework.response import Response
-from .models import Role, Volunteer, Event, Assignment, Availability, Rotation, RotationMember
-from .serializers import (
-    RoleSerializer, VolunteerSerializer, EventSerializer,
-    AssignmentSerializer, AvailabilitySerializer,
-    RotationSerializer, RotationMemberSerializer
-)
-from . import services
-from django.core.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
+from .models import Visitor, VisitorAttendance
+from .serializers import VisitorSerializer, VisitorAttendanceSerializer
+from .services import AttendanceService
 
-class RoleViewSet(viewsets.ModelViewSet):
-    queryset = Role.objects.all()
-    serializer_class = RoleSerializer
+class VisitorListCreateView(generics.ListCreateAPIView):
+    queryset = Visitor.objects.all()
+    serializer_class = VisitorSerializer
     permission_classes = [IsAuthenticated]
 
-class VolunteerViewSet(viewsets.ModelViewSet):
-    queryset = Volunteer.objects.all()
-    serializer_class = VolunteerSerializer
+
+class VisitorAttendanceCheckInView(generics.GenericAPIView):
+    serializer_class = VisitorAttendanceSerializer
     permission_classes = [IsAuthenticated]
 
-    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
-    def assignments(self, request, pk=None):
-        volunteer = self.get_object()
-        qs = volunteer.assignments.all()
-        page = self.paginate_queryset(qs)
-        serializer = AssignmentSerializer(page or qs, many=True)
-        return self.get_paginated_response(serializer.data) if page is not None else Response(serializer.data)
+    def post(self, request):
+        visitor_id = request.data.get("visitor_id")
+        service_date = request.data.get("service_date")
 
-class EventViewSet(viewsets.ModelViewSet):
-    queryset = Event.objects.all()
-    serializer_class = EventSerializer
-    permission_classes = [IsAuthenticated]
+        if not visitor_id:
+            return Response({"error": "visitor_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
-    def available_volunteers(self, request, pk=None):
-        event = self.get_object()
-        role_ids = request.query_params.getlist("role")
-        volunteers = services.get_available_volunteers_for_event(event, roles=role_ids or None)
-        page = self.paginate_queryset(volunteers)
-        serializer = VolunteerSerializer(page or volunteers, many=True)
-        return self.get_paginated_response(serializer.data) if page is not None else Response(serializer.data)
-
-class AssignmentViewSet(viewsets.ModelViewSet):
-    queryset = Assignment.objects.select_related("volunteer", "event").all()
-    serializer_class = AssignmentSerializer
-    permission_classes = [IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        volunteer = serializer.validated_data["volunteer"]
-        event = serializer.validated_data["event"]
-        role = serializer.validated_data.get("role")
-        force = request.data.get("force", False)
         try:
-            assignment = services.assign_volunteer_to_event(volunteer, event, role=role, force=force)
-        except ValidationError as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        out = AssignmentSerializer(assignment)
-        return Response(out.data, status=status.HTTP_201_CREATED)
+            visitor = Visitor.objects.get(id=visitor_id)
+        except Visitor.DoesNotExist:
+            return Response({"error": "Visitor not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
-    def confirm(self, request, pk=None):
-        assignment = self.get_object()
-        try:
-            assignment = services.confirm_assignment(assignment)
-        except ValidationError as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(AssignmentSerializer(assignment).data)
+        attendance, error = AttendanceService.check_in_visitor(
+            visitor=visitor,
+            service_date=service_date,
+            user=request.user
+        )
 
-    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
-    def decline(self, request, pk=None):
-        assignment = self.get_object()
-        assignment = services.decline_assignment(assignment)
-        return Response(AssignmentSerializer(assignment).data)
+        if error:
+            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
-class AvailabilityViewSet(viewsets.ModelViewSet):
-    queryset = Availability.objects.select_related("volunteer").all()
-    serializer_class = AvailabilitySerializer
+        return Response(VisitorAttendanceSerializer(attendance).data, status=status.HTTP_201_CREATED)
+
+
+class VisitorAttendanceListView(generics.ListAPIView):
+    queryset = VisitorAttendance.objects.all()
+    serializer_class = VisitorAttendanceSerializer
     permission_classes = [IsAuthenticated]
-
-class RotationViewSet(viewsets.ModelViewSet):
-    queryset = Rotation.objects.prefetch_related("members__volunteer").all()
-    serializer_class = RotationSerializer
-    permission_classes = [IsAuthenticated]
-
-    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
-    def run_for_event(self, request, pk=None):
-        rotation = self.get_object()
-        event_id = request.data.get("event")
-        if not event_id:
-            return Response({"detail": "event id required"}, status=status.HTTP_400_BAD_REQUEST)
-        event = get_object_or_404(Event, pk=event_id)
-        role_id = request.data.get("role")
-        role = None
-        if role_id:
-            from .models import Role
-            role = get_object_or_404(Role, pk=role_id)
-        count = int(request.data.get("count", 1))
-        force = bool(request.data.get("force", False))
-        try:
-            created = services.run_rotation_for_event(rotation, event, role=role, count=count, force=force)
-        except ValidationError as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        out = AssignmentSerializer(created, many=True)
-        return Response({"created": out.data}, status=status.HTTP_201_CREATED)
