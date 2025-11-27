@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from apps.attendance.models import AttendanceSheet
@@ -203,3 +203,13 @@ def recent_activities(request):
     activities.sort(key=lambda x: x["timestamp"], reverse=True)
 
     return Response({"activities": activities[:20], "count": len(activities)})
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def health_check(request):
+    """
+    GET /api/health/
+    Simple health check for uptime monitoring
+    """
+    return Response({"status": "ok"})
