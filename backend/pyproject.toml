@@ -62,3 +62,11 @@ good-names = ["i", "j", "k", "ex", "Run", "_", "id", "pk"]
 [tool.pylint.design]
 max-args = 7
 max-attributes = 10
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "sbcc.settings"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
