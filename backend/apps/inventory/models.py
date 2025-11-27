@@ -1,5 +1,5 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 
 class InventoryTracking(models.Model):
@@ -14,12 +14,8 @@ class InventoryTracking(models.Model):
     )
 
     acquisition_date = models.DateField(null=True, blank=True)
-    acquisition_cost = models.DecimalField(
-        max_digits=12, decimal_places=2, null=True, blank=True
-    )
-    salvage_value = models.DecimalField(
-        max_digits=12, decimal_places=2, null=True, blank=True
-    )
+    acquisition_cost = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    salvage_value = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     useful_life_years = models.PositiveIntegerField(default=5)
 
     label = models.CharField(max_length=20, blank=True)
