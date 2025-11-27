@@ -1,6 +1,6 @@
 """Common utility functions"""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 
 

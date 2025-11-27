@@ -1,5 +1,4 @@
 import logging
-from datetime import timedelta
 
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
@@ -10,8 +9,6 @@ from apps.attendance.models import AttendanceSheet
 from apps.events.models import Event
 from apps.inventory.models import InventoryTracking
 from apps.members.models import Member
-
-# Import from proper apps
 from apps.ministries.models import Ministry
 
 logger = logging.getLogger(__name__)

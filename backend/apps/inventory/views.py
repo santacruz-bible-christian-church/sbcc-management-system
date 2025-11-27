@@ -10,7 +10,6 @@ from reportlab.lib.units import cm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 
 from .models import InventoryTracking
 from .serializers import InventoryTrackingSerializer

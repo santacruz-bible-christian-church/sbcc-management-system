@@ -2,12 +2,11 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.core.mail import send_mail
-from django.db.models import Avg, Count, Q
 from django.utils import timezone
 
 from apps.members.models import Member
 
-from .models import Attendance, AttendanceSheet
+from .models import Attendance
 
 
 def check_frequent_absences(threshold=3, days=30):
