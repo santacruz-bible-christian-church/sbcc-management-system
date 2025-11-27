@@ -3,7 +3,7 @@ services:
     name: sbcc-backend
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    dockerContext: .
     region: singapore
     plan: free
     healthCheckPath: /api/health/
