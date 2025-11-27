@@ -31,6 +31,10 @@ COPY backend /app
 COPY backend/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Create static/media directories and set permissions
+RUN mkdir -p /app/static /app/staticfiles /app/media \
+    && touch /app/static/.gitkeep
+
 # Default envs (override in compose)
 ENV DJANGO_SETTINGS_MODULE=sbcc.settings \
     PYTHONPATH=/app
@@ -39,8 +43,9 @@ ENV DJANGO_SETTINGS_MODULE=sbcc.settings \
 # ---------- Development image ----------
 FROM base AS dev
 
-# Create non-root user
-RUN useradd -m appuser
+# Create non-root user and set ownership
+RUN useradd -m appuser \
+    && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
@@ -54,8 +59,9 @@ FROM base AS prod
 
 RUN pip install gunicorn
 
-# Create non-root user
-RUN useradd -m appuser
+# Create non-root user and set ownership
+RUN useradd -m appuser \
+    && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
