@@ -75,7 +75,7 @@ def _notify_admins_about_absences(problem_members, threshold, days):
 
     subject = f"Attendance Alert: {len(problem_members)} Member(s) with Frequent Absences"
 
-    message = f"Attendance Alert Report\n"
+    message = "Attendance Alert Report\n"
     message += f"Threshold: {threshold} absences in {days} days\n"
     message += f"Generated: {timezone.now().strftime('%Y-%m-%d %H:%M')}\n\n"
     message += "=" * 60 + "\n\n"

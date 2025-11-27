@@ -212,7 +212,7 @@ def rotate_and_assign(
 
             print(f"\n--- Ministry {ministry_id} complete: {created_for_ministry} assignments ---")
 
-        print(f"\n=== ROTATION COMPLETE ===")
+        print("\n=== ROTATION COMPLETE ===")
         print(f"Summary: {summary}")
 
     except Exception as e:
