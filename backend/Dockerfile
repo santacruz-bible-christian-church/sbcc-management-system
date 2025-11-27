@@ -27,6 +27,10 @@ RUN pip install --upgrade pip setuptools wheel \
 # App source
 COPY backend /app
 
+# Entrypoint script
+COPY backend/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Default envs (override in compose)
 ENV DJANGO_SETTINGS_MODULE=sbcc.settings \
     PYTHONPATH=/app
@@ -41,7 +45,7 @@ USER appuser
 
 EXPOSE 8000
 
-# Run Django dev server with autoreload
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 
@@ -56,4 +60,5 @@ USER appuser
 
 EXPOSE 8000
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["gunicorn", "sbcc.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]

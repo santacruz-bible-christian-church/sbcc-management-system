@@ -1,23 +1,15 @@
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from io import BytesIO
 
 from django.http import HttpResponse
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import cm
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Table,
-    TableStyle,
-    Paragraph,
-    Spacer,
-)
 from reportlab.lib.styles import getSampleStyleSheet
-
-from rest_framework import viewsets, permissions
+from reportlab.lib.units import cm
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 
 from .models import InventoryTracking
 from .serializers import InventoryTrackingSerializer
@@ -48,9 +40,7 @@ class InventoryTrackingViewSet(viewsets.ModelViewSet):
         elements = []
 
         elements.append(Paragraph("Inventory & Depreciation Report", styles["Title"]))
-        elements.append(
-            Paragraph(date.today().strftime("Generated on %Y-%m-%d"), styles["Normal"])
-        )
+        elements.append(Paragraph(date.today().strftime("Generated on %Y-%m-%d"), styles["Normal"]))
         elements.append(Spacer(1, 0.5 * cm))
 
         table_data = [
@@ -83,7 +73,9 @@ class InventoryTrackingViewSet(viewsets.ModelViewSet):
                 years_used = Decimal("0")
 
             depreciable_base = max(Decimal("0"), cost - salvage)
-            annual_dep = depreciable_base / Decimal(useful_life) if useful_life > 0 else Decimal("0")
+            annual_dep = (
+                depreciable_base / Decimal(useful_life) if useful_life > 0 else Decimal("0")
+            )
             accumulated_dep = min(depreciable_base, annual_dep * years_used)
             book_value = max(Decimal("0"), cost - accumulated_dep)
 
@@ -124,8 +116,6 @@ class InventoryTrackingViewSet(viewsets.ModelViewSet):
         buffer.close()
 
         response = HttpResponse(content_type="application/pdf")
-        response["Content-Disposition"] = (
-            'attachment; filename="inventory_depreciation_report.pdf"'
-        )
+        response["Content-Disposition"] = 'attachment; filename="inventory_depreciation_report.pdf"'
         response.write(pdf_value)
         return response

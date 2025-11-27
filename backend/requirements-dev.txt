@@ -1,6 +1,9 @@
 # Development and code quality tools
 # Install with: pip install -r requirements-dev.txt
 
+# Include production deps
+-r requirements.txt
+
 # Code formatting
 black==24.10.0
 isort==5.13.2

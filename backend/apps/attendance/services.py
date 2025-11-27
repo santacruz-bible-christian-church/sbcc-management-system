@@ -2,12 +2,11 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.core.mail import send_mail
-from django.db.models import Avg, Count, Q
 from django.utils import timezone
 
 from apps.members.models import Member
 
-from .models import Attendance, AttendanceSheet
+from .models import Attendance
 
 
 def check_frequent_absences(threshold=3, days=30):
@@ -76,7 +75,7 @@ def _notify_admins_about_absences(problem_members, threshold, days):
 
     subject = f"Attendance Alert: {len(problem_members)} Member(s) with Frequent Absences"
 
-    message = f"Attendance Alert Report\n"
+    message = "Attendance Alert Report\n"
     message += f"Threshold: {threshold} absences in {days} days\n"
     message += f"Generated: {timezone.now().strftime('%Y-%m-%d %H:%M')}\n\n"
     message += "=" * 60 + "\n\n"
