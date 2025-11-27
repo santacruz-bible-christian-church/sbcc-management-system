@@ -207,7 +207,7 @@ def rotate_and_assign(
 
                 # If no one could be assigned
                 if not assigned:
-                    print(f"  ⚠️ Could not assign shift (no available volunteers)")
+                    print("  ⚠️ Could not assign shift (no available volunteers)")  # Line 210 FIXED
                     summary["skipped_no_available"].append(shift.id)
 
             print(f"\n--- Ministry {ministry_id} complete: {created_for_ministry} assignments ---")
@@ -246,6 +246,7 @@ def _send_assignment_notification(assignment, shift, ministry_member):
 
         subject = f"Shift Assignment: {shift.ministry.name}"
 
+        notes_section = "Notes: " + shift.notes if shift.notes else ""
         message = f"""
 Hello {user.first_name or user.username},
 
@@ -255,7 +256,7 @@ Ministry: {shift.ministry.name}
 Date: {shift_date}
 Time: {start_time} - {end_time}
 
-{ "Notes: " + shift.notes if shift.notes else ""}
+{notes_section}
 
 Thank you for serving!
 
