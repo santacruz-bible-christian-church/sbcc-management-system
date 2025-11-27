@@ -40,7 +40,7 @@ def rotate_and_assign(
         today = timezone.now().date()
         end_date = today + timedelta(days=days)
 
-        print(f"\n=== ROTATION STARTED ===")
+        print("\n=== ROTATION STARTED ===")
         print(f"Date range: {today} to {end_date}")
         print(f"Ministry IDs: {ministry_ids}")
         print(f"Dry run: {dry_run}")
@@ -235,7 +235,7 @@ def _send_assignment_notification(assignment, shift, ministry_member):
         try:
             start_time = shift.start_time.strftime("%I:%M %p")
             end_time = shift.end_time.strftime("%I:%M %p")
-        except:
+        except Exception:
             start_time = str(shift.start_time)
             end_time = str(shift.end_time)
 
