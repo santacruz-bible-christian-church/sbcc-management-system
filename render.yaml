@@ -4,6 +4,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: .
+    dockerTarget: prod
     region: singapore
     plan: free
     healthCheckPath: /api/health/
