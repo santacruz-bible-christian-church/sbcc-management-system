@@ -6,7 +6,7 @@ services:
     dockerContext: .
     region: singapore
     plan: free
-    healthCheckPath: /api/health/
+    healthCheckPath: /api/dashboard/health/
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: sbcc.settings
