@@ -17,6 +17,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        build-essential \
        libpq-dev \
+       curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python deps
@@ -43,7 +44,6 @@ ENV DJANGO_SETTINGS_MODULE=sbcc.settings \
 # ---------- Development image ----------
 FROM base AS dev
 
-# Create non-root user and set ownership
 RUN useradd -m appuser \
     && chown -R appuser:appuser /app
 USER appuser
@@ -57,9 +57,6 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 # ---------- Production image ----------
 FROM base AS prod
 
-RUN pip install gunicorn
-
-# Create non-root user and set ownership
 RUN useradd -m appuser \
     && chown -R appuser:appuser /app
 USER appuser
@@ -67,4 +64,4 @@ USER appuser
 EXPOSE 8000
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["gunicorn", "sbcc.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+CMD ["gunicorn", "sbcc.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "120"]
