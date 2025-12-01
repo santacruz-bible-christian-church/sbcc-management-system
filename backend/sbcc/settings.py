@@ -61,7 +61,7 @@ INSTALLED_APPS = [
     "apps.meeting_minutes",
     "apps.prayer_requests",
     "apps.tasks",
-    "apps.volunteers",
+    "apps.visitors",
 ]
 
 # Custom User Model

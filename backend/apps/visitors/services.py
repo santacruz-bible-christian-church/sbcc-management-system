@@ -1,6 +1,6 @@
 from datetime import date
 from django.db import IntegrityError
-from .models import VisitorAttendance
+from visitors.models import VisitorAttendance
 
 class AttendanceService:
     @staticmethod
