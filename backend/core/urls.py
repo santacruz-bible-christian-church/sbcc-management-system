@@ -1,7 +1,9 @@
 from django.urls import path
-from .views import dashboard_stats, recent_activities
+
+from . import views
 
 urlpatterns = [
-    path('stats/', dashboard_stats, name='dashboard-stats'),
-    path('activities/', recent_activities, name='dashboard-activities'),
+    path("stats/", views.dashboard_stats, name="dashboard-stats"),
+    path("activities/", views.recent_activities, name="dashboard-activities"),
+    path("health/", views.health_check, name="health-check"),
 ]

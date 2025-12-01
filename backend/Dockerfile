@@ -27,6 +27,14 @@ RUN pip install --upgrade pip setuptools wheel \
 # App source
 COPY backend /app
 
+# Entrypoint script
+COPY backend/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Create static/media directories and set permissions
+RUN mkdir -p /app/static /app/staticfiles /app/media \
+    && touch /app/static/.gitkeep
+
 # Default envs (override in compose)
 ENV DJANGO_SETTINGS_MODULE=sbcc.settings \
     PYTHONPATH=/app
@@ -35,13 +43,14 @@ ENV DJANGO_SETTINGS_MODULE=sbcc.settings \
 # ---------- Development image ----------
 FROM base AS dev
 
-# Create non-root user
-RUN useradd -m appuser
+# Create non-root user and set ownership
+RUN useradd -m appuser \
+    && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
 
-# Run Django dev server with autoreload
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 
@@ -50,10 +59,12 @@ FROM base AS prod
 
 RUN pip install gunicorn
 
-# Create non-root user
-RUN useradd -m appuser
+# Create non-root user and set ownership
+RUN useradd -m appuser \
+    && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["gunicorn", "sbcc.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]

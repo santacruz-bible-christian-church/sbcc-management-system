@@ -1,12 +1,11 @@
 from datetime import timedelta
-from datetime import timezone as dt_timezone
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Assignment, Ministry, MinistryMember, Shift
+from .models import Assignment, MinistryMember, Shift
 
 
 def rotate_and_assign(
@@ -40,7 +39,7 @@ def rotate_and_assign(
         today = timezone.now().date()
         end_date = today + timedelta(days=days)
 
-        print(f"\n=== ROTATION STARTED ===")
+        print("\n=== ROTATION STARTED ===")
         print(f"Date range: {today} to {end_date}")
         print(f"Ministry IDs: {ministry_ids}")
         print(f"Dry run: {dry_run}")
@@ -109,7 +108,7 @@ def rotate_and_assign(
                 ),
             )
 
-            print(f"Members sorted by fairness")
+            print("Members sorted by fairness")
 
             # Step 5: Assign shifts with smart filtering
             rot_index = 0
@@ -186,9 +185,9 @@ def rotate_and_assign(
                                     try:
                                         _send_assignment_notification(assignment, shift, candidate)
                                         summary["emailed"] += 1
-                                        print(f"    📧 Email sent")
+                                        print("    📧 Email sent")
                                     except Exception as email_err:
-                                        print(f"    ⚠️ Email failed: {email_err}")
+                                        print("    ⚠️ Email failed: " + str(email_err))
                                         summary["errors"].append(
                                             f"Email to {candidate.user.email}: {str(email_err)}"
                                         )
@@ -208,12 +207,12 @@ def rotate_and_assign(
 
                 # If no one could be assigned
                 if not assigned:
-                    print(f"  ⚠️ Could not assign shift (no available volunteers)")
+                    print("  ⚠️ Could not assign shift (no available volunteers)")  # Line 210 FIXED
                     summary["skipped_no_available"].append(shift.id)
 
             print(f"\n--- Ministry {ministry_id} complete: {created_for_ministry} assignments ---")
 
-        print(f"\n=== ROTATION COMPLETE ===")
+        print("\n=== ROTATION COMPLETE ===")
         print(f"Summary: {summary}")
 
     except Exception as e:
@@ -235,18 +234,19 @@ def _send_assignment_notification(assignment, shift, ministry_member):
         try:
             start_time = shift.start_time.strftime("%I:%M %p")
             end_time = shift.end_time.strftime("%I:%M %p")
-        except:
+        except Exception:
             start_time = str(shift.start_time)
             end_time = str(shift.end_time)
 
         # Format date
         try:
             shift_date = shift.date.strftime("%A, %B %d, %Y")
-        except:
+        except Exception:
             shift_date = str(shift.date)
 
         subject = f"Shift Assignment: {shift.ministry.name}"
 
+        notes_section = "Notes: " + shift.notes if shift.notes else ""
         message = f"""
 Hello {user.first_name or user.username},
 
@@ -256,7 +256,7 @@ Ministry: {shift.ministry.name}
 Date: {shift_date}
 Time: {start_time} - {end_time}
 
-{f'Notes: {shift.notes}' if shift.notes else ''}
+{notes_section}
 
 Thank you for serving!
 

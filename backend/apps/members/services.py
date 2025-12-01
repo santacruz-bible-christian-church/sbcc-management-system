@@ -1,6 +1,9 @@
-from datetime import timedelta, date
+from datetime import date, timedelta
+
 from django.utils import timezone
+
 from .models import Member
+
 
 def _next_annual_occurrence(d: date, today: date):
     """Return the next occurrence date (this year or next) for month/day of d."""
@@ -18,6 +21,7 @@ def _next_annual_occurrence(d: date, today: date):
             occ = date(today.year + 1, 3, 1)
     return occ
 
+
 def get_upcoming_birthdays(days=7):
     """
     Return list of dicts: {'member': Member, 'occurrence': date}
@@ -30,10 +34,11 @@ def get_upcoming_birthdays(days=7):
     for m in Member.objects.all():
         occ = _next_annual_occurrence(m.date_of_birth, today)
         if occ and today <= occ <= deadline:
-            results.append({'member': m, 'occurrence': occ})
+            results.append({"member": m, "occurrence": occ})
     # optional: sort by occurrence date
-    results.sort(key=lambda r: r['occurrence'])
+    results.sort(key=lambda r: r["occurrence"])
     return results
+
 
 def get_upcoming_anniversaries(days=7):
     """
@@ -47,7 +52,7 @@ def get_upcoming_anniversaries(days=7):
     for m in Member.objects.all():
         occ = _next_annual_occurrence(m.baptism_date, today)
         if occ and today <= occ <= deadline:
-            results.append({'member': m, 'occurrence': occ})
+            results.append({"member": m, "occurrence": occ})
     # optional: sort by occurrence date
-    results.sort(key=lambda r: r['occurrence'])
+    results.sort(key=lambda r: r["occurrence"])
     return results
