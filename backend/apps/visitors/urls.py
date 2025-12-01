@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import (
+from visitors.views import (
     VisitorListCreateView,
     VisitorAttendanceCheckInView,
     VisitorAttendanceListView,

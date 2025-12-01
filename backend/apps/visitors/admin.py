@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Visitor, VisitorAttendance
+from apps.visitors.models import Visitor, VisitorAttendance
 
 @admin.register(Visitor)
 class VisitorAdmin(admin.ModelAdmin):
