@@ -1,70 +1,40 @@
 # Backend Dockerfile for Django API
-# Multi-stage: dev (with hot reload) & prod (gunicorn)
-
-# ---------- Base image ----------
-FROM python:3.12-slim AS base
+FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100
+    PIP_DISABLE_PIP_VERSION_CHECK=on
 
 WORKDIR /app
 
-# System deps (psycopg2, build, etc.)
+# System deps
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        build-essential \
        libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install python deps
-COPY backend/requirements.txt ./requirements.txt
-RUN pip install --upgrade pip setuptools wheel \
-    && pip install -r requirements.txt
+# Install Python deps
+COPY requirements.txt ./
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt \
+    && pip install gunicorn
 
-# App source
-COPY backend /app
+# Copy app
+COPY . .
 
-# Entrypoint script
-COPY backend/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Create directories
+RUN mkdir -p /app/static /app/staticfiles /app/media
 
-# Create static/media directories and set permissions
-RUN mkdir -p /app/static /app/staticfiles /app/media \
-    && touch /app/static/.gitkeep
-
-# Default envs (override in compose)
-ENV DJANGO_SETTINGS_MODULE=sbcc.settings \
-    PYTHONPATH=/app
-
-
-# ---------- Development image ----------
-FROM base AS dev
-
-# Create non-root user and set ownership
+# Create non-root user
 RUN useradd -m appuser \
     && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
 
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
-
-# ---------- Production image ----------
-FROM base AS prod
-
-RUN pip install gunicorn
-
-# Create non-root user and set ownership
-RUN useradd -m appuser \
-    && chown -R appuser:appuser /app
-USER appuser
-
-EXPOSE 8000
-
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["gunicorn", "sbcc.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+# Railway uses PORT env var
+CMD python manage.py migrate --noinput && \
+    python manage.py collectstatic --noinput && \
+    gunicorn sbcc.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2
