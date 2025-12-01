@@ -29,22 +29,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build backend (dev)
+      - name: Build backend
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./backend
           file: backend/Dockerfile
-          target: dev
-          push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build backend (prod)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: backend/Dockerfile
-          target: prod
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
