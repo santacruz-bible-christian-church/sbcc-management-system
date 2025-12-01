@@ -15,14 +15,14 @@ RUN apt-get update \
        libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python deps
-COPY requirements.txt ./
+# Install Python deps (path relative to project root)
+COPY backend/requirements.txt ./
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
     && pip install gunicorn
 
 # Copy app
-COPY . .
+COPY backend/ .
 
 # Create directories
 RUN mkdir -p /app/static /app/staticfiles /app/media
