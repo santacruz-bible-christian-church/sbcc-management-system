@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.db import connections
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -7,6 +8,14 @@ User = get_user_model()
 
 # Test credentials - not used in production
 TEST_PASSWORD = "TestPass123!"  # nosec B105
+
+
+@pytest.fixture(autouse=True)
+def close_db_connections():
+    """Close database connections after each test to prevent connection leaks."""
+    yield
+    for conn in connections.all():
+        conn.close()
 
 
 @pytest.fixture

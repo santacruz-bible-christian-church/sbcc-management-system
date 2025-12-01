@@ -39,6 +39,7 @@ exclude = [
     "*/venv/*",
     "build",
     "dist",
+    "manual_*.py",  # Manual test scripts require Django setup before imports
 ]
 per-file-ignores = [
     "__init__.py:F401",
@@ -70,3 +71,7 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::django.utils.deprecation.RemovedInDjango60Warning",
+    "ignore::DeprecationWarning:reportlab",
+]
