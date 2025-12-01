@@ -1,7 +1,6 @@
 import ReactDom from "react-dom";
 
 const NewAnnouncementModal = ({ openForm, handleSetOpenForm }) => {
-    console.log(openForm)
     return ReactDom.createPortal(
         openForm ? (
             <div className="fixed z-[10] flex inset-0 scale-100 opacity-100">

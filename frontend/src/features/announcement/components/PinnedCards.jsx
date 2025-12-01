@@ -1,6 +1,5 @@
 const PinnedCards = ({ mock, handleSetMock, handleSetQuery }) => {
     const pinnedItems = mock.filter(item => item.pinned)
-    console.log(handleSetQuery)
     return (
         <div>
             {
