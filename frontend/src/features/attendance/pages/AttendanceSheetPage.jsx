@@ -13,6 +13,7 @@ import {
   EmptyState,
   ConfirmationModal
 } from '../../../components/ui';
+import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 
 const ACCENT = '#FDB54A';
 
@@ -194,6 +195,7 @@ export default function AttendanceSheetPage() {
           open={deleteState.open}
           title="Delete Attendance Sheet?"
           message={`Are you sure you want to delete the attendance sheet for "${deleteState.sheet?.event_title}" on ${formatDate(deleteState.sheet?.date)}? This action cannot be undone.`}
+          illustration={TrashIllustration}
           confirmText="Delete"
           confirmVariant="danger"
           onConfirm={handleDeleteConfirm}
