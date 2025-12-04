@@ -5,6 +5,8 @@ import { useMembers } from '../hooks/useMembers';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useCallback, useState, useEffect } from 'react';
 import { ConfirmationModal } from '../../../components/ui/Modal';
+import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
+import ArchiveIllustration from '../../../assets/Archive-Illustration.svg';
 import { membersApi } from '../../../api/members.api';
 import { MemberDetailsModal } from '../components/MemberDetailsModal';
 import { MemberFormModal } from '../components/MemberFormModal';
@@ -49,25 +51,25 @@ export const MembershipListPage = () => {
     const [formLoading, setFormLoading] = useState(false);
 
 
-    // Delete handlers
-    const openDeleteModal = useCallback((member) => {
-        setDeleteState({ open: true, member });
-    }, []);
+        // Delete handlers
+        const openDeleteModal = useCallback((member) => {
+            setDeleteState({ open: true, member });
+        }, []);
 
-    const closeDeleteModal = useCallback(() => {
-        setDeleteState({ open: false, member: null });
-    }, []);
+        const closeDeleteModal = useCallback(() => {
+            setDeleteState({ open: false, member: null });
+        }, []);
 
-    const handleDeleteConfirm = useCallback(async () => {
-        if (!deleteState.member) return;
+        const handleDeleteConfirm = useCallback(async () => {
+            if (!deleteState.member) return;
 
-        try {
-            await deleteMember(deleteState.member.id);
-            closeDeleteModal();
-        } catch (err) {
-            console.error('Delete member error:', err);
-        }
-    }, [deleteState.member, deleteMember, closeDeleteModal]);
+            try {
+                await deleteMember(deleteState.member.id);
+                closeDeleteModal();
+            } catch (err) {
+                console.error('Delete member error:', err);
+            }
+        }, [deleteState.member, deleteMember, closeDeleteModal]);
 
 
     // Archive handlers
@@ -223,10 +225,14 @@ export const MembershipListPage = () => {
             </div>
 
             {/* Delete Confirmation Modal */}
+            {/* NOTE: Updated to use same two-column confirmation modal with illustration
+                (Trash-WarmTone.svg) — matches Attendance delete modal. Illustration
+                is passed via the `illustration` prop so it remains configurable. */}
             <ConfirmationModal
                 open={deleteState.open}
                 title="Delete Member?"
                 message={`Are you sure you want to permanently delete ${deleteState.member?.full_name || deleteState.member?.first_name}? This action cannot be undone.`}
+                illustration={TrashIllustration}
                 confirmText="Delete"
                 confirmVariant="danger"
                 onConfirm={handleDeleteConfirm}
@@ -235,12 +241,16 @@ export const MembershipListPage = () => {
             />
 
             {/* Archive Confirmation Modal */}
+            {/* Archive Confirmation Modal - styled to match design screenshot
+                Uses the Archive illustration and a compact two-column layout.
+                Title and confirm button text adjusted to match the visual example. */}
             <ConfirmationModal
                 open={archiveState.open}
-                title="Archive Member?"
+                title="Are you sure?"
                 message={`Are you sure you want to archive ${archiveState.member?.full_name || archiveState.member?.first_name}? You can restore them later.`}
-                confirmText="Archive"
-                confirmVariant="warning"
+                illustration={ArchiveIllustration}
+                confirmText="Confirm"
+                confirmVariant="danger"
                 onConfirm={handleArchiveConfirm}
                 onCancel={closeArchiveModal}
                 loading={loading}

@@ -18,6 +18,7 @@ import { prepareEventFormValues } from '../utils/format';
 import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 import Snackbar from '../../../components/ui/Snackbar';
+import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 import '../../../styles/events.css';
 import '../../../styles/calendar.css';
 
@@ -372,10 +373,14 @@ export const EventsPage = () => {
       </EventModal>
 
       {/* Delete Confirmation Modal */}
+      {/* NOTE: Updated to use two-column confirmation modal with illustration
+          (Trash-WarmTone.svg) — matches other delete modals across the app.
+          Illustration is passed via the `illustration` prop so it remains configurable. */}
       <ConfirmationModal
         open={deleteState.open}
         title="Delete Event?"
         message={`Are you sure you want to delete "${deleteState.event?.title}"? This action cannot be undone.`}
+        illustration={TrashIllustration}
         confirmText="Delete"
         confirmVariant="danger"
         onConfirm={handleDeleteConfirm}
