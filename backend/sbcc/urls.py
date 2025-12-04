@@ -19,6 +19,7 @@ urlpatterns = [
     path("api/attendance/", include("apps.attendance.urls")),
     path("api/inventory/", include("apps.inventory.urls")),
     path("api/announcements/", include("apps.announcements.urls")),
+    path("api/prayer-requests/", include("apps.prayer_requests.urls")),
     # Dashboard (aggregates data from multiple apps)
     path("api/dashboard/", include("core.urls")),
 ]
