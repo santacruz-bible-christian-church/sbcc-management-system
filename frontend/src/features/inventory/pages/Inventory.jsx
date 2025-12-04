@@ -12,6 +12,7 @@ import { ConfirmationModal } from '../../../components/ui/Modal';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useInventory } from '../hooks/useInventory';
+import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 import {
   InventoryFilters,
   InventoryForm,
@@ -223,10 +224,15 @@ const InventoryPage = () => {
         />
       </InventoryModal>
 
+      {/* Delete Confirmation Modal */}
+      {/* NOTE: Updated to use two-column confirmation modal with illustration
+          (Trash-WarmTone.svg) — matches Attendance, Members, and Ministries delete modals.
+          Illustration is passed via the `illustration` prop so it remains configurable. */}
       <ConfirmationModal
         open={deleteState.open}
         title="Delete asset?"
         message={`Are you sure you want to delete "${deleteState.item?.item_name || ''}"? This action cannot be undone.`}
+        illustration={TrashIllustration}
         confirmText="Delete asset"
         confirmVariant="danger"
         onConfirm={handleDeleteConfirm}
