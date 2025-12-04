@@ -4,10 +4,10 @@ A comprehensive web-based platform designed to streamline church operations incl
 
 ## 🎯 Project Overview
 
-**Course:** CMSC 309 - Software Engineering I  
-**Client:** Santa Cruz Bible Christian Church  
-**Team Size:** 9 Developers  
-**Target Deadline:** November 9, 2025 (Prototype Demo)
+**Course:** CMSC 309 - Software Engineering I
+**Client:** Santa Cruz Bible Christian Church
+**Team Size:** 9 Developers
+**Status:** Active Development
 
 ### Team Members
 - **Lead Developer:** Jeremy M. Garin (emperuna)
@@ -24,20 +24,21 @@ A comprehensive web-based platform designed to streamline church operations incl
 
 ## ✨ Key Features
 
-### Phase 1: Core Modules (Prototype - Nov 9, 2025)
-- 🔐 **Authentication** - JWT-based auth with role management
-- 👥 **Membership** - Member profiles with ministry assignments
-- 🏛️ **Ministries** - Ministry/department management
-- 📅 **Events** - Church calendar with event registration
-- ✅ **Attendance** - Digital attendance tracking
+### Core Modules (Implemented)
+- ✅ **Authentication** - JWT-based auth with role management
+- ✅ **Membership** - Member profiles with ministry assignments
+- ✅ **Ministries** - Ministry/department management with volunteer scheduling
+- ✅ **Events** - Church calendar with event registration
+- ✅ **Attendance** - Digital attendance tracking with sheets
+- ✅ **Inventory** - Equipment and resource management
+- ✅ **Dashboard** - Analytics and reporting
 
-### Phase 2: Extended Features (Post-Prototype)
-- 🤝 **Volunteer Scheduling** - Automated rotational scheduling
-- 🙏 **Prayer Requests** - Digital submission and tracking
-- 📦 **Inventory** - Equipment and resource management
-- 📄 **Meeting Minutes** - Document management
-- 📢 **Announcements** - Church-wide communication
-- 📊 **Dashboard** - Analytics and reporting
+### Future Features
+- 🔜 **Prayer Requests** - Digital submission and tracking
+- 🔜 **Meeting Minutes** - Document management
+- 🔜 **Announcements** - Church-wide communication
+- 🔜 **Tasks** - Task assignment and tracking
+- 🔜 **Volunteers** - Advanced volunteer management
 
 ### User Roles
 - **Admin** - Full system access
@@ -50,13 +51,17 @@ A comprehensive web-based platform designed to streamline church operations incl
 ## 🏗️ Technology Stack
 
 ### Frontend
-- **Framework:** React 18.3.1 with Vite 5.4.11
-- **Styling:** Tailwind CSS 3.4.14
-- **Component Library:** Flowbite React 0.10.2
-- **Icons:** React Icons 5.3.0, Heroicons
-- **HTTP Client:** Axios 1.7.7
-- **State Management:** Zustand 5.0.1
-- **Routing:** React Router DOM 6.28.0
+- **Framework:** React 19.1.1 with Vite 7.1.7
+- **Styling:** Tailwind CSS 3.4.18
+- **Component Library:** Flowbite React 0.12.10, Flowbite 3.1.2
+- **Icons:** Lucide React 0.545.0, React Icons 5.5.0
+- **HTTP Client:** Axios 1.12.2
+- **State Management:** Zustand 5.0.8, TanStack Query 5.90.2
+- **Routing:** React Router DOM 7.9.4
+- **Forms:** React Hook Form 7.65.0, Zod 4.1.12
+- **PDF Generation:** jsPDF 3.0.3
+- **QR Codes:** qrcode.react 4.2.0
+- **Date Utilities:** date-fns 4.1.0
 
 ### Backend
 - **Framework:** Django 5.1.4
@@ -66,6 +71,7 @@ A comprehensive web-based platform designed to streamline church operations incl
 - **Database Driver:** psycopg2-binary 2.9.10
 - **CORS:** django-cors-headers 4.5.0
 - **Filtering:** django-filter 24.3
+- **PDF Generation:** reportlab 4.2.5
 - **Environment:** python-decouple 3.8
 
 ### Database
@@ -80,195 +86,88 @@ A comprehensive web-based platform designed to streamline church operations incl
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-- **Python:** 3.12+ (Project uses Python 3.12)
-- **Node.js:** 18+
-- **Git:** Latest version
-- **Database:** Neon PostgreSQL account (or local PostgreSQL)
+- Python 3.12+
+- Node.js 18+
+- PostgreSQL (Neon account recommended)
 
-### Backend Setup
+### Setup
+```bash
+# Clone repository
+git clone https://github.com/emperuna/sbcc-management-system.git
+cd sbcc-management-system
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/emperuna/sbcc-management-system.git
-   cd sbcc-management-system/backend
-   ```
+# Backend setup
+cd backend
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env  # Configure your DATABASE_URL
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver  # http://localhost:8000
 
-2. **Create virtual environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+# Frontend setup (new terminal)
+cd frontend
+npm install
+npm run dev  # http://localhost:5173
+```
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` with your credentials:
-   ```env
-   SECRET_KEY=your-secret-key-here
-   DEBUG=True
-   DATABASE_URL=postgresql://user:password@host.neon.tech/dbname?sslmode=require
-   ```
-
-5. **Run migrations**
-   ```bash
-   python manage.py migrate
-   ```
-
-6. **Create superuser**
-   ```bash
-   python manage.py createsuperuser
-   ```
-
-7. **Start development server**
-   ```bash
-   python manage.py runserver
-   # Or use the convenience script:
-   ./start-backend.sh
-   ```
-
-   **Backend URLs:**
-   - API: `http://localhost:8000/api/`
-   - Admin: `http://localhost:8000/admin/`
-
-### Frontend Setup
-
-1. **Navigate to frontend directory**
-   ```bash
-   cd frontend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env`:
-   ```env
-   VITE_API_URL=http://localhost:8000/api
-   ```
-
-4. **Start development server**
-   ```bash
-   npm run dev
-   ```
-
-   **Frontend URL:** `http://localhost:5173`
+For detailed setup instructions, see:
+- [Backend Setup Guide](docs/BACKEND_SETUP.md)
+- [Frontend Setup Guide](docs/FRONTEND_SETUP.md)
 
 ---
 
-## 📁 Project Structure
+## 📁 Project Architecture
 
+### High-Level Structure
 ```
 sbcc-management-system/
-├── backend/                    # Django REST API
-│   ├── apps/                   # Django applications
-│   │   ├── authentication/     # User auth & JWT
-│   │   ├── members/            # Member profiles
-│   │   ├── ministries/         # Ministry management
-│   │   ├── events/             # Event & registration system
-│   │   ├── attendance/         # Attendance tracking
-│   │   ├── announcements/      # Announcements (future)
-│   │   ├── inventory/          # Inventory (future)
-│   │   ├── meeting_minutes/    # Minutes (future)
-│   │   ├── prayer_requests/    # Prayer requests (future)
-│   │   ├── tasks/              # Task management (future)
-│   │   └── volunteers/         # Volunteer system (future)
-│   ├── common/                 # Shared utilities
-│   │   ├── exceptions.py       # Custom exceptions
-│   │   ├── permissions.py      # DRF permissions
-│   │   ├── utils.py            # Helper functions
-│   │   └── validators.py       # Custom validators
-│   ├── core/                   # Dashboard aggregation
-│   ├── sbcc/                   # Django settings
-│   │   ├── settings.py         # Configuration
-│   │   ├── urls.py             # URL routing
-│   │   └── wsgi.py             # WSGI config
-│   ├── tests/                  # Test suite
-│   ├── manage.py
-│   ├── requirements.txt
-│   └── .env.example
-├── frontend/                   # React application
-│   ├── src/
-│   │   ├── api/                # API client modules
-│   │   ├── components/         # Reusable components
-│   │   │   ├── forms/          # Form components
-│   │   │   ├── layout/         # Layout components
-│   │   │   └── ui/             # UI primitives
-│   │   ├── features/           # Feature modules
-│   │   │   ├── auth/           # Authentication
-│   │   │   ├── dashboard/      # Dashboard
-│   │   │   ├── events/         # Events management
-│   │   │   ├── members/        # Member management
-│   │   │   └── attendance/     # Attendance tracking
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── router/             # Routing configuration
-│   │   ├── services/           # Business logic
-│   │   ├── store/              # State management (Zustand)
-│   │   ├── styles/             # Global styles
-│   │   ├── utils/              # Utility functions
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── public/                 # Static assets
-│   ├── package.json
-│   ├── vite.config.js
-│   └── tailwind.config.js
-├── docs/                       # Documentation
-│   ├── BACKEND_SETUP.md
-│   ├── FRONTEND_SETUP.md
-│   └── DEVELOPMENT_WORKFLOW.md
-├── .gitignore
-├── LICENSE
-└── README.md
+├── backend/          # Django REST API
+├── frontend/         # React SPA
+└── docs/             # Documentation
 ```
 
----
-
-## 🔐 Environment Variables
-
-### Backend (`.env`)
-```env
-# Django Configuration
-SECRET_KEY=your-secret-key-here
-DEBUG=True
-
-# Database (Neon PostgreSQL)
-DATABASE_URL=postgresql://user:password@host.neon.tech/database?sslmode=require
-
-# CORS (Frontend URL)
-CORS_ALLOWED_ORIGINS=http://localhost:5173
-
-# Email (Optional - for future notifications)
-# EMAIL_HOST=smtp.gmail.com
-# EMAIL_PORT=587
-# EMAIL_HOST_USER=your-email@gmail.com
-# EMAIL_HOST_PASSWORD=your-app-password
+### Backend (Feature-Based Architecture)
+```
+backend/apps/
+├── authentication/   # ✅ User & JWT auth
+├── members/          # ✅ Member management
+├── ministries/       # ✅ Ministry & volunteer scheduling
+├── events/           # ✅ Events & registration
+├── attendance/       # ✅ Attendance tracking
+├── inventory/        # ✅ Equipment tracking
+├── prayer_requests/  # 🚧 In progress
+├── meeting_minutes/  # 🚧 In progress
+├── announcements/    # 🚧 In progress
+└── tasks/            # 🚧 In progress
 ```
 
-### Frontend (`.env`)
-```env
-VITE_API_URL=http://localhost:8000/api
+### Frontend (Feature-Based Architecture)
 ```
+frontend/src/
+├── features/         # Feature modules
+│   ├── auth/        # Authentication
+│   ├── members/     # Member management
+│   ├── ministries/  # Ministry management
+│   ├── events/      # Event management
+│   ├── attendance/  # Attendance tracking
+│   └── dashboard/   # Dashboard & analytics
+├── components/      # Shared UI components
+├── services/        # API services
+├── store/           # State management
+└── router/          # Routing configuration
+```
+
+For detailed structure, see [Backend Setup](docs/BACKEND_SETUP.md) and [Frontend Setup](docs/FRONTEND_SETUP.md).
 
 ---
 
 ## 🗄️ Database Schema
 
-### Current Models (Phase 1)
+### Database Models
 
 **Authentication:**
 - `User` - Custom user model with role-based permissions
@@ -276,20 +175,23 @@ VITE_API_URL=http://localhost:8000/api
 **Core Modules:**
 - `Member` - Church member profiles (linked to User)
 - `Ministry` - Church ministries/departments
+- `MinistryMember` - Ministry membership relationships
+- `Shift` - Volunteer shifts for ministry scheduling
+- `Assignment` - Volunteer shift assignments
 - `Event` - Church events with registration system
 - `EventRegistration` - Event-specific member registrations
-- `Attendance` - General attendance tracking
+- `AttendanceSheet` - Attendance tracking sheets per event
+- `Attendance` - Individual attendance records
+- `InventoryTracking` - Equipment and resource tracking
 
-### Relationships
+### Key Relationships
 ```
 User (1) ──→ (1) Member
-User (1) ──→ (*) Ministry (as leader)
-Ministry (1) ──→ (*) Member
-Ministry (1) ──→ (*) Event
-Event (1) ──→ (*) EventRegistration
-Member (1) ──→ (*) EventRegistration
-Event (1) ──→ (*) Attendance
-Member (1) ──→ (*) Attendance
+Ministry (1) ──→ (*) MinistryMember ──→ (1) Member
+Ministry (1) ──→ (*) Shift
+Shift (1) ──→ (*) Assignment ──→ (1) User
+Event (1) ──→ (*) EventRegistration ──→ (1) Member
+Event (1) ──→ (*) AttendanceSheet ──→ (*) Attendance ──→ (1) Member
 ```
 
 ---
@@ -316,6 +218,13 @@ Member (1) ──→ (*) Attendance
 - `GET /api/ministries/{id}/` - Retrieve ministry
 - `PUT /api/ministries/{id}/` - Update ministry
 - `DELETE /api/ministries/{id}/` - Delete ministry
+- `GET /api/ministries/members/` - List ministry members
+- `POST /api/ministries/members/` - Add ministry member
+- `GET /api/ministries/shifts/` - List ministry shifts
+- `POST /api/ministries/shifts/` - Create ministry shift
+- `GET /api/ministries/assignments/` - List shift assignments
+- `POST /api/ministries/assignments/` - Create shift assignment
+- `POST /api/ministries/assignments/rotate/` - Auto-rotate assignments
 
 ### Events
 - `GET /api/events/` - List events
@@ -326,168 +235,92 @@ Member (1) ──→ (*) Attendance
 - `POST /api/events/{id}/register/` - Register for event
 - `DELETE /api/events/{id}/unregister/` - Unregister from event
 - `GET /api/events/{id}/registrations/` - List event registrations
-- `GET /api/events/{id}/attendance_report/` - Get attendance report
 
 ### Attendance
-- `GET /api/attendance/` - List attendance records
-- `POST /api/attendance/` - Record attendance
-- `GET /api/attendance/{id}/` - Retrieve attendance record
+- `GET /api/attendance/sheets/` - List attendance sheets
+- `POST /api/attendance/sheets/` - Create attendance sheet
+- `GET /api/attendance/sheets/{id}/` - Retrieve attendance sheet
+- `POST /api/attendance/sheets/{id}/mark_present/` - Mark member present
+- `POST /api/attendance/sheets/{id}/update_attendances/` - Bulk update
+- `GET /api/attendance/sheets/{id}/download/` - Download CSV
+- `GET /api/attendance/records/` - List attendance records
+- `GET /api/attendance/records/member_summary/` - Member summary
+- `GET /api/attendance/records/ministry_report/` - Ministry report
+
+### Inventory
+- `GET /api/inventory/` - List inventory items
+- `POST /api/inventory/` - Create inventory item
+- `GET /api/inventory/{id}/` - Retrieve inventory item
+- `PUT /api/inventory/{id}/` - Update inventory item
+- `DELETE /api/inventory/{id}/` - Delete inventory item
+
+### Dashboard
+- `GET /api/dashboard/stats/` - Dashboard statistics
+- `GET /api/dashboard/activities/` - Recent activities
 
 ---
 
 ## 🤝 Contributing
 
-### Git Workflow
+We follow a feature-based Git workflow with conventional commits.
 
-1. **Create feature branch from main**
-   ```bash
-   git checkout main
-   git pull origin main
-   git checkout -b feature/your-feature-name
-   ```
+**Branch naming:**
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `refactor/` - Code refactoring
+- `docs/` - Documentation
+- `design/` - UI/UX changes
 
-2. **Make changes and commit**
-   ```bash
-   git add .
-   git commit -m "feat: add your feature description"
-   ```
-
-3. **Keep branch updated**
-   ```bash
-   git fetch origin
-   git rebase origin/main
-   ```
-
-4. **Push to GitHub**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-5. **Create Pull Request**
-   - Use PR template (if available)
-   - Request review from lead developer
-   - Address feedback promptly
-   - Ensure CI checks pass
-   - Merge only when approved
-
-### Branch Naming Convention
-- `feature/` - New features (e.g., `feature/event-registration`)
-- `fix/` - Bug fixes (e.g., `fix/login-validation`)
-- `refactor/` - Code refactoring (e.g., `refactor/events-module`)
-- `docs/` - Documentation (e.g., `docs/api-endpoints`)
-- `design/` - UI/UX changes (e.g., `design/events-page`)
-
-### Commit Message Convention
+**Commit format:**
 ```
 feat: add new feature
-fix: fix bug
+fix: resolve bug
 docs: update documentation
-style: format code
-refactor: restructure code
-test: add tests
-chore: maintenance tasks
 ```
 
-### Code Style Guidelines
-
-**Python (Backend):**
-- Follow PEP 8
-- Use `black` for formatting
-- Maximum line length: 100 characters
-- Use type hints where applicable
-
-**JavaScript (Frontend):**
-- Use ESLint configuration
-- Prefer functional components with hooks
-- Use meaningful variable names
-- Keep components small and focused
-
-### Code Review Checklist
-- [ ] Code follows project style guidelines
-- [ ] No cache files (`__pycache__`, `.pyc`) committed
-- [ ] Environment variables used (no hard-coded credentials)
-- [ ] Tests added/updated (if applicable)
-- [ ] Documentation updated (if needed)
-- [ ] PR description is clear and complete
-- [ ] Branch is up-to-date with main
-- [ ] All CI checks passing
-
----
-
-## 🧪 Testing
-
-### Backend Tests
-```bash
-cd backend
-python manage.py test                    # Run all tests
-python manage.py test apps.events       # Test specific app
-pytest --cov                             # Run with coverage (if pytest installed)
-```
-
-### Frontend Tests
-```bash
-cd frontend
-npm run test              # Run unit tests
-npm run test:coverage     # Generate coverage report
-```
-
-**Note:** Comprehensive test suite to be implemented in Phase 2.
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Backend won't start:**
-- Check Python version: `python --version` (should be 3.12+)
-- Verify virtual environment is activated
-- Ensure all dependencies installed: `pip install -r requirements.txt`
-- Check `DATABASE_URL` in `.env` is correct
-
-**Frontend won't start:**
-- Check Node version: `node --version` (should be 18+)
-- Delete `node_modules` and reinstall: `rm -rf node_modules && npm install`
-- Clear Vite cache: `rm -rf node_modules/.vite`
-
-**Database connection errors:**
-- Verify Neon database is active
-- Check `DATABASE_URL` format and credentials
-- Test connection manually with `psql` or database client
-
-**CORS errors:**
-- Verify `CORS_ALLOWED_ORIGINS` in backend settings
-- Check frontend API URL matches backend URL
+See [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md) for detailed guidelines.
 
 ---
 
 ## 📚 Documentation
 
-- [Backend Setup Guide](docs/BACKEND_SETUP.md) - Detailed backend configuration
-- [Frontend Setup Guide](docs/FRONTEND_SETUP.md) - Detailed frontend configuration
-- [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md) - Team collaboration guidelines
+- **[Backend Setup Guide](docs/BACKEND_SETUP.md)** - Django/DRF configuration, database setup, troubleshooting
+- **[Frontend Setup Guide](docs/FRONTEND_SETUP.md)** - React/Vite configuration, API integration, styling
+- **[Development Workflow](docs/DEVELOPMENT_WORKFLOW.md)** - Git workflow, code review, testing guidelines
 
 ---
 
 ## 📝 Development Status
 
-### Phase 1: Prototype (Target: Nov 9, 2025)
-- ✅ Authentication system
-- ✅ Member management
-- ✅ Ministry management
-- ✅ Event system with registration
-- ✅ Attendance tracking
-- ✅ Frontend UI/UX for core modules
-- 🚧 Dashboard analytics (in progress)
+### ✅ Completed Features
+- ✅ Authentication system with JWT
+- ✅ User management with role-based access
+- ✅ Member management with filtering & search
+- ✅ Ministry management with department structure
+- ✅ Ministry member relationships
+- ✅ Volunteer shift scheduling
+- ✅ Event management with registration
+- ✅ Attendance tracking with sheets
+- ✅ Attendance reports (member & ministry)
+- ✅ Inventory tracking system
+- ✅ Dashboard analytics
+- ✅ CSV import/export functionality
+- ✅ PDF generation for reports
+- ✅ QR code generation for members
+- ✅ Birthday & anniversary tracking
+- ✅ Responsive frontend UI
 
-### Phase 2: Extended Features (Post-Prototype)
-- ⏳ Volunteer scheduling
-- ⏳ Prayer request management
-- ⏳ Inventory tracking
-- ⏳ Meeting minutes
-- ⏳ Announcements system
-- ⏳ Email notifications
-- ⏳ Advanced reporting
+### 🚧 In Progress
+- 🚧 Prayer request management
+- 🚧 Meeting minutes system
+- 🚧 Announcements module
+- 🚧 Task assignment system
+- 🚧 Advanced volunteer management
+
+### 🔜 Planned Features
+- 🔜 Email notifications
+- 🔜 Advanced reporting & analytics
+- 🔜 Data export tools
 
 ---
 
@@ -495,18 +328,18 @@ npm run test:coverage     # Generate coverage report
 
 This project is developed as part of CMSC 309 coursework at Laguna State Polytechnic University - Santa Cruz Campus.
 
-**Copyright © 2025 SBCC Management System Team**  
+**Copyright © 2025 SBCC Management System Team**
 All rights reserved by the development team and Santa Cruz Bible Christian Church.
 
 ---
 
 ## 📞 Contact
 
-**Project Lead:** Jeremy M. Garin  
-**GitHub:** [@emperuna](https://github.com/emperuna)  
+**Project Lead:** Jeremy M. Garin
+**GitHub:** [@emperuna](https://github.com/emperuna)
 **Email:** garinjeremy6@gmail.com
 
-**Instructor:** Prof. Reynalen Justo  
+**Instructor:** Prof. Reynalen Justo
 **Course:** CMSC 309 - Software Engineering I
 
 ---

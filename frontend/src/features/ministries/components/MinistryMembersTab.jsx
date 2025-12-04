@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { HiUserAdd, HiPencil, HiTrash, HiCheckCircle, HiXCircle } from 'react-icons/hi';
-import { ministriesApi } from '../../../api/ministries.api';
+import { useState } from 'react';
+import { HiUserAdd, HiPencil, HiTrash, HiCheckCircle, HiXCircle, HiChevronLeft, HiChevronRight } from 'react-icons/hi';
+import { useMinistryMembers } from '../hooks/useMinistryMembers';
 import { useSnackbar } from '../../../hooks/useSnackbar';
-import { PrimaryButton, SecondaryButton, Button } from '../../../components/ui/Button';
+import { PrimaryButton, IconButton } from '../../../components/ui/Button';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 import Snackbar from '../../../components/ui/Snackbar';
 import AddVolunteerModal from './AddVolunteerModal';
@@ -11,50 +11,37 @@ import EditVolunteerModal from './EditVolunteerModal';
 const ROLE_LABELS = {
   volunteer: 'Volunteer',
   lead: 'Lead',
-  usher: 'Usher',
-  worship: 'Worship',
 };
 
+const ROLE_COLORS = {
+  volunteer: 'bg-blue-50 text-blue-700 ring-blue-700/10',
+  lead: 'bg-purple-50 text-purple-700 ring-purple-700/10',
+  usher: 'bg-green-50 text-green-700 ring-green-700/10',
+  worship: 'bg-orange-50 text-orange-700 ring-orange-700/10',
+};
+
+const ITEMS_PER_PAGE = 10;
+
 export const MinistryMembersTab = ({ ministry, onRefresh }) => {
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { members, loading, refresh, deleteMember } = useMinistryMembers(ministry?.id);
+  const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
+
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalState, setEditModalState] = useState({ open: false, member: null });
   const [deleteModalState, setDeleteModalState] = useState({ open: false, member: null });
-  const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const fetchMembers = async () => {
-    setLoading(true);
-    try {
-      console.log('=== FETCHING MINISTRY MEMBERS ===');
-      console.log('Ministry ID:', ministry.id);
+  // Calculate pagination
+  const totalPages = Math.ceil(members.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedMembers = members.slice(startIndex, endIndex);
 
-      const data = await ministriesApi.listMembers({ ministry: ministry.id });
-      console.log('Raw response:', data);
-
-      const membersList = Array.isArray(data) ? data : data.results || [];
-      console.log('Processed members list:', membersList);
-
-      setMembers(membersList);
-    } catch (err) {
-      console.error('Failed to load volunteers:', err);
-      console.error('Error response:', err.response?.data);
-      showError('Failed to load volunteers');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (ministry?.id) {
-      fetchMembers();
-    }
-  }, [ministry?.id]);
-
+  // Reset to page 1 when members change
   const handleAddSuccess = async () => {
     setAddModalOpen(false);
-    await fetchMembers();
-    // Refresh parent to update stats
+    await refresh();
+    setCurrentPage(1); // Reset to first page
     if (onRefresh) {
       await onRefresh();
     }
@@ -62,8 +49,7 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
 
   const handleEditSuccess = async () => {
     setEditModalState({ open: false, member: null });
-    await fetchMembers();
-    // Refresh parent to update stats
+    await refresh();
     if (onRefresh) {
       await onRefresh();
     }
@@ -73,11 +59,17 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
     if (!deleteModalState.member) return;
 
     try {
-      await ministriesApi.deleteMember(deleteModalState.member.id);
+      await deleteMember(deleteModalState.member.id);
       showSuccess('Volunteer removed from ministry');
       setDeleteModalState({ open: false, member: null });
-      await fetchMembers();
-      // Refresh parent to update stats
+
+      // If current page becomes empty after delete, go to previous page
+      const remainingMembers = members.length - 1;
+      const maxPage = Math.ceil(remainingMembers / ITEMS_PER_PAGE);
+      if (currentPage > maxPage && maxPage > 0) {
+        setCurrentPage(maxPage);
+      }
+
       if (onRefresh) {
         await onRefresh();
       }
@@ -85,6 +77,18 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
       showError('Failed to remove volunteer');
       console.error(err);
     }
+  };
+
+  const handlePreviousPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(totalPages, prev + 1));
+  };
+
+  const handlePageClick = (page) => {
+    setCurrentPage(page);
   };
 
   if (loading) {
@@ -98,11 +102,15 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Volunteer Roster</h3>
             <p className="text-sm text-gray-600 mt-1">
               {members.length} {members.length === 1 ? 'volunteer' : 'volunteers'} serving in this ministry
+              {members.length > ITEMS_PER_PAGE && (
+                <span className="text-gray-500"> • Page {currentPage} of {totalPages}</span>
+              )}
             </p>
           </div>
           <PrimaryButton icon={HiUserAdd} onClick={() => setAddModalOpen(true)}>
@@ -110,6 +118,7 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
           </PrimaryButton>
         </div>
 
+        {/* Empty State */}
         {members.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
             <HiUserAdd className="mx-auto h-12 w-12 text-gray-400" />
@@ -122,84 +131,226 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
             </div>
           </div>
         ) : (
-          <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Name</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Available Days</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Max Consecutive Shifts</th>
-                  <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {members.map((member) => {
-                  // Extract user data safely
-                  const userName = member.user
-                    ? `${member.user.first_name || ''} ${member.user.last_name || ''}`.trim() || member.user.username || member.user.email
-                    : 'Unknown User';
+          <>
+            {/* Members Table */}
+            <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+              <table className="min-w-full divide-y divide-gray-300">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
+                      Name
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Role
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Status
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Available Days
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">
+                      Max Shifts
+                    </th>
+                    <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                      <span className="sr-only">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {paginatedMembers.map((member) => {
+                    const userName = member.user
+                      ? `${member.user.first_name || ''} ${member.user.last_name || ''}`.trim() ||
+                        member.user.username ||
+                        member.user.email
+                      : 'Unknown User';
 
-                  const userEmail = member.user?.email || 'No email';
+                    const userEmail = member.user?.email || 'No email';
 
-                  return (
-                    <tr key={member.id} className="hover:bg-gray-50">
-                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm">
-                        <div className="font-medium text-gray-900">{userName}</div>
-                        <div className="text-gray-500">{userEmail}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                          {ROLE_LABELS[member.role] || member.role}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm">
-                        {member.is_active ? (
-                          <div className="flex items-center gap-1 text-green-700">
-                            <HiCheckCircle className="h-5 w-5" />
-                            <span className="text-xs font-medium">Active</span>
+                    return (
+                      <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                        {/* Name */}
+                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 flex-shrink-0">
+                              <div className="h-10 w-10 rounded-full bg-sbcc-primary flex items-center justify-center text-white font-semibold">
+                                {userName.charAt(0).toUpperCase()}
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="font-medium text-gray-900">{userName}</div>
+                              <div className="text-gray-500">{userEmail}</div>
+                            </div>
                           </div>
-                        ) : (
-                          <div className="flex items-center gap-1 text-red-700">
-                            <HiXCircle className="h-5 w-5" />
-                            <span className="text-xs font-medium">Inactive</span>
+                        </td>
+
+                        {/* Role */}
+                        <td className="whitespace-nowrap px-3 py-4 text-sm">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
+                            ROLE_COLORS[member.role] || ROLE_COLORS.volunteer
+                          }`}>
+                            {ROLE_LABELS[member.role] || member.role}
+                          </span>
+                        </td>
+
+                        {/* Status */}
+                        <td className="whitespace-nowrap px-3 py-4 text-sm">
+                          {member.is_active ? (
+                            <div className="flex items-center gap-1.5 text-green-700">
+                              <HiCheckCircle className="h-5 w-5" />
+                              <span className="text-xs font-medium">Active</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 text-gray-500">
+                              <HiXCircle className="h-5 w-5" />
+                              <span className="text-xs font-medium">Inactive</span>
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Available Days */}
+                        <td className="px-3 py-4 text-sm text-gray-500">
+                          <div className="max-w-xs">
+                            {Array.isArray(member.available_days) && member.available_days.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {member.available_days.map((day) => (
+                                  <span
+                                    key={day}
+                                    className="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
+                                  >
+                                    {day.slice(0, 3)}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 italic">Any day</span>
+                            )}
                           </div>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {Array.isArray(member.available_days) && member.available_days.length > 0
-                          ? member.available_days.join(', ')
-                          : 'Any day'}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">
-                        {member.max_consecutive_shifts || 'Unlimited'}
-                      </td>
-                      <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium space-x-2">
-                        <SecondaryButton
-                          size="sm"
-                          icon={HiPencil}
-                          onClick={() => setEditModalState({ open: true, member })}
-                        >
-                          Edit
-                        </SecondaryButton>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          icon={HiTrash}
-                          onClick={() => setDeleteModalState({ open: true, member })}
-                        >
-                          Remove
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+
+                        {/* Max Consecutive Shifts */}
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">
+                          <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                            {member.max_consecutive_shifts || '∞'}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 sm:pr-6">
+                          <div className="flex items-center justify-end gap-2">
+                            <IconButton
+                              icon={HiPencil}
+                              onClick={() => setEditModalState({ open: true, member })}
+                              className="text-gray-600 hover:text-sbcc-primary"
+                              title="Edit volunteer"
+                            />
+                            <IconButton
+                              icon={HiTrash}
+                              onClick={() => setDeleteModalState({ open: true, member })}
+                              className="text-gray-600 hover:text-red-600"
+                              title="Remove volunteer"
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-b-lg">
+                <div className="flex flex-1 justify-between sm:hidden">
+                  <button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
+                      <span className="font-medium">{Math.min(endIndex, members.length)}</span> of{' '}
+                      <span className="font-medium">{members.length}</span> volunteers
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                      <button
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1}
+                        className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="sr-only">Previous</span>
+                        <HiChevronLeft className="h-5 w-5" aria-hidden="true" />
+                      </button>
+
+                      {/* Page Numbers */}
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        // Show first page, last page, current page, and pages around current
+                        const showPage =
+                          page === 1 ||
+                          page === totalPages ||
+                          (page >= currentPage - 1 && page <= currentPage + 1);
+
+                        const showEllipsis =
+                          (page === currentPage - 2 && currentPage > 3) ||
+                          (page === currentPage + 2 && currentPage < totalPages - 2);
+
+                        if (showEllipsis) {
+                          return (
+                            <span
+                              key={page}
+                              className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300"
+                            >
+                              ...
+                            </span>
+                          );
+                        }
+
+                        if (!showPage) return null;
+
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => handlePageClick(page)}
+                            className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                              currentPage === page
+                                ? 'z-10 bg-sbcc-primary text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sbcc-primary'
+                                : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+
+                      <button
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                        className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="sr-only">Next</span>
+                        <HiChevronRight className="h-5 w-5" aria-hidden="true" />
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Add Volunteer Modal */}

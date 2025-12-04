@@ -65,8 +65,6 @@ class Member(models.Model):
 
     def update_attendance_stats(self):
         """Recalculate attendance statistics"""
-        from django.db.models import Count, Q
-
         from apps.attendance.models import Attendance
 
         records = Attendance.objects.filter(member=self)
