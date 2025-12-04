@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from visitors.models import Visitor, VisitorAttendance
+from apps.visitors.models import Visitor, VisitorAttendance
+
 
 class VisitorSerializer(serializers.ModelSerializer):
     class Meta:

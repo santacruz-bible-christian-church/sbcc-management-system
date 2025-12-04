@@ -1,9 +1,14 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from visitors.models import Visitor, VisitorAttendance
-from visitors.serializers import VisitorSerializer, VisitorAttendanceSerializer
-from visitors.services import AttendanceService
+from rest_framework.views import APIView
+from django.contrib.auth.models import User
+
+from apps.visitors.models import Visitor, VisitorAttendance
+from apps.visitors.serializers import VisitorSerializer, VisitorAttendanceSerializer
+from apps.visitors.services import AttendanceService
+from apps.members.models import Member  # requires your members app
+
 
 class VisitorListCreateView(generics.ListCreateAPIView):
     queryset = Visitor.objects.all()
@@ -40,6 +45,40 @@ class VisitorAttendanceCheckInView(generics.GenericAPIView):
 
 
 class VisitorAttendanceListView(generics.ListAPIView):
-    queryset = VisitorAttendance.objects.all()
+    queryset = VisitorAttendance.objects.select_related("visitor", "added_by")
     serializer_class = VisitorAttendanceSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = generics.ListAPIView.pagination_class   # default DRF pagination
+
+
+class ConvertVisitorToMemberView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, id):
+        try:
+            visitor = Visitor.objects.get(id=id)
+        except Visitor.DoesNotExist:
+            return Response({"error": "Visitor not found"}, status=404)
+
+        # Create User
+        username = visitor.email or visitor.full_name.replace(" ", "").lower()
+        user = User.objects.create_user(
+            username=username,
+            email=visitor.email,
+            password="changeme123"
+        )
+
+        # Create Member
+        member = Member.objects.create(
+            user=user,
+            full_name=visitor.full_name,
+            phone=visitor.phone,
+            email=visitor.email,
+        )
+
+        # Update visitor
+        visitor.status = "member"
+        visitor.converted_to_member = member
+        visitor.save()
+
+        return Response({"message": "Visitor converted to member successfully"})

@@ -1,11 +1,20 @@
 from django.contrib import admin
 from apps.visitors.models import Visitor, VisitorAttendance
 
+
 @admin.register(Visitor)
 class VisitorAdmin(admin.ModelAdmin):
-    list_display = ("full_name", "phone", "email", "is_first_time", "date_added")
+    list_display = (
+        "full_name",
+        "phone",
+        "email",
+        "status",
+        "follow_up_status",
+        "is_first_time",
+        "date_added",
+    )
     search_fields = ("full_name", "phone", "email")
-    list_filter = ("is_first_time",)
+    list_filter = ("status", "follow_up_status", "is_first_time")
 
 
 @admin.register(VisitorAttendance)

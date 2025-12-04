@@ -3,12 +3,36 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+STATUS_CHOICES = [
+    ("visitor", "Visitor"),
+    ("member", "Member"),
+]
+
+FOLLOW_UP_CHOICES = [
+    ("visited_1x", "Visited 1x"),
+    ("visited_2x", "Visited 2x"),
+    ("regular", "Regular Visitor"),
+]
+
+
 class Visitor(models.Model):
     full_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     is_first_time = models.BooleanField(default=True)
     date_added = models.DateTimeField(auto_now_add=True)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="visitor")
+    follow_up_status = models.CharField(max_length=20, choices=FOLLOW_UP_CHOICES, default="visited_1x")
+
+    converted_to_member = models.ForeignKey(
+        "members.Member",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    notes = models.TextField(blank=True)
 
     def __str__(self):
         return self.full_name
