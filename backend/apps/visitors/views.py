@@ -7,8 +7,7 @@ from django.contrib.auth.models import User
 from apps.visitors.models import Visitor, VisitorAttendance
 from apps.visitors.serializers import VisitorSerializer, VisitorAttendanceSerializer
 from apps.visitors.services import AttendanceService
-from apps.members.models import Member  # requires your members app
-
+from apps.members.models import Member
 
 class VisitorListCreateView(generics.ListCreateAPIView):
     queryset = Visitor.objects.all()
@@ -48,8 +47,7 @@ class VisitorAttendanceListView(generics.ListAPIView):
     queryset = VisitorAttendance.objects.select_related("visitor", "added_by")
     serializer_class = VisitorAttendanceSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = generics.ListAPIView.pagination_class   # default DRF pagination
-
+    pagination_class = generics.ListAPIView.pagination_class
 
 class ConvertVisitorToMemberView(APIView):
     permission_classes = [IsAuthenticated]
@@ -60,7 +58,6 @@ class ConvertVisitorToMemberView(APIView):
         except Visitor.DoesNotExist:
             return Response({"error": "Visitor not found"}, status=404)
 
-        # Create User
         username = visitor.email or visitor.full_name.replace(" ", "").lower()
         user = User.objects.create_user(
             username=username,
@@ -68,7 +65,6 @@ class ConvertVisitorToMemberView(APIView):
             password="changeme123"
         )
 
-        # Create Member
         member = Member.objects.create(
             user=user,
             full_name=visitor.full_name,
@@ -76,7 +72,6 @@ class ConvertVisitorToMemberView(APIView):
             email=visitor.email,
         )
 
-        # Update visitor
         visitor.status = "member"
         visitor.converted_to_member = member
         visitor.save()
