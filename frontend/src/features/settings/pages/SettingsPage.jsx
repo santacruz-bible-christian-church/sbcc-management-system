@@ -7,12 +7,13 @@ import { useSnackbar } from '../../../hooks/useSnackbar';
 import { BrandingTab } from '../components/BrandingTab';
 import { AboutTab } from '../components/AboutTab';
 import { ContactTab } from '../components/ContactTab';
+import { SettingsPreview } from '../components/SettingsPreview';
 import Snackbar from '../../../components/ui/Snackbar';
 import { Navigate } from 'react-router-dom';
 
 export const SettingsPage = () => {
   const { user } = useAuth();
-  const { settings, loading, saving, updateSettings, uploadImage, removeImage } = useSettings();
+  const { settings, loading, saving, refresh, updateSettings, uploadImage, removeImage } = useSettings();
   const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
   const [activeTab, setActiveTab] = useState(0);
 
@@ -40,6 +41,12 @@ export const SettingsPage = () => {
         await updateSettings(data);
         showSuccess('Settings updated successfully');
       }
+      // Refresh preview and notify other components
+      await refresh();
+
+      // Import and trigger global settings refresh
+      const { refreshPublicSettings } = await import('../hooks/usePublicSettings');
+      refreshPublicSettings();
     } catch (err) {
       console.error('Failed to update settings:', err);
       showError(err.response?.data?.detail || 'Failed to update settings');
@@ -66,54 +73,68 @@ export const SettingsPage = () => {
         </p>
       </div>
 
-      {/* Tabs */}
-      <Tabs
-        aria-label="Settings tabs"
-        variant="underline"
-        onActiveTabChange={setActiveTab}
-      >
-        <Tabs.Item
-          active={activeTab === 0}
-          title="Branding"
-          icon={HiOutlineCog}
-        >
-          <div className="py-6">
-            <BrandingTab
-              settings={settings}
-              onSave={handleSave}
-              saving={saving}
-            />
-          </div>
-        </Tabs.Item>
+      {/* Two Column Layout: Tabs + Preview */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content - Tabs */}
+        <div className="lg:col-span-2">
+          <Tabs
+            aria-label="Settings tabs"
+            variant="underline"
+            onActiveTabChange={setActiveTab}
+          >
+            <Tabs.Item
+              active={activeTab === 0}
+              title="Branding"
+              icon={HiOutlineCog}
+            >
+              <div className="py-6">
+                <BrandingTab
+                  settings={settings}
+                  onSave={handleSave}
+                  saving={saving}
+                />
+              </div>
+            </Tabs.Item>
 
-        <Tabs.Item
-          active={activeTab === 1}
-          title="About"
-          icon={HiOutlineInformationCircle}
-        >
-          <div className="py-6">
-            <AboutTab
-              settings={settings}
-              onSave={handleSave}
-              saving={saving}
-            />
-          </div>
-        </Tabs.Item>
+            <Tabs.Item
+              active={activeTab === 1}
+              title="About"
+              icon={HiOutlineInformationCircle}
+            >
+              <div className="py-6">
+                <AboutTab
+                  settings={settings}
+                  onSave={handleSave}
+                  saving={saving}
+                />
+              </div>
+            </Tabs.Item>
 
-        <Tabs.Item
-          active={activeTab === 2}
-          title="Contact"
-          icon={HiOutlinePhone}
-        >
-          <div className="py-6">
-            <ContactTab
-              settings={settings}
-              onSave={handleSave}
-              saving={saving}
-            />
-          </div>
-        </Tabs.Item>
-      </Tabs>
+            <Tabs.Item
+              active={activeTab === 2}
+              title="Contact"
+              icon={HiOutlinePhone}
+            >
+              <div className="py-6">
+                <ContactTab
+                  settings={settings}
+                  onSave={handleSave}
+                  saving={saving}
+                />
+              </div>
+            </Tabs.Item>
+          </Tabs>
+        </div>
+
+        {/* Preview Sidebar */}
+        <div className="lg:col-span-1">
+          <SettingsPreview
+            settings={settings}
+            onRefresh={refresh}
+            loading={loading}
+          />
+        </div>
+      </div>
 
       {/* Snackbar */}
       {snackbar && (
