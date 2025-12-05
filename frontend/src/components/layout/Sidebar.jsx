@@ -14,6 +14,7 @@ import {
     Menu,
     X,
     LogOut,
+    Settings,
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 
@@ -248,7 +249,7 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                 </div>
             </nav>
 
-            {/* Footer - User Info & Logout */}
+            {/* Footer - User Info, Settings & Logout */}
             <div className="p-4 border-t border-gray-200 space-y-2">
                 {/* User Info */}
                 <div className={`flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
@@ -271,6 +272,20 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         </div>
                     )}
                 </div>
+
+                {/* Settings Button - Admin Only */}
+                {user?.role === 'admin' && (
+                    <button
+                        onClick={() => navigate('/settings')}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors rounded-lg hover:bg-gray-50 text-gray-700 ${
+                            location.pathname === '/settings' ? 'bg-orange-50 text-[#FDB54A]' : ''
+                        } ${collapsed ? 'justify-center' : ''}`}
+                        title={collapsed ? 'Settings' : undefined}
+                    >
+                        <Settings size={18} className={`flex-shrink-0 ${location.pathname === '/settings' ? 'text-[#FDB54A]' : 'text-gray-600'}`} />
+                        {!collapsed && <span className="font-medium">Settings</span>}
+                    </button>
+                )}
 
                 {/* Logout Button */}
                 <button
