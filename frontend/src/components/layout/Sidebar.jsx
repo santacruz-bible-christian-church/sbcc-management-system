@@ -14,8 +14,10 @@ import {
     Menu,
     X,
     LogOut,
+    Settings,
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
+import { usePublicSettings } from '../../features/settings/hooks/usePublicSettings';
 
 export default function SCBCSidebar({ collapsed = false, onToggle }) {
     const navigate = useNavigate();
@@ -23,6 +25,7 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
     const { user, logout } = useAuth();
     const [membershipOpen, setMembershipOpen] = useState(false);
     const [supportOpen, setSupportOpen] = useState(false);
+    const { settings: systemSettings } = usePublicSettings();
 
     const handleLogout = async () => {
         try {
@@ -105,6 +108,16 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
         return 'U';
     };
 
+    // Get app name initials for logo
+    const getAppInitials = () => {
+        if (!systemSettings?.app_name) return 'SC';
+        const words = systemSettings.app_name.split(' ');
+        if (words.length >= 2) {
+            return `${words[0][0]}${words[1][0]}`.toUpperCase();
+        }
+        return systemSettings.app_name.substring(0, 2).toUpperCase();
+    };
+
     return (
         <aside
             className={`${
@@ -114,11 +127,22 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
             {/* Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                 <div className={`flex items-center gap-3 ${collapsed ? 'justify-center w-full' : ''}`}>
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#F6C67E] to-[#FDB54A] rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
-                        <span className="text-white font-bold text-sm">SC</span>
-                    </div>
+                    {/* Dynamic Logo or Initials */}
+                    {systemSettings?.logo ? (
+                        <img
+                            src={systemSettings.logo}
+                            alt="Logo"
+                            className="w-8 h-8 rounded-full object-contain flex-shrink-0 shadow-lg"
+                        />
+                    ) : (
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#F6C67E] to-[#FDB54A] rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                            <span className="text-white font-bold text-sm">{getAppInitials()}</span>
+                        </div>
+                    )}
                     {!collapsed && (
-                        <h1 className="text-lg font-semibold text-gray-900 whitespace-nowrap">SBCC Management</h1>
+                        <h1 className="text-lg font-semibold text-gray-900 whitespace-nowrap">
+                            {systemSettings?.app_name || 'SBCC Management'}
+                        </h1>
                     )}
                 </div>
 
@@ -248,7 +272,7 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                 </div>
             </nav>
 
-            {/* Footer - User Info & Logout */}
+            {/* Footer - User Info, Settings & Logout */}
             <div className="p-4 border-t border-gray-200 space-y-2">
                 {/* User Info */}
                 <div className={`flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
@@ -271,6 +295,20 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         </div>
                     )}
                 </div>
+
+                {/* Settings Button - Admin Only */}
+                {user?.role === 'admin' && (
+                    <button
+                        onClick={() => navigate('/settings')}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors rounded-lg hover:bg-gray-50 text-gray-700 ${
+                            location.pathname === '/settings' ? 'bg-orange-50 text-[#FDB54A]' : ''
+                        } ${collapsed ? 'justify-center' : ''}`}
+                        title={collapsed ? 'Settings' : undefined}
+                    >
+                        <Settings size={18} className={`flex-shrink-0 ${location.pathname === '/settings' ? 'text-[#FDB54A]' : 'text-gray-600'}`} />
+                        {!collapsed && <span className="font-medium">Settings</span>}
+                    </button>
+                )}
 
                 {/* Logout Button */}
                 <button
