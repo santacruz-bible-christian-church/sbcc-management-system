@@ -20,6 +20,7 @@ urlpatterns = [
     path("api/inventory/", include("apps.inventory.urls")),
     path("api/announcements/", include("apps.announcements.urls")),
     path("api/prayer-requests/", include("apps.prayer_requests.urls")),
+    path("api/visitors/", include("apps.visitors.urls")),
     # Dashboard (aggregates data from multiple apps)
     path("api/dashboard/", include("core.urls")),
 ]
