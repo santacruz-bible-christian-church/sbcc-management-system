@@ -1,4 +1,3 @@
-// frontend/src/features/announcement/components/SendNowModal.jsx
 import { useState } from 'react';
 import { HiX, HiMail, HiExclamation } from 'react-icons/hi';
 
