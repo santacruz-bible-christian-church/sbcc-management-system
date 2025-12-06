@@ -281,7 +281,6 @@ This project will be stored in a separate GitHub repository.
 |----------|--------|---------|
 | `/public/announcements/` | GET | Announcements |
 | `/public/prayer-request/` | POST | Prayer Request Submission |
-| `/public/ministries/` | GET | Ministries Listing |
 | `/public/events/` | GET | Events (optional) |
 
 ---
@@ -291,10 +290,12 @@ This project will be stored in a separate GitHub repository.
 | Role | Description |
 |------|-------------|
 | Super Admin | Has full system access; manages users, modules, and settings |
+| Admin Staff | Manage memberships, attendance, events, and reports |
 | Pastor / Elders | Handle prayer requests, track pastoral care, and manage member spiritual records |
-| Ministry Leaders | Manage volunteers, inventory, and events within their ministry |
-| Volunteers | View their assigned schedules and ministry activities |
-| Members | Submit prayer requests, view events, and receive announcements (Have their own homepage) |
+| Ministry Leaders | Assigned by Admin; Receive reports via email and manage volunteers, inventory, and events within their ministry |
+| Volunteers | View their assigned schedules and ministry activities through email |
+| Members | Access the public website for announcements, events, and prayer requests |
+| Visitors | Access the public website to learn about the church and submit prayer requests |
 
 ---
 
@@ -309,8 +310,7 @@ This project will be stored in a separate GitHub repository.
 | Design Tool | Figma |
 | Version Control | Git + GitHub (monorepo) |
 | Testing | Pytest-Django, Vitest, Playwright |
-| Deployment | Cloud Hosting (AWS/DigitalOcean/Render) |
-| Desktop Offline Mode | Tauri (with SQLite sync) |
+| Deployment | Cloud Hosting (Cloudflare/Railway) |
 
 ---
 
