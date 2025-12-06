@@ -258,9 +258,7 @@ class MemberViewSet(viewsets.ModelViewSet):
         try:
             ministry_id = int(ministry_id)
         except ValueError:
-            return Response(
-                {"error": "Invalid ministry ID"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Invalid ministry ID"}, status=status.HTTP_400_BAD_REQUEST)
 
         stats = get_ministry_demographics(ministry_id)
 

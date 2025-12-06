@@ -51,28 +51,28 @@ def test_demographics(access_token):
         print(f"\nTotal Members: {data.get('total_members', 0)}")
         print(f"Active Members: {data.get('active_members', 0)}")
         print(f"Inactive Members: {data.get('inactive_members', 0)}")
-        
+
         print("\n📊 Gender Distribution:")
-        gender = data.get('gender_distribution', {})
+        gender = data.get("gender_distribution", {})
         print(f"  Male: {gender.get('male', 0)}")
         print(f"  Female: {gender.get('female', 0)}")
         print(f"  Other: {gender.get('other', 0)}")
-        
+
         print("\n📊 Age Groups:")
-        age_groups = data.get('age_groups', {})
+        age_groups = data.get("age_groups", {})
         for age_range, count in age_groups.items():
             print(f"  {age_range}: {count}")
-        
+
         print("\n📊 Ministry Distribution:")
-        ministries = data.get('ministry_distribution', [])
+        ministries = data.get("ministry_distribution", [])
         if ministries:
             for ministry in ministries[:5]:  # Top 5
                 print(f"  {ministry['ministry_name']}: {ministry['count']}")
         else:
             print("  No ministry data")
-        
+
         print(f"\nUnassigned Members: {data.get('unassigned_members', 0)}")
-        
+
         return data
     else:
         print("❌ Failed to get demographics!")
@@ -101,18 +101,18 @@ def test_ministry_demographics(access_token, ministry_id):
         print("✅ Ministry demographics retrieved successfully!")
         print(f"\nMinistry: {data.get('ministry_name', 'N/A')}")
         print(f"Total Members: {data.get('total_members', 0)}")
-        
+
         print("\n📊 Gender Distribution:")
-        gender = data.get('gender_distribution', {})
+        gender = data.get("gender_distribution", {})
         print(f"  Male: {gender.get('male', 0)}")
         print(f"  Female: {gender.get('female', 0)}")
         print(f"  Other: {gender.get('other', 0)}")
-        
+
         print("\n📊 Age Groups:")
-        age_groups = data.get('age_groups', {})
+        age_groups = data.get("age_groups", {})
         for category, count in age_groups.items():
             print(f"  {category.capitalize()}: {count}")
-        
+
         return data
     elif response.status_code == 404:
         print("❌ Ministry not found!")
@@ -142,17 +142,17 @@ def test_dashboard_with_demographics(access_token):
     if response.status_code == 200:
         data = response.json()
         print("✅ Dashboard stats retrieved!")
-        
-        if 'demographics' in data:
+
+        if "demographics" in data:
             print("\n📊 Demographics Summary (from dashboard):")
-            demo = data['demographics']
+            demo = data["demographics"]
             print(f"  Gender Distribution: {demo.get('gender_distribution', {})}")
             print(f"  Age Groups: {demo.get('age_groups', {})}")
             print(f"  Ministry Count: {demo.get('ministry_count', 0)}")
             print(f"  Unassigned Members: {demo.get('unassigned_members', 0)}")
         else:
             print("⚠️  No demographics in dashboard response")
-        
+
         return data
     else:
         print("❌ Failed to get dashboard stats!")
@@ -175,8 +175,8 @@ def get_ministries(access_token):
 
     if response.status_code == 200:
         data = response.json()
-        ministries = data if isinstance(data, list) else data.get('results', [])
-        
+        ministries = data if isinstance(data, list) else data.get("results", [])
+
         if ministries:
             print(f"✅ Found {len(ministries)} ministries:")
             for ministry in ministries[:5]:
@@ -223,8 +223,8 @@ def main():
     if ministries:
         # Test first ministry
         first_ministry = ministries[0]
-        test_ministry_demographics(access_token, first_ministry['id'])
-        
+        test_ministry_demographics(access_token, first_ministry["id"])
+
         # Test invalid ministry
         print("\n" + "=" * 70)
         print("Testing with invalid ministry ID (should fail gracefully)...")
@@ -240,12 +240,14 @@ def main():
     print("\n" + "=" * 70)
     print("✅ All Tests Completed!")
     print("=" * 70)
-    
+
     if demographics_data:
         print("\n📊 Quick Summary:")
         print(f"  Total Members: {demographics_data.get('total_members', 0)}")
         print(f"  Active: {demographics_data.get('active_members', 0)}")
-        print(f"  Ministries with Members: {len(demographics_data.get('ministry_distribution', []))}")
+        print(
+            f"  Ministries with Members: {len(demographics_data.get('ministry_distribution', []))}"
+        )
 
 
 if __name__ == "__main__":

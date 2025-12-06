@@ -2,6 +2,7 @@
 Service functions for member statistics and analytics
 Pattern: Similar to apps/attendance/services.py
 """
+
 from datetime import date, timedelta
 from django.db.models import Count, Q, Case, When, IntegerField
 from django.utils import timezone
@@ -99,19 +100,13 @@ def get_demographic_statistics():
     active_count = active_members.count()
 
     # ========== Gender Distribution ==========
-    gender_stats = active_members.values('gender').annotate(
-        count=Count('id')
-    ).order_by('gender')
+    gender_stats = active_members.values("gender").annotate(count=Count("id")).order_by("gender")
 
-    gender_distribution = {
-        'male': 0,
-        'female': 0,
-        'other': 0
-    }
+    gender_distribution = {"male": 0, "female": 0, "other": 0}
 
     for stat in gender_stats:
-        gender = stat['gender'] or 'other'
-        gender_distribution[gender] = stat['count']
+        gender = stat["gender"] or "other"
+        gender_distribution[gender] = stat["count"]
 
     # ========== Age Group Distribution ==========
     today = date.today()
@@ -120,19 +115,16 @@ def get_demographic_statistics():
     age_groups = active_members.aggregate(
         age_0_17=Count(
             Case(
-                When(
-                    date_of_birth__gte=today - timedelta(days=17 * 365),
-                    then=1
-                ),
+                When(date_of_birth__gte=today - timedelta(days=17 * 365), then=1),
                 output_field=IntegerField(),
             )
         ),
         age_18_25=Count(
             Case(
                 When(
-                    Q(date_of_birth__gte=today - timedelta(days=25 * 365)) &
-                    Q(date_of_birth__lt=today - timedelta(days=18 * 365)),
-                    then=1
+                    Q(date_of_birth__gte=today - timedelta(days=25 * 365))
+                    & Q(date_of_birth__lt=today - timedelta(days=18 * 365)),
+                    then=1,
                 ),
                 output_field=IntegerField(),
             )
@@ -140,9 +132,9 @@ def get_demographic_statistics():
         age_26_35=Count(
             Case(
                 When(
-                    Q(date_of_birth__gte=today - timedelta(days=35 * 365)) &
-                    Q(date_of_birth__lt=today - timedelta(days=26 * 365)),
-                    then=1
+                    Q(date_of_birth__gte=today - timedelta(days=35 * 365))
+                    & Q(date_of_birth__lt=today - timedelta(days=26 * 365)),
+                    then=1,
                 ),
                 output_field=IntegerField(),
             )
@@ -150,9 +142,9 @@ def get_demographic_statistics():
         age_36_50=Count(
             Case(
                 When(
-                    Q(date_of_birth__gte=today - timedelta(days=50 * 365)) &
-                    Q(date_of_birth__lt=today - timedelta(days=36 * 365)),
-                    then=1
+                    Q(date_of_birth__gte=today - timedelta(days=50 * 365))
+                    & Q(date_of_birth__lt=today - timedelta(days=36 * 365)),
+                    then=1,
                 ),
                 output_field=IntegerField(),
             )
@@ -160,19 +152,16 @@ def get_demographic_statistics():
         age_51_65=Count(
             Case(
                 When(
-                    Q(date_of_birth__gte=today - timedelta(days=65 * 365)) &
-                    Q(date_of_birth__lt=today - timedelta(days=51 * 365)),
-                    then=1
+                    Q(date_of_birth__gte=today - timedelta(days=65 * 365))
+                    & Q(date_of_birth__lt=today - timedelta(days=51 * 365)),
+                    then=1,
                 ),
                 output_field=IntegerField(),
             )
         ),
         age_66_plus=Count(
             Case(
-                When(
-                    date_of_birth__lt=today - timedelta(days=65 * 365),
-                    then=1
-                ),
+                When(date_of_birth__lt=today - timedelta(days=65 * 365), then=1),
                 output_field=IntegerField(),
             )
         ),
@@ -180,18 +169,17 @@ def get_demographic_statistics():
 
     # ========== Ministry Distribution ==========
     ministry_stats = (
-        active_members
-        .filter(ministry__isnull=False)
-        .values('ministry__id', 'ministry__name')
-        .annotate(count=Count('id'))
-        .order_by('-count')
+        active_members.filter(ministry__isnull=False)
+        .values("ministry__id", "ministry__name")
+        .annotate(count=Count("id"))
+        .order_by("-count")
     )
 
     ministry_distribution = [
         {
-            'ministry_id': stat['ministry__id'],
-            'ministry_name': stat['ministry__name'],
-            'count': stat['count']
+            "ministry_id": stat["ministry__id"],
+            "ministry_name": stat["ministry__name"],
+            "count": stat["count"],
         }
         for stat in ministry_stats
     ]
@@ -200,21 +188,21 @@ def get_demographic_statistics():
 
     # ========== Return Complete Stats ==========
     return {
-        'total_members': total_members,
-        'active_members': active_count,
-        'inactive_members': total_members - active_count,
-        'gender_distribution': gender_distribution,
-        'age_groups': {
-            '0-17': age_groups['age_0_17'],
-            '18-25': age_groups['age_18_25'],
-            '26-35': age_groups['age_26_35'],
-            '36-50': age_groups['age_36_50'],
-            '51-65': age_groups['age_51_65'],
-            '66+': age_groups['age_66_plus'],
+        "total_members": total_members,
+        "active_members": active_count,
+        "inactive_members": total_members - active_count,
+        "gender_distribution": gender_distribution,
+        "age_groups": {
+            "0-17": age_groups["age_0_17"],
+            "18-25": age_groups["age_18_25"],
+            "26-35": age_groups["age_26_35"],
+            "36-50": age_groups["age_36_50"],
+            "51-65": age_groups["age_51_65"],
+            "66+": age_groups["age_66_plus"],
         },
-        'ministry_distribution': ministry_distribution,
-        'unassigned_members': unassigned_count,
-        'generated_at': timezone.now().isoformat(),
+        "ministry_distribution": ministry_distribution,
+        "unassigned_members": unassigned_count,
+        "generated_at": timezone.now().isoformat(),
     }
 
 
@@ -233,29 +221,25 @@ def get_ministry_demographics(ministry_id):
     try:
         ministry = Ministry.objects.get(id=ministry_id)
     except Ministry.DoesNotExist:
-        return {'error': 'Ministry not found'}
+        return {"error": "Ministry not found"}
 
     members = Member.objects.filter(ministry=ministry, is_active=True)
     total_count = members.count()
 
     if total_count == 0:
         return {
-            'ministry_id': ministry.id,
-            'ministry_name': ministry.name,
-            'total_members': 0,
-            'message': 'No active members in this ministry'
+            "ministry_id": ministry.id,
+            "ministry_name": ministry.name,
+            "total_members": 0,
+            "message": "No active members in this ministry",
         }
 
     # Gender distribution
-    gender_stats = members.values('gender').annotate(count=Count('id'))
-    gender_distribution = {
-        'male': 0,
-        'female': 0,
-        'other': 0
-    }
+    gender_stats = members.values("gender").annotate(count=Count("id"))
+    gender_distribution = {"male": 0, "female": 0, "other": 0}
     for stat in gender_stats:
-        gender = stat['gender'] or 'other'
-        gender_distribution[gender] = stat['count']
+        gender = stat["gender"] or "other"
+        gender_distribution[gender] = stat["count"]
 
     # Age groups (simplified for ministry view)
     today = date.today()
@@ -269,9 +253,9 @@ def get_ministry_demographics(ministry_id):
         adults=Count(
             Case(
                 When(
-                    Q(date_of_birth__gte=today - timedelta(days=65 * 365)) &
-                    Q(date_of_birth__lt=today - timedelta(days=26 * 365)),
-                    then=1
+                    Q(date_of_birth__gte=today - timedelta(days=65 * 365))
+                    & Q(date_of_birth__lt=today - timedelta(days=26 * 365)),
+                    then=1,
                 ),
                 output_field=IntegerField(),
             )
@@ -285,14 +269,14 @@ def get_ministry_demographics(ministry_id):
     )
 
     return {
-        'ministry_id': ministry.id,
-        'ministry_name': ministry.name,
-        'total_members': total_count,
-        'gender_distribution': gender_distribution,
-        'age_groups': {
-            'youth': age_groups['youth'],
-            'adults': age_groups['adults'],
-            'seniors': age_groups['seniors'],
+        "ministry_id": ministry.id,
+        "ministry_name": ministry.name,
+        "total_members": total_count,
+        "gender_distribution": gender_distribution,
+        "age_groups": {
+            "youth": age_groups["youth"],
+            "adults": age_groups["adults"],
+            "seniors": age_groups["seniors"],
         },
-        'generated_at': timezone.now().isoformat(),
+        "generated_at": timezone.now().isoformat(),
     }
