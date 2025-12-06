@@ -4,7 +4,8 @@ Pattern: Similar to apps/attendance/services.py
 """
 
 from datetime import date, timedelta
-from django.db.models import Count, Q, Case, When, IntegerField
+
+from django.db.models import Case, Count, IntegerField, Q, When
 from django.utils import timezone
 
 from .models import Member
