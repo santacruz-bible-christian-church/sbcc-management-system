@@ -15,6 +15,7 @@ import {
     X,
     LogOut,
     Settings,
+    Heart,
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { usePublicSettings } from '../../features/settings/hooks/usePublicSettings';
@@ -209,6 +210,13 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                             </div>
                         )}
                     </div>
+
+                    <NavButton
+                        id="prayer-requests"
+                        icon={Heart}
+                        label="Prayer Requests"
+                        path="/prayer-requests"
+                    />
 
                     <NavButton
                         id="inventory"

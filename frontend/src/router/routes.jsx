@@ -11,6 +11,7 @@ import AttendanceTracker from '../features/attendance/pages/AttendanceTracker';
 import { ComingSoon } from '../components/ui/ComingSoon';
 import Inventory from '../features/inventory/pages/Inventory';
 import { SettingsPage } from '../features/settings/pages/SettingsPage';
+import PrayerRequestsPage from '../features/prayer-requests/pages/PrayerRequestsPage';
 
 export const routes = [
   {
@@ -130,6 +131,14 @@ export const routes = [
     element: (
       <ProtectedWithLayout>
         <SettingsPage />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: '/prayer-requests',
+    element: (
+      <ProtectedWithLayout>
+        <PrayerRequestsPage />
       </ProtectedWithLayout>
     ),
   },
