@@ -9,7 +9,12 @@ from rest_framework.response import Response
 
 from .models import Member
 from .serializers import MemberSerializer
-from .services import get_upcoming_anniversaries, get_upcoming_birthdays
+from .services import (
+    get_demographic_statistics,
+    get_ministry_demographics,
+    get_upcoming_anniversaries,
+    get_upcoming_birthdays,
+)
 
 User = get_user_model()
 
@@ -219,3 +224,47 @@ class MemberViewSet(viewsets.ModelViewSet):
             item["occurrence_date"] = r["occurrence"].isoformat()
             data.append(item)
         return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
+    def demographics(self, request):
+        """
+        Get demographic statistics for all members
+        GET /api/members/demographics/
+
+        Similar to: attendance/views.py ministry_report action
+        Returns: Gender, age group, and ministry distribution
+        """
+        stats = get_demographic_statistics()
+        return Response(stats)
+
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
+    def ministry_demographics(self, request):
+        """
+        Get demographic statistics for a specific ministry
+        GET /api/members/ministry_demographics/?ministry=5
+
+        Query Parameters:
+            ministry (int): Ministry ID
+
+        Returns: Ministry-specific demographics
+        """
+        ministry_id = request.query_params.get("ministry")
+
+        if not ministry_id:
+            return Response(
+                {"error": "Ministry ID is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            ministry_id = int(ministry_id)
+        except ValueError:
+            return Response(
+                {"error": "Invalid ministry ID"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        stats = get_ministry_demographics(ministry_id)
+
+        if "error" in stats:
+            return Response(stats, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(stats)
