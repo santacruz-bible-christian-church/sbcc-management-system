@@ -10,6 +10,7 @@ import AttendanceSheetPage from '../features/attendance/pages/AttendanceSheetPag
 import AttendanceTracker from '../features/attendance/pages/AttendanceTracker';
 import { ComingSoon } from '../components/ui/ComingSoon';
 import Inventory from '../features/inventory/pages/Inventory';
+import AnnouncementPage from '../features/announcement/pages/AnnouncementPage';
 import { SettingsPage } from '../features/settings/pages/SettingsPage';
 import PrayerRequestsPage from '../features/prayer-requests/pages/PrayerRequestsPage';
 
@@ -125,6 +126,14 @@ export const routes = [
         <ComingSoon title="Help Center" />
       </ProtectedWithLayout>
     ),
+  },
+  {
+    path: "/announcements",
+    element: (
+      <ProtectedWithLayout>
+        <AnnouncementPage />
+      </ProtectedWithLayout>
+    )
   },
   {
     path: '/settings',
