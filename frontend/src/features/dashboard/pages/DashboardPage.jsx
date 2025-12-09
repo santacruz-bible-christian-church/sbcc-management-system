@@ -6,6 +6,8 @@ import { WelcomeCard } from '../components/WelcomeCard';
 import { SBCCInfoCard } from '../components/SBCCInfoCard';
 import { StatsGrid } from '../components/StatsGrid';
 import { RecentActivities } from '../components/RecentActivities';
+import TotalMembersStatsCard from '../components/TotalMembersStatsCard';
+import MinistryPieChart from '../components/MinistryPieChart';
 
 export const DashboardPage = () => {
   const { user } = useAuth();
@@ -47,7 +49,13 @@ export const DashboardPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <WelcomeCard user={user} />
           <SBCCInfoCard stats={stats} />
-          <StatsGrid stats={stats} />
+          <div className="col-span-8">
+            <TotalMembersStatsCard />
+            <div className="flex mt-4">
+              <MinistryPieChart />
+              <StatsGrid stats={stats} />
+            </div>
+          </div>
           <RecentActivities
             activities={activities}
             refreshing={refreshing}
