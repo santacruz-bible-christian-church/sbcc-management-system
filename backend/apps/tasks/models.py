@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -183,13 +185,32 @@ class TaskComment(models.Model):
 
 
 class TaskAttachment(models.Model):
-    """File attachments for tasks"""
+    """File attachments for tasks - stored in R2"""
+
+    def upload_to_path(instance, filename):
+        """Generate organized file path"""
+        import os
+        from datetime import datetime
+
+        # Get file extension
+        ext = os.path.splitext(filename)[1]
+        # Generate unique filename
+        unique_filename = f"{uuid.uuid4().hex}{ext}"
+        # Organize by year/month/task_id
+        date = datetime.now()
+        return f"task_attachments/{date.year}/{date.month:02d}/{instance.task_id}/{unique_filename}"
 
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="attachments")
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="task_uploads")
-    file = models.FileField(upload_to="task_attachments/%Y/%m/%d/")
-    file_name = models.CharField(max_length=255)
+
+    # R2 file storage
+    file = models.FileField(upload_to=upload_to_path, max_length=500)
+
+    # Metadata
+    file_name = models.CharField(max_length=255, help_text="Original filename")
     file_size = models.PositiveIntegerField(help_text="File size in bytes")
+    content_type = models.CharField(max_length=100, blank=True)
+
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -198,3 +219,14 @@ class TaskAttachment(models.Model):
 
     def __str__(self):
         return f"{self.file_name} - {self.task.title}"
+
+    @property
+    def file_size_mb(self):
+        """Return file size in MB"""
+        return round(self.file_size / (1024 * 1024), 2)
+
+    def delete(self, *args, **kwargs):
+        """Delete file from R2 when model is deleted"""
+        if self.file:
+            self.file.delete(save=False)
+        super().delete(*args, **kwargs)

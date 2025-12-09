@@ -1,4 +1,4 @@
-import { HiCalendar, HiClock, HiUser, HiUserGroup, HiPencil, HiTrash } from 'react-icons/hi';
+import { HiCalendar, HiClock, HiUser, HiUserGroup, HiPencil, HiTrash, HiPaperClip } from 'react-icons/hi';
 import { format } from 'date-fns';
 
 const priorityColors = {
@@ -130,6 +130,37 @@ export const TaskDetailsView = ({ task, onEdit, onDelete, onClose }) => {
         <div>
           <h4 className="text-sm font-semibold text-sbcc-dark mb-2">Notes</h4>
           <p className="text-sbcc-gray whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">{task.notes}</p>
+        </div>
+      )}
+
+      {/* Attachments */}
+      {task.attachments && task.attachments.length > 0 && (
+        <div>
+          <h4 className="text-sm font-semibold text-sbcc-dark mb-2">Attachments</h4>
+          {task.attachments.map((attachment) => (
+            <div key={attachment.id} className="flex items-center justify-between p-2 border rounded">
+              <div className="flex items-center gap-2">
+                <HiPaperClip className="w-4 h-4 text-gray-400" />
+                <a
+                  href={attachment.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {attachment.file_name}
+                </a>
+                <span className="text-xs text-gray-500">
+                  ({attachment.file_size_mb} MB)
+                </span>
+              </div>
+              <button
+                onClick={() => handleDeleteAttachment(attachment.id)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <HiTrash className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
         </div>
       )}
 
