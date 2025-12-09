@@ -1,33 +1,36 @@
 import { HiClipboardList } from "react-icons/hi";
-
+import { useDashboardStats } from "../hooks/useDashboardStats";
 import {
     PieChart,
     Pie,
     Cell,
     Tooltip,
-    Legend,
     ResponsiveContainer
 } from "recharts";
 
-const ministryData = [
-    { name: "Worship Team", value: 40 },
-    { name: "Youth Ministry", value: 55 },
-    { name: "Kids Ministry", value: 35 },
-    { name: "Outreach", value: 25 },
-    { name: "Tech/Media", value: 30 },
-    { name: "Small Groups", value: 45 }
-];
+const ministryColors = {
+    'Music Ministry': '#3B00DD',
+    'Youth Ministry': '#9800B4',
+    'Children Ministry': '#FF00E4',
+    'Prayer Ministry': '#00FF4B',
+    'Media Ministry': '#5b8f95',
+    'Worship Ministry': '#8D00FF',
+    'Usher Ministry': '#FFDF00',
+};
+console.log(ministryColors['Music Ministry'])
 
-const COLORS = [
-    "#FDB54A",
-    "#0088FE",
-    "#FF6384",
-    "#4BC0C0",
-    "#9966FF",
-    "#36A2EB"
-];
+const getMinistryColor = (ministry) => {
+    return ministryColors[ministry]
+};
 
 export default function MinistryPieChart() {
+    const { chartStats } = useDashboardStats()
+
+    const ministryGroupData = chartStats?.ministry_distribution?.map((ministry) => ({
+        ministry: ministry.ministry_name,
+        members: ministry.count
+    })) || [];
+
     return (
         <div className="w-[60%] col-span-5 bg-white shadow-lg rounded-2xl p-6">
             <div className="flex gap-3">
@@ -42,16 +45,19 @@ export default function MinistryPieChart() {
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
-                                data={ministryData}
-                                dataKey="value"
-                                nameKey="name"
+                                data={ministryGroupData}
+                                dataKey="members"
+                                nameKey="ministry"
                                 cx="50%"
                                 cy="50%"
                                 outerRadius={60}
                                 label
                             >
-                                {ministryData.map((entry, index) => (
-                                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                                {ministryGroupData.map((entry, index) => (
+                                    <Cell
+                                        key={index}
+                                        fill={getMinistryColor(entry.ministry)}
+                                    />
                                 ))}
                             </Pie>
                             <Tooltip />
@@ -60,13 +66,13 @@ export default function MinistryPieChart() {
                 </div>
 
                 <div className="flex flex-wrap justify-center gap-2 h-10">
-                    {ministryData.map((entry, index) => (
+                    {ministryGroupData.map((entry, index) => (
                         <div key={index} className="flex items-center gap-2">
                             <div
                                 className="w-4 h-4 rounded"
-                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                style={{ backgroundColor: getMinistryColor(entry.ministry) }}
                             />
-                            <span className="text-[10px] text-gray-700">{entry.name}</span>
+                            <span className="text-[10px] text-gray-700">{entry.ministry}</span>
                         </div>
                     ))}
                 </div>

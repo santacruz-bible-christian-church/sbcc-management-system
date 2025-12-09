@@ -9,29 +9,31 @@ import {
     Tooltip,
     BarChart,
     Bar,
-    Legend,
+    Cell,
 } from "recharts";
 
-const ageGroupData = [
-    { ageGroup: "0-12", total: 40 },
-    { ageGroup: "13-17", total: 55 },
-    { ageGroup: "18-25", total: 120 },
-    { ageGroup: "26-40", total: 90 },
-    { ageGroup: "41-60", total: 60 },
-    { ageGroup: "60+", total: 30 },
-];
-
-const genderData = [
-    { ageGroup: "0-12", male: 20, female: 20 },
-    { ageGroup: "13-17", male: 30, female: 25 },
-    { ageGroup: "18-25", male: 70, female: 50 },
-    { ageGroup: "26-40", male: 40, female: 50 },
-    { ageGroup: "41-60", male: 30, female: 30 },
-    { ageGroup: "60+", male: 15, female: 15 },
-];
-
 export default function TotalMembersStatsCard() {
-    const { stats, loading, error, refreshing, refresh, retry } = useDashboardStats();
+    const { stats, chartStats, loading, error, refreshing, refresh, retry } = useDashboardStats();
+
+
+    // convert age_group object to array
+    const rawAgeGroups = chartStats?.age_groups ?? {};
+    const ageGroupData = Object.entries(rawAgeGroups).map(([ageRange, count]) => ({
+        name: ageRange,
+        members: count
+    }))
+
+    // convert gender_distribution object to array
+    const rawGenderGroups = chartStats?.gender_distribution ?? {};
+    const genderGroupData = Object.entries(rawGenderGroups).map(([gender, count]) => ({
+        name: gender,
+        members: count
+    }))
+
+    if (!chartStats) {
+        return null;
+    }
+
     return (
         <div className="col-span-8 bg-white shadow-lg rounded-2xl p-6 gap-6 h-[330px]">
             <div className="flex gap-3">
@@ -45,25 +47,36 @@ export default function TotalMembersStatsCard() {
                 <div className="w-full text-[10px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={ageGroupData}>
-                            <XAxis dataKey="ageGroup" />
+                            <XAxis dataKey="name" />
                             <YAxis width={20} />
                             <Tooltip />
-                            <Line type="monotone" dataKey="total" stroke="#FDB54A" strokeWidth={2} />
+                            <Line type="monotone" dataKey="members" stroke="#FDB54A" strokeWidth={2} />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
 
                 <div className="w-full text-[10px]">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={genderData}>
-                            <XAxis dataKey="ageGroup" />
+                        <BarChart data={genderGroupData}>
+                            <XAxis dataKey="name" />
                             <YAxis width={30} />
                             <Tooltip />
-                            <Legend
-                                verticalAlign="top"
-                            />
-                            <Bar dataKey="male" fill="#0088FE" />
-                            <Bar dataKey="female" fill="#FF69B4" />
+                            <Bar dataKey="members">
+                                {genderGroupData.map((entry, index) => {
+                                    let color;
+                                    if (entry.name.toLowerCase() === "male") {
+                                        color = "#0088FE"
+                                    } else if (entry.name.toLowerCase() === "female") {
+                                        color = "#FF69B4"
+                                    } else if (entry.name.toLowerCase() === "other") {
+                                        color = "#FDB54A"
+                                    }
+                                    return < Cell
+                                        key={index}
+                                        fill={color}
+                                    />
+                                })}
+                            </Bar>
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
