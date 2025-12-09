@@ -53,7 +53,7 @@ export const DashboardPage = () => {
             <TotalMembersStatsCard />
             <div className="flex mt-4">
               <MinistryPieChart />
-              <StatsGrid stats={stats} />
+              <StatsGrid stats={stats} loading={refreshing} />
             </div>
           </div>
           <RecentActivities
