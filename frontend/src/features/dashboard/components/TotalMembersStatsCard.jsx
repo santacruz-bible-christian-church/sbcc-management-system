@@ -30,10 +30,6 @@ export default function TotalMembersStatsCard() {
         members: count
     }))
 
-    if (!chartStats) {
-        return null;
-    }
-
     return (
         <div className="col-span-8 bg-white shadow-lg rounded-2xl p-6 gap-6 h-[330px]">
             <div className="flex gap-3">
