@@ -17,6 +17,7 @@ import {
     Settings,
     Heart,
     Bell,
+    CheckSquare,
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { usePublicSettings } from '../../features/settings/hooks/usePublicSettings';
@@ -238,6 +239,13 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         icon={FileText}
                         label="Documents"
                         path="/documents"
+                    />
+
+                    <NavButton
+                        id="tasks"
+                        icon={CheckSquare}
+                        label="Tasks"
+                        path="/tasks"
                     />
 
                     {!collapsed && <div className="my-3 border-t border-gray-200"></div>}
