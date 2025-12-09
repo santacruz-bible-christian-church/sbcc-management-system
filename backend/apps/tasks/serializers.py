@@ -1,8 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.utils import timezone
 from rest_framework import serializers
-
-from apps.ministries.models import Ministry
 
 from .models import Task, TaskAttachment, TaskComment
 
