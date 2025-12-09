@@ -47,7 +47,7 @@ class TaskAttachmentSerializer(serializers.ModelSerializer):
             "file_size",
             "uploaded_at",
         ]
-        read_only_fields = ["id", "uploaded_by", "uploaded_at"]
+        read_only_fields = ["id", "uploaded_by", "uploaded_at", "file_name", "file_size"]
 
 
 class TaskSerializer(serializers.ModelSerializer):

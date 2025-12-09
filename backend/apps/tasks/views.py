@@ -146,10 +146,13 @@ class TaskViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        task.status = "in_progress"
-        task.completed_at = None
-        task.completed_by = None
-        task.save()
+        # Use update() to bypass save() method's auto-completion logic
+        Task.objects.filter(pk=task.pk).update(
+            status="in_progress",
+            completed_at=None,
+            completed_by=None,
+        )
+        task.refresh_from_db()
 
         serializer = self.get_serializer(task)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -186,8 +189,8 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         tasks = get_upcoming_tasks(
             days=days,
-            ministry_id=ministry_id if ministry_id else None,
-            assigned_to_id=assigned_to_id if assigned_to_id else None,
+            ministry=ministry_id if ministry_id else None,
+            assigned_to=assigned_to_id if assigned_to_id else None,
         )
 
         serializer = self.get_serializer(tasks, many=True)
@@ -203,8 +206,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         assigned_to_id = request.query_params.get("assigned_to")
 
         tasks = get_overdue_tasks(
-            ministry_id=ministry_id if ministry_id else None,
-            assigned_to_id=assigned_to_id if assigned_to_id else None,
+            ministry=ministry_id if ministry_id else None,
+            assigned_to=assigned_to_id if assigned_to_id else None,
         )
 
         serializer = self.get_serializer(tasks, many=True)
@@ -220,8 +223,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         assigned_to_id = request.query_params.get("assigned_to")
 
         tasks = get_in_progress_tasks(
-            ministry_id=ministry_id if ministry_id else None,
-            assigned_to_id=assigned_to_id if assigned_to_id else None,
+            ministry=ministry_id if ministry_id else None,
+            assigned_to=assigned_to_id if assigned_to_id else None,
         )
 
         serializer = self.get_serializer(tasks, many=True)
@@ -237,8 +240,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         assigned_to_id = request.query_params.get("assigned_to")
 
         stats = get_task_statistics(
-            ministry_id=ministry_id if ministry_id else None,
-            assigned_to_id=assigned_to_id if assigned_to_id else None,
+            ministry=ministry_id if ministry_id else None,
+            assigned_to=assigned_to_id if assigned_to_id else None,
         )
 
         return Response(stats)
