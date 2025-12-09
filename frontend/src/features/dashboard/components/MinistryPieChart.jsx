@@ -17,7 +17,6 @@ const ministryColors = {
     'Worship Ministry': '#8D00FF',
     'Usher Ministry': '#FFDF00',
 };
-console.log(ministryColors['Music Ministry'])
 
 const getMinistryColor = (ministry) => {
     return ministryColors[ministry]
