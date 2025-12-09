@@ -3,9 +3,11 @@ import { dashboardApi } from '../../../api/dashboard.api';
 
 export const useDashboardStats = () => {
   const [stats, setStats] = useState(null);
+  const [chartStats, setChartStats] = useState(null)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+
 
   const fetchStats = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) {
@@ -18,6 +20,9 @@ export const useDashboardStats = () => {
     try {
       const data = await dashboardApi.getStats();
       setStats(data);
+
+      const chartStats = await dashboardApi.getChartsData();
+      setChartStats(chartStats);
     } catch (err) {
       console.error('❌ Dashboard error:', err);
       setError(err.response?.data?.detail || 'Failed to load dashboard stats');
@@ -38,6 +43,7 @@ export const useDashboardStats = () => {
   return {
     stats,
     loading,
+    chartStats,
     error,
     refreshing,
     refresh,

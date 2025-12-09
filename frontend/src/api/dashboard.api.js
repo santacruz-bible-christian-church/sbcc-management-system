@@ -12,4 +12,10 @@ export const dashboardApi = {
     const response = await apiClient.get('/dashboard/activities/');
     return response.data;
   },
+
+  async getChartsData() {
+    const response = await apiClient.get('/members/demographics/')
+    return response.data
+  }
+
 };

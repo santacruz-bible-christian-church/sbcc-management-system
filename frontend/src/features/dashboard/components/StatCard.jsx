@@ -7,7 +7,7 @@ export const StatCard = ({ card, index }) => {
   return (
     <button
       onClick={() => card.link && navigate(card.link)}
-      className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 text-left group relative overflow-hidden"
+      className="bg-white rounded-2xl px-4 py-2 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 text-left group relative overflow-hidden"
       style={{ animationDelay: `${index * 100}ms` }}
     >
       {/* Gradient overlay on hover */}
@@ -34,7 +34,7 @@ export const StatCard = ({ card, index }) => {
         </div>
 
         {card.link && (
-          <div className="mt-3 flex items-center text-sbcc-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+          <div className="mt-2 flex items-center text-sbcc-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
             View Details <HiChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
           </div>
         )}
