@@ -1,0 +1,116 @@
+import { format } from 'date-fns';
+
+const priorityConfig = {
+  urgent: { label: 'Urgent', className: 'bg-red-100 text-red-600' },
+  high: { label: 'High', className: 'bg-red-100 text-red-600' },
+  medium: { label: 'Medium', className: 'bg-orange-100 text-orange-600' },
+  low: { label: 'Low', className: 'bg-blue-100 text-blue-600' },
+};
+
+export const TaskCardKanban = ({ task, onEdit, onDelete, onClick }) => {
+  const handleDragStart = (e) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('application/json', JSON.stringify(task));
+    e.currentTarget.style.opacity = '0.5';
+  };
+
+  const handleDragEnd = (e) => {
+    e.currentTarget.style.opacity = '1';
+  };
+
+  // Get initials from assigned user name
+  const getInitials = (name) => {
+    if (!name) return '';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0]}, ${parts[1][0]}.`;
+    }
+    return name;
+  };
+
+  const isCompleted = task.status === 'completed';
+  const priorityStyle = priorityConfig[task.priority] || priorityConfig.medium;
+
+  return (
+    <div
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onClick={() => onClick(task)}
+      className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer group relative border border-transparent hover:border-gray-200"
+    >
+      {/* Header: Title + Priority/Status Badge */}
+      <div className="flex items-start justify-between mb-3">
+        <h4 className="font-bold text-gray-900 text-base leading-tight pr-2">
+          {task.title}
+        </h4>
+        {isCompleted ? (
+          <span className="shrink-0 px-2.5 py-1 rounded text-xs font-semibold bg-green-100 text-green-700">
+            Completed
+          </span>
+        ) : (
+          <span className={`shrink-0 px-2.5 py-1 rounded text-xs font-semibold ${priorityStyle.className}`}>
+            {priorityStyle.label}
+          </span>
+        )}
+      </div>
+
+      {/* Description */}
+      <p className="text-gray-500 text-sm mb-6 line-clamp-2 leading-relaxed">
+        {task.description || 'No description provided.'}
+      </p>
+
+      {/* Footer: Assignee + Date */}
+      <div className="flex items-center justify-between mt-auto pt-2">
+        {/* Assignee Badge */}
+        {task.assigned_to_name ? (
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white ${isCompleted ? 'bg-green-600' :
+              task.status === 'in_progress' ? 'bg-orange-400' :
+                'bg-red-500'
+            }`}>
+            {getInitials(task.assigned_to_name)}
+          </span>
+        ) : (
+          <span className="text-xs text-gray-400 italic">Unassigned</span>
+        )}
+
+        {/* Date */}
+        <span className="text-xs font-medium text-gray-500">
+          {isCompleted && task.completed_at ? (
+            `Completed ${format(new Date(task.completed_at), 'MMM d')}`
+          ) : (
+            `Due: ${format(new Date(task.end_date), 'MMM d')}`
+          )}
+        </span>
+      </div>
+
+      {/* Quick Actions (on hover) */}
+      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-lg shadow-sm border border-gray-100">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(task);
+          }}
+          className="p-1.5 rounded hover:bg-gray-100 transition-colors text-gray-600"
+          title="Edit"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(task);
+          }}
+          className="p-1.5 rounded hover:bg-red-50 transition-colors text-red-500"
+          title="Delete"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};

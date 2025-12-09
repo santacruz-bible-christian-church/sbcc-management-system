@@ -1,0 +1,8 @@
+export { TaskCardKanban } from './TaskCardKanban';
+export { TaskForm } from './TaskForm';
+export { TaskModal } from './TaskModal';
+export { TaskFilters } from './TaskFilters';
+export { TaskStatisticsCards } from './TaskStatisticsCards';
+export { KanbanBoard } from './KanbanBoard';
+export { KanbanColumn } from './KanbanColumn';
+export { TaskDetailsView } from './TaskDetailsView';
