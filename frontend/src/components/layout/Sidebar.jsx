@@ -16,6 +16,7 @@ import {
     LogOut,
     Settings,
     Heart,
+    Bell,
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { usePublicSettings } from '../../features/settings/hooks/usePublicSettings';
@@ -185,6 +186,13 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         icon={Calendar}
                         label="Events"
                         path="/events"
+                    />
+
+                    <NavButton
+                        id="announcements"
+                        icon={Bell}
+                        label="Announcements"
+                        path="/announcements"
                     />
 
                     <div className="mt-1">

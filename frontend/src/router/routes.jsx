@@ -13,6 +13,7 @@ import Inventory from '../features/inventory/pages/Inventory';
 import AnnouncementPage from '../features/announcement/pages/AnnouncementPage';
 import { SettingsPage } from '../features/settings/pages/SettingsPage';
 import PrayerRequestsPage from '../features/prayer-requests/pages/PrayerRequestsPage';
+import { FileManagementPage } from '../features/file-management/pages/FileManagementPage';
 
 export const routes = [
   {
@@ -91,7 +92,7 @@ export const routes = [
     path: '/documents',
     element: (
       <ProtectedWithLayout>
-        <ComingSoon title="Documents" />
+        <FileManagementPage />
       </ProtectedWithLayout>
     ),
   },
