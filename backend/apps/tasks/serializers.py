@@ -31,20 +31,43 @@ class TaskAttachmentSerializer(serializers.ModelSerializer):
     """Serializer for task attachments"""
 
     uploaded_by_name = serializers.CharField(source="uploaded_by.get_full_name", read_only=True)
+    file_url = serializers.SerializerMethodField()
+    file_size_mb = serializers.ReadOnlyField()
 
     class Meta:
         model = TaskAttachment
         fields = [
             "id",
             "task",
-            "uploaded_by",
-            "uploaded_by_name",
             "file",
+            "file_url",
             "file_name",
             "file_size",
+            "file_size_mb",
+            "content_type",
+            "uploaded_by",
+            "uploaded_by_name",
             "uploaded_at",
         ]
-        read_only_fields = ["id", "uploaded_by", "uploaded_at", "file_name", "file_size"]
+        read_only_fields = ["uploaded_by", "uploaded_at", "file_name", "file_size", "content_type"]
+
+    def get_file_url(self, obj):
+        """Return public URL for file"""
+        if obj.file:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None
+
+    def create(self, validated_data):
+        """Extract file metadata on upload"""
+        file_obj = validated_data.get("file")
+        if file_obj:
+            validated_data["file_name"] = file_obj.name
+            validated_data["file_size"] = file_obj.size
+            validated_data["content_type"] = file_obj.content_type
+        return super().create(validated_data)
 
 
 class TaskSerializer(serializers.ModelSerializer):

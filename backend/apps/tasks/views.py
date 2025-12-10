@@ -303,10 +303,5 @@ class TaskAttachmentViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        """Set uploaded_by to current user and extract file metadata"""
-        file_obj = self.request.FILES.get("file")
-        serializer.save(
-            uploaded_by=self.request.user,
-            file_name=file_obj.name if file_obj else "",
-            file_size=file_obj.size if file_obj else 0,
-        )
+        """Set uploaded_by to current user"""
+        serializer.save(uploaded_by=self.request.user)
