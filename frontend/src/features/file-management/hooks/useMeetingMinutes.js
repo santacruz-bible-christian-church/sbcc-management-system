@@ -36,8 +36,8 @@ const transformMeetingToFile = (meeting) => ({
   name: meeting.title,
   type: meeting.category_display || meeting.category,
   size: `${meeting.attachment_count || 0} attachment${meeting.attachment_count !== 1 ? 's' : ''}`,
-  modified: meeting.meeting_date
-    ? formatDistanceToNow(new Date(meeting.meeting_date), { addSuffix: true })
+  modified: meeting.created_at
+    ? formatDistanceToNow(new Date(meeting.created_at), { addSuffix: true })
     : 'Unknown',
   icon: HiDocumentText,
   color: 'text-amber-600',
