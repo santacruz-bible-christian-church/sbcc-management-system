@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.db import connections
@@ -8,6 +10,14 @@ User = get_user_model()
 
 # Test credentials - not used in production
 TEST_PASSWORD = "TestPass123!"  # nosec B105
+
+
+# Disable R2 storage for tests - use local file storage
+@pytest.fixture(scope="session", autouse=True)
+def disable_r2_for_tests():
+    """Disable R2 storage during tests to use local file storage"""
+    os.environ["USE_R2_STORAGE"] = "false"
+    yield
 
 
 @pytest.fixture(autouse=True)
