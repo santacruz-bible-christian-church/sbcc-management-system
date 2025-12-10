@@ -1,301 +1,16 @@
-"""
-Comprehensive test suite for Visitors module.
-
-PRD Requirements Covered:
-- Record attendance of attendees NOT in membership list
-- Mark as Visitor or Member
-- Follow-up tracking: "Visited 1x", "Visited 2x", "Regular Visitor"
-- Convert visitor → member (one-click migration)
-- Visitor attendance report
-"""
-
 from datetime import date, timedelta
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 
 from apps.members.models import Member
-from apps.visitors.models import Visitor, VisitorAttendance
-from apps.visitors.services import AttendanceService
-
-User = get_user_model()
+from apps.visitors.models import Visitor
 
 
-# ============================================================================
-# FIXTURES
-# ============================================================================
-
-
-@pytest.fixture
-def visitor_data():
-    """Basic visitor data for creation."""
-    return {
-        "full_name": "John Doe",
-        "phone": "09171234567",
-        "email": "john.doe@example.com",
-        "notes": "First time visitor from nearby town",
-    }
-
-
-@pytest.fixture
-def visitor(db):
-    """Create a single visitor instance."""
-    return Visitor.objects.create(
-        full_name="Jane Smith",
-        phone="09179876543",
-        email="jane.smith.visitor@example.com",  # Unique email to avoid conflicts
-        is_first_time=True,
-        status="visitor",
-        follow_up_status="visited_1x",
-    )
-
-
-@pytest.fixture
-def visitor_with_attendance(db, admin_user):
-    """Visitor with existing attendance records (separate instance)."""
-    visitor = Visitor.objects.create(
-        full_name="Jane Smith",
-        phone="09179876543",
-        email="jane.attendance@example.com",  # Different email
-        is_first_time=False,
-        status="visitor",
-        follow_up_status="visited_2x",
-    )
-    VisitorAttendance.objects.create(
-        visitor=visitor,
-        service_date=date.today() - timedelta(days=14),
-        added_by=admin_user,
-    )
-    VisitorAttendance.objects.create(
-        visitor=visitor,
-        service_date=date.today() - timedelta(days=7),
-        added_by=admin_user,
-    )
-    return visitor
-
-
-@pytest.fixture
-def multiple_visitors(db):
-    """Create multiple visitors with different statuses."""
-    visitors = [
-        Visitor.objects.create(
-            full_name="Visitor One",
-            follow_up_status="visited_1x",
-            status="visitor",
-        ),
-        Visitor.objects.create(
-            full_name="Visitor Two",
-            follow_up_status="visited_2x",
-            status="visitor",
-        ),
-        Visitor.objects.create(
-            full_name="Visitor Three",
-            follow_up_status="regular",
-            status="visitor",
-        ),
-        Visitor.objects.create(
-            full_name="Converted Member",
-            follow_up_status="regular",
-            status="member",
-        ),
-    ]
-    return visitors
-
-
-# ============================================================================
-# MODEL TESTS
-# ============================================================================
-
-
-@pytest.mark.django_db
-class TestVisitorModel:
-    """Test Visitor model behavior."""
-
-    def test_visitor_creation_defaults(self):
-        """PRD: New visitor should default to 'visitor' status and 'visited_1x'."""
-        visitor = Visitor.objects.create(full_name="Test Visitor")
-
-        assert visitor.status == "visitor"
-        assert visitor.follow_up_status == "visited_1x"
-        assert visitor.is_first_time is True
-        assert visitor.converted_to_member is None
-
-    def test_visitor_str_representation(self, visitor):
-        """Visitor string representation is full_name."""
-        assert str(visitor) == "Jane Smith"
-
-    def test_visit_count_property(self, visitor_with_attendance):
-        """visit_count property returns correct attendance count."""
-        assert visitor_with_attendance.visit_count == 2
-
-    def test_visitor_status_choices(self):
-        """PRD: Status must be 'visitor' or 'member'."""
-        valid_statuses = ["visitor", "member"]
-        choices = [choice[0] for choice in Visitor.STATUS_CHOICES]
-        assert choices == valid_statuses
-
-    def test_follow_up_status_choices(self):
-        """PRD: Follow-up options are visited_1x, visited_2x, regular."""
-        valid_follow_ups = ["visited_1x", "visited_2x", "regular"]
-        choices = [choice[0] for choice in Visitor.FOLLOW_UP_CHOICES]
-        assert choices == valid_follow_ups
-
-    def test_visitor_ordering(self, multiple_visitors):
-        """Visitors are ordered by date_added descending."""
-        visitors = list(Visitor.objects.all())
-        # Most recent first
-        assert visitors[0].full_name == "Converted Member"
-
-
-@pytest.mark.django_db
-class TestVisitorAttendanceModel:
-    """Test VisitorAttendance model behavior."""
-
-    def test_attendance_creation(self, visitor, admin_user):
-        """Attendance record links visitor, date, and user."""
-        attendance = VisitorAttendance.objects.create(
-            visitor=visitor,
-            service_date=date.today(),
-            added_by=admin_user,
-        )
-
-        assert attendance.visitor == visitor
-        assert attendance.service_date == date.today()
-        assert attendance.added_by == admin_user
-
-    def test_attendance_unique_constraint(self, visitor, admin_user):
-        """Visitor cannot have duplicate attendance on same date."""
-        VisitorAttendance.objects.create(
-            visitor=visitor,
-            service_date=date.today(),
-            added_by=admin_user,
-        )
-
-        with pytest.raises(Exception):  # IntegrityError
-            VisitorAttendance.objects.create(
-                visitor=visitor,
-                service_date=date.today(),
-                added_by=admin_user,
-            )
-
-    def test_attendance_str_representation(self, visitor, admin_user):
-        """Attendance string shows visitor name and date."""
-        attendance = VisitorAttendance.objects.create(
-            visitor=visitor,
-            service_date=date(2025, 12, 1),
-            added_by=admin_user,
-        )
-        assert str(attendance) == "Jane Smith - 2025-12-01"
-
-
-# ============================================================================
-# SERVICE TESTS
-# ============================================================================
-
-
-@pytest.mark.django_db
-class TestAttendanceService:
-    """Test AttendanceService business logic."""
-
-    def test_check_in_first_visit(self, visitor, admin_user):
-        """PRD: First check-in sets follow_up_status to 'visited_1x'."""
-        # Reset visitor to have no attendance
-        visitor.attendance_records.all().delete()
-        visitor.follow_up_status = "visited_1x"
-        visitor.is_first_time = True
-        visitor.save()
-
-        attendance, error = AttendanceService.check_in_visitor(
-            visitor=visitor,
-            service_date=date.today(),
-            user=admin_user,
-        )
-
-        assert error is None
-        assert attendance is not None
-        visitor.refresh_from_db()
-        assert visitor.follow_up_status == "visited_1x"
-        assert visitor.is_first_time is True
-
-    def test_check_in_second_visit(self, visitor, admin_user):
-        """PRD: Second check-in sets follow_up_status to 'visited_2x'."""
-        # Create first attendance
-        VisitorAttendance.objects.create(
-            visitor=visitor,
-            service_date=date.today() - timedelta(days=7),
-            added_by=admin_user,
-        )
-
-        attendance, error = AttendanceService.check_in_visitor(
-            visitor=visitor,
-            service_date=date.today(),
-            user=admin_user,
-        )
-
-        assert error is None
-        visitor.refresh_from_db()
-        assert visitor.follow_up_status == "visited_2x"
-        assert visitor.is_first_time is False
-
-    def test_check_in_third_visit_becomes_regular(self, visitor, admin_user):
-        """PRD: Third+ check-in sets follow_up_status to 'regular'."""
-        # Create two prior attendances
-        VisitorAttendance.objects.create(
-            visitor=visitor,
-            service_date=date.today() - timedelta(days=14),
-            added_by=admin_user,
-        )
-        VisitorAttendance.objects.create(
-            visitor=visitor,
-            service_date=date.today() - timedelta(days=7),
-            added_by=admin_user,
-        )
-
-        attendance, error = AttendanceService.check_in_visitor(
-            visitor=visitor,
-            service_date=date.today(),
-            user=admin_user,
-        )
-
-        assert error is None
-        visitor.refresh_from_db()
-        assert visitor.follow_up_status == "regular"
-        assert visitor.is_first_time is False
-
-    def test_check_in_duplicate_returns_error(self, visitor, admin_user):
-        """Duplicate check-in on same date returns error."""
-        AttendanceService.check_in_visitor(
-            visitor=visitor,
-            service_date=date.today(),
-            user=admin_user,
-        )
-
-        attendance, error = AttendanceService.check_in_visitor(
-            visitor=visitor,
-            service_date=date.today(),
-            user=admin_user,
-        )
-
-        assert attendance is None
-        assert error == "Visitor has already been checked in for this service."
-
-    def test_check_in_defaults_to_today(self, visitor, admin_user):
-        """Check-in without service_date defaults to today."""
-        attendance, error = AttendanceService.check_in_visitor(
-            visitor=visitor,
-            user=admin_user,
-        )
-
-        assert attendance.service_date == date.today()
-
-
-# ============================================================================
-# API ENDPOINT TESTS - CRUD
-# ============================================================================
-
-
+# =============================================================================
+# CRUD Endpoints
+# =============================================================================
 @pytest.mark.django_db
 class TestVisitorCRUDEndpoints:
     """Test Visitor CRUD operations."""
@@ -380,11 +95,9 @@ class TestVisitorCRUDEndpoints:
         assert not Visitor.objects.filter(id=visitor.id).exists()
 
 
-# ============================================================================
-# API ENDPOINT TESTS - CHECK-IN
-# ============================================================================
-
-
+# =============================================================================
+# Check-in Endpoints
+# =============================================================================
 @pytest.mark.django_db
 class TestVisitorCheckInEndpoint:
     """Test visitor check-in functionality."""
@@ -443,11 +156,9 @@ class TestVisitorCheckInEndpoint:
         assert response2.status_code == status.HTTP_201_CREATED
 
 
-# ============================================================================
-# API ENDPOINT TESTS - CONVERT TO MEMBER
-# ============================================================================
-
-
+# =============================================================================
+# Convert to Member Endpoints
+# =============================================================================
 @pytest.mark.django_db
 class TestVisitorConvertToMemberEndpoint:
     """PRD: Convert visitor → member (one-click migration)."""
@@ -466,10 +177,6 @@ class TestVisitorConvertToMemberEndpoint:
             {"date_of_birth": "1990-05-15"},
             format="json",
         )
-
-        # Debug: print actual error
-        if response.status_code != status.HTTP_201_CREATED:
-            print(f"Response data: {response.data}")
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["message"] == "Visitor converted to member successfully"
@@ -554,11 +261,9 @@ class TestVisitorConvertToMemberEndpoint:
         assert "@placeholder.local" in member.email
 
 
-# ============================================================================
-# API ENDPOINT TESTS - VISITOR ATTENDANCE CRUD
-# ============================================================================
-
-
+# =============================================================================
+# Attendance Endpoints
+# =============================================================================
 @pytest.mark.django_db
 class TestVisitorAttendanceEndpoints:
     """Test VisitorAttendance ViewSet."""
@@ -601,11 +306,9 @@ class TestVisitorAttendanceEndpoints:
         assert data[0]["visitor_name"] == "Jane Smith"
 
 
-# ============================================================================
-# SERIALIZER TESTS
-# ============================================================================
-
-
+# =============================================================================
+# Serializer Tests
+# =============================================================================
 @pytest.mark.django_db
 class TestVisitorSerializer:
     """Test serializer output."""
@@ -633,11 +336,9 @@ class TestVisitorSerializer:
         assert visitor.converted_to_member is None
 
 
-# ============================================================================
-# EDGE CASES & VALIDATION
-# ============================================================================
-
-
+# =============================================================================
+# Edge Cases & Validation
+# =============================================================================
 @pytest.mark.django_db
 class TestVisitorEdgeCases:
     """Edge cases and validation tests."""
