@@ -6,6 +6,12 @@ from django.db import connections
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
+# Import all shared fixtures
+pytest_plugins = [
+    "tests.fixtures.users",
+    "tests.fixtures.models",
+]
+
 User = get_user_model()
 
 # Test credentials - not used in production
@@ -45,10 +51,9 @@ def create_user(db):
         role="member",
         **kwargs,
     ):
-        user = User.objects.create_user(
+        return User.objects.create_user(
             username=username, email=email, password=password, role=role, **kwargs
         )
-        return user
 
     return _create_user
 

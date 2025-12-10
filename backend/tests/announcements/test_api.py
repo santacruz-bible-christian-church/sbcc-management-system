@@ -1,3 +1,4 @@
+# tests/announcements/test_api.py
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -7,112 +8,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from apps.announcements.models import Announcement
-from apps.ministries.models import Ministry, MinistryMember
-
-
-@pytest.fixture
-def ministry(db):
-    """Create a test ministry."""
-    return Ministry.objects.create(
-        name="Youth Ministry",
-        description="Ministry for young people",
-        is_active=True,
-    )
-
-
-@pytest.fixture
-def ministry_member(db, ministry, user):
-    """Create a ministry membership for the test user."""
-    return MinistryMember.objects.create(
-        user=user,
-        ministry=ministry,
-        role="volunteer",
-        is_active=True,
-    )
-
-
-@pytest.fixture
-def announcement(db, admin_user):
-    """Create a basic published announcement."""
-    return Announcement.objects.create(
-        title="Test Announcement",
-        body="This is a test announcement body.",
-        audience=Announcement.AUDIENCE_ALL,
-        publish_at=timezone.now() - timedelta(hours=1),
-        is_active=True,
-        created_by=admin_user,
-    )
-
-
-@pytest.fixture
-def scheduled_announcement(db, admin_user):
-    """Create a scheduled (future) announcement."""
-    return Announcement.objects.create(
-        title="Future Announcement",
-        body="This announcement is scheduled for the future.",
-        audience=Announcement.AUDIENCE_ALL,
-        publish_at=timezone.now() + timedelta(days=7),
-        is_active=True,
-        created_by=admin_user,
-    )
-
-
-@pytest.fixture
-def expired_announcement(db, admin_user):
-    """Create an expired announcement."""
-    return Announcement.objects.create(
-        title="Expired Announcement",
-        body="This announcement has expired.",
-        audience=Announcement.AUDIENCE_ALL,
-        publish_at=timezone.now() - timedelta(days=7),
-        expire_at=timezone.now() - timedelta(days=1),
-        is_active=True,
-        created_by=admin_user,
-    )
-
-
-@pytest.fixture
-def ministry_announcement(db, admin_user, ministry):
-    """Create a ministry-specific announcement."""
-    return Announcement.objects.create(
-        title="Ministry Announcement",
-        body="This is for Youth Ministry only.",
-        audience=Announcement.AUDIENCE_MINISTRY,
-        ministry=ministry,
-        publish_at=timezone.now() - timedelta(hours=1),
-        is_active=True,
-        created_by=admin_user,
-    )
-
-
-# =============================================================================
-# Model Tests
-# =============================================================================
-@pytest.mark.django_db
-class TestAnnouncementModel:
-    """Tests for the Announcement model."""
-
-    def test_announcement_str(self, announcement):
-        """Test string representation."""
-        assert str(announcement) == "Test Announcement"
-
-    def test_is_published_active_announcement(self, announcement):
-        """Test is_published returns True for active, published announcements."""
-        assert announcement.is_published() is True
-
-    def test_is_published_scheduled_announcement(self, scheduled_announcement):
-        """Test is_published returns False for future announcements."""
-        assert scheduled_announcement.is_published() is False
-
-    def test_is_published_expired_announcement(self, expired_announcement):
-        """Test is_published returns False for expired announcements."""
-        assert expired_announcement.is_published() is False
-
-    def test_is_published_inactive_announcement(self, announcement):
-        """Test is_published returns False for inactive announcements."""
-        announcement.is_active = False
-        announcement.save()
-        assert announcement.is_published() is False
+from apps.ministries.models import Ministry
 
 
 # =============================================================================
@@ -210,7 +106,7 @@ class TestAnnouncementPermissions:
 
 
 # =============================================================================
-# Serializer Validation Tests
+# Validation Tests
 # =============================================================================
 @pytest.mark.django_db
 class TestAnnouncementValidation:
@@ -255,7 +151,6 @@ class TestAnnouncementValidation:
 
     def test_partial_update_validates_existing_audience(self, admin_client, ministry_announcement):
         """Test partial update still validates ministry requirement."""
-        # Remove ministry from a ministry-audience announcement
         url = reverse("announcement-detail", kwargs={"pk": ministry_announcement.pk})
         response = admin_client.patch(
             url,
@@ -410,136 +305,3 @@ class TestPreviewRecipientsEndpoint:
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-
-# =============================================================================
-# Service Tests
-# =============================================================================
-@pytest.mark.django_db
-class TestAnnouncementServices:
-    """Tests for announcement services."""
-
-    def test_get_recipients_all_audience(self, announcement, create_user):
-        """Test get_announcement_recipients for 'all' audience."""
-        from datetime import date
-
-        from apps.announcements.services import get_announcement_recipients
-        from apps.members.models import Member
-
-        # Create users first (Member requires a user FK)
-        user1 = create_user(
-            username="john_svc", email="john_svc@example.com", password="TestPass123!"
-        )
-        user2 = create_user(
-            username="jane_svc", email="jane_svc@example.com", password="TestPass123!"
-        )
-        user3 = create_user(
-            username="inactive_svc",
-            email="inactive_svc@example.com",
-            password="TestPass123!",
-        )
-
-        # Create some active members with emails
-        Member.objects.create(
-            user=user1,
-            first_name="John",
-            last_name="Doe",
-            email="john_svc@example.com",
-            phone="1234567890",
-            date_of_birth=date(1990, 1, 1),
-            is_active=True,
-        )
-        Member.objects.create(
-            user=user2,
-            first_name="Jane",
-            last_name="Doe",
-            email="jane_svc@example.com",
-            phone="1234567891",
-            date_of_birth=date(1992, 5, 15),
-            is_active=True,
-        )
-        # Inactive member should be excluded
-        Member.objects.create(
-            user=user3,
-            first_name="Inactive",
-            last_name="User",
-            email="inactive_svc@example.com",
-            phone="1234567892",
-            date_of_birth=date(1985, 3, 20),
-            is_active=False,
-        )
-
-        recipients = list(get_announcement_recipients(announcement))
-
-        assert "john_svc@example.com" in recipients
-        assert "jane_svc@example.com" in recipients
-        assert "inactive_svc@example.com" not in recipients
-
-    def test_get_recipients_ministry_audience(self, ministry_announcement, ministry, user):
-        """Test get_announcement_recipients for ministry audience."""
-        from apps.announcements.services import get_announcement_recipients
-
-        # Add user to ministry (user already exists from fixture)
-        MinistryMember.objects.get_or_create(
-            user=user,
-            ministry=ministry,
-            defaults={"role": "volunteer", "is_active": True},
-        )
-
-        recipients = list(get_announcement_recipients(ministry_announcement))
-
-        assert user.email in recipients
-
-    def test_get_recipients_excludes_null_emails(self, announcement, create_user):
-        """Test that null/empty emails are excluded from ministry audience."""
-        from apps.announcements.services import get_announcement_recipients
-
-        # For ministry audience, test that inactive ministry members are excluded
-        # (We can't easily test empty Member.email due to unique constraint,
-        # but services.py filters them out anyway)
-        recipients = list(get_announcement_recipients(announcement))
-
-        # Should not contain None or empty strings
-        assert None not in recipients
-        assert "" not in recipients
-
-    @patch("apps.announcements.services.send_mass_mail")
-    def test_send_announcement_email_marks_as_sent(self, mock_mail, announcement, create_user):
-        """Test that send_announcement_email marks announcement as sent."""
-        from datetime import date
-
-        from apps.announcements.services import send_announcement_email
-        from apps.members.models import Member
-
-        # Create user and member with unique email
-        test_user = create_user(
-            username="testmember_send",
-            email="testmember_send@example.com",
-            password="TestPass123!",
-        )
-        Member.objects.create(
-            user=test_user,
-            first_name="Test",
-            last_name="User",
-            email="testmember_send@example.com",
-            phone="1234567890",
-            date_of_birth=date(1990, 1, 1),
-            is_active=True,
-        )
-
-        mock_mail.return_value = 1
-
-        result = send_announcement_email(announcement)
-
-        assert result["success"] is True
-        announcement.refresh_from_db()
-        assert announcement.sent is True
-
-    def test_send_announcement_email_no_recipients(self, announcement):
-        """Test send_announcement_email with no recipients."""
-        from apps.announcements.services import send_announcement_email
-
-        result = send_announcement_email(announcement)
-
-        assert result["success"] is False
-        assert result["message"] == "No recipients found"

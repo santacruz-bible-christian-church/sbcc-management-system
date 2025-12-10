@@ -1,194 +1,13 @@
-"""
-Comprehensive test suite for System Settings module.
-
-PRD Requirements Covered:
-- Editable app name (church name changes)
-- Manage branding information
-- Allow uploading church logo/banner
-- About page auto-update based on config
-"""
-
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 
 from apps.settings.models import SystemSettings
 
-User = get_user_model()
 
-
-# ============================================================================
-# FIXTURES
-# ============================================================================
-
-
-@pytest.fixture
-def settings_data():
-    """Full settings data for updates."""
-    return {
-        "app_name": "New Church App",
-        "church_name": "New Church Name",
-        "tagline": "Faith, Hope, Love",
-        "mission": "To spread the gospel",
-        "vision": "A church for everyone",
-        "history": "Founded in 2020",
-        "statement_of_faith": "We believe in one God",
-        "address": "123 Church Street, City",
-        "phone": "+63 912 345 6789",
-        "email": "info@newchurch.org",
-        "facebook_url": "https://facebook.com/newchurch",
-        "youtube_url": "https://youtube.com/newchurch",
-        "instagram_url": "https://instagram.com/newchurch",
-        "service_schedule": "Sunday 9:00 AM, Wednesday 7:00 PM",
-    }
-
-
-@pytest.fixture
-def system_settings(db):
-    """Create system settings instance."""
-    return SystemSettings.get_settings()
-
-
-@pytest.fixture
-def configured_settings(db):
-    """Create system settings with custom values."""
-    settings = SystemSettings.get_settings()
-    settings.app_name = "SBCC Management System"
-    settings.church_name = "Santa Cruz Bible Christian Church"
-    settings.tagline = "Growing in Faith Together"
-    settings.mission = "To glorify God and make disciples"
-    settings.vision = "A Christ-centered community"
-    settings.address = "Santa Cruz, Laguna"
-    settings.phone = "0912-345-6789"
-    settings.email = "info@sbcc.org"
-    settings.facebook_url = "https://facebook.com/sbcc"
-    settings.service_schedule = "Sunday 9:00 AM"
-    settings.save()
-    return settings
-
-
-@pytest.fixture
-def member_user(create_user):
-    """Create a regular member user."""
-    return create_user(
-        username="member_user",
-        email="member@example.com",
-        role="member",
-    )
-
-
-@pytest.fixture
-def member_client(api_client, member_user):
-    """Return an authenticated API client for member user."""
-    from rest_framework_simplejwt.tokens import RefreshToken
-
-    refresh = RefreshToken.for_user(member_user)
-    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
-    return api_client
-
-
-@pytest.fixture
-def pastor_user(create_user):
-    """Create a pastor user."""
-    return create_user(
-        username="pastor_user",
-        email="pastor@example.com",
-        role="pastor",
-    )
-
-
-@pytest.fixture
-def pastor_client(api_client, pastor_user):
-    """Return an authenticated API client for pastor user."""
-    from rest_framework_simplejwt.tokens import RefreshToken
-
-    refresh = RefreshToken.for_user(pastor_user)
-    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
-    return api_client
-
-
-# ============================================================================
-# MODEL TESTS
-# ============================================================================
-
-
-@pytest.mark.django_db
-class TestSystemSettingsModel:
-    """Test SystemSettings model behavior."""
-
-    def test_singleton_pattern(self):
-        """Only one SystemSettings instance can exist."""
-        settings1 = SystemSettings.get_settings()
-        settings2 = SystemSettings.get_settings()
-
-        assert settings1.pk == 1
-        assert settings2.pk == 1
-        assert settings1.pk == settings2.pk
-        assert SystemSettings.objects.count() == 1
-
-    def test_singleton_enforced_on_save(self):
-        """Multiple saves always use pk=1."""
-        settings = SystemSettings(app_name="Test App")
-        settings.save()
-
-        # Try to create another instance
-        settings2 = SystemSettings(app_name="Another App")
-        settings2.save()
-
-        # Should still be only one instance
-        assert SystemSettings.objects.count() == 1
-        assert SystemSettings.objects.first().app_name == "Another App"
-
-    def test_default_values(self, system_settings):
-        """Default values are set correctly."""
-        assert system_settings.app_name == "SBCC Management System"
-        assert system_settings.church_name == "Santa Cruz Bible Christian Church"
-        assert system_settings.tagline == ""
-        assert system_settings.mission == ""
-        assert system_settings.vision == ""
-
-    def test_str_representation(self, system_settings):
-        """String representation includes update timestamp."""
-        str_repr = str(system_settings)
-        assert "System Settings" in str_repr
-        assert "Updated:" in str_repr
-
-    def test_get_settings_creates_if_not_exists(self, db):
-        """get_settings() creates instance if none exists."""
-        assert SystemSettings.objects.count() == 0
-
-        settings = SystemSettings.get_settings()
-
-        assert settings is not None
-        assert settings.pk == 1
-        assert SystemSettings.objects.count() == 1
-
-    def test_updated_by_tracking(self, system_settings, admin_user):
-        """updated_by is tracked correctly."""
-        system_settings.app_name = "Updated App"
-        system_settings.updated_by = admin_user
-        system_settings.save()
-
-        system_settings.refresh_from_db()
-        assert system_settings.updated_by == admin_user
-
-    def test_updated_at_auto_updates(self, system_settings):
-        """updated_at is automatically updated on save."""
-        original_updated_at = system_settings.updated_at
-
-        system_settings.app_name = "Changed Name"
-        system_settings.save()
-
-        system_settings.refresh_from_db()
-        assert system_settings.updated_at >= original_updated_at
-
-
-# ============================================================================
-# PERMISSION TESTS
-# ============================================================================
-
-
+# =============================================================================
+# Permission Tests
+# =============================================================================
 @pytest.mark.django_db
 class TestSystemSettingsPermissions:
     """Test access control for system settings."""
@@ -251,11 +70,9 @@ class TestSystemSettingsPermissions:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-# ============================================================================
-# ADMIN API ENDPOINT TESTS
-# ============================================================================
-
-
+# =============================================================================
+# Admin API Endpoint Tests
+# =============================================================================
 @pytest.mark.django_db
 class TestSystemSettingsAdminEndpoint:
     """Test admin settings API endpoints."""
@@ -396,11 +213,9 @@ class TestSystemSettingsAdminEndpoint:
         assert "Sunday 8:00 AM" in response.data["service_schedule"]
 
 
-# ============================================================================
-# PUBLIC API ENDPOINT TESTS
-# ============================================================================
-
-
+# =============================================================================
+# Public API Endpoint Tests
+# =============================================================================
 @pytest.mark.django_db
 class TestPublicSettingsEndpoint:
     """Test public settings API endpoint."""
@@ -463,11 +278,9 @@ class TestPublicSettingsEndpoint:
         assert response.status_code == status.HTTP_200_OK
 
 
-# ============================================================================
-# SERIALIZER TESTS
-# ============================================================================
-
-
+# =============================================================================
+# Serializer Tests
+# =============================================================================
 @pytest.mark.django_db
 class TestSettingsSerializers:
     """Test serializer behavior."""
@@ -540,11 +353,9 @@ class TestSettingsSerializers:
         assert response.data["app_name"] == "Valid Update"
 
 
-# ============================================================================
-# VALIDATION TESTS
-# ============================================================================
-
-
+# =============================================================================
+# Validation Tests
+# =============================================================================
 @pytest.mark.django_db
 class TestSettingsValidation:
     """Test field validation."""
@@ -609,11 +420,9 @@ class TestSettingsValidation:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-# ============================================================================
-# EDGE CASES
-# ============================================================================
-
-
+# =============================================================================
+# Edge Cases
+# =============================================================================
 @pytest.mark.django_db
 class TestSettingsEdgeCases:
     """Edge cases and special scenarios."""
