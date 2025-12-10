@@ -49,7 +49,7 @@ class TaskAttachmentSerializer(serializers.ModelSerializer):
             "uploaded_by_name",
             "uploaded_at",
         ]
-        read_only_fields = ["uploaded_by", "uploaded_at", "file_size", "content_type"]
+        read_only_fields = ["uploaded_by", "uploaded_at", "file_name", "file_size", "content_type"]
 
     def get_file_url(self, obj):
         """Return public URL for file"""
