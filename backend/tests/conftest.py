@@ -90,3 +90,23 @@ def admin_client(api_client, admin_user):
     refresh = RefreshToken.for_user(admin_user)
     api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
     return api_client
+
+
+@pytest.fixture
+def user_tokens(user):
+    """Return access and refresh tokens for regular user."""
+    refresh = RefreshToken.for_user(user)
+    return {
+        "access": str(refresh.access_token),
+        "refresh": str(refresh),
+    }
+
+
+@pytest.fixture
+def admin_tokens(admin_user):
+    """Return access and refresh tokens for admin user."""
+    refresh = RefreshToken.for_user(admin_user)
+    return {
+        "access": str(refresh.access_token),
+        "refresh": str(refresh),
+    }
