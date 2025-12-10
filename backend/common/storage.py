@@ -83,7 +83,7 @@ class R2Storage(Storage):
         try:
             self.s3_client.head_object(Bucket=self.bucket_name, Key=name)
             return True
-        except:
+        except Exception:
             return False
 
     def size(self, name):
@@ -91,7 +91,7 @@ class R2Storage(Storage):
         try:
             obj = self.s3_client.head_object(Bucket=self.bucket_name, Key=name)
             return obj["ContentLength"]
-        except:
+        except Exception:
             return 0
 
     def url(self, name):
