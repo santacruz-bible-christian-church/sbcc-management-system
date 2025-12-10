@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 
 from .models import MeetingMinutes, MeetingMinutesAttachment, MeetingMinutesVersion
@@ -56,12 +57,18 @@ class MeetingMinutesAttachmentSerializer(serializers.ModelSerializer):
 
     def get_file_url(self, obj):
         """Return public URL for file."""
-        if obj.file:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(obj.file.url)
+        if not obj.file:
+            return None
+
+        # If R2 storage is enabled, obj.file.url already returns full R2 URL
+        if getattr(settings, "USE_R2_STORAGE", False):
             return obj.file.url
-        return None
+
+        # For local storage, build absolute URI
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(obj.file.url)
+        return obj.file.url
 
     def create(self, validated_data):
         """Extract file metadata on upload."""
