@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { HiEye, HiDownload, HiTrash, HiDotsVertical } from 'react-icons/hi';
 
-export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelete }) => {
+export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelete, onFileClick }) => {
   if (files.length === 0) return null;
 
   return (
@@ -13,7 +13,8 @@ export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelet
             {files.map((file) => (
               <tr
                 key={file.id}
-                className={`hover:bg-gray-50 transition-colors ${
+                onClick={() => onFileClick && onFileClick(file.id)}
+                className={`hover:bg-gray-50 transition-colors cursor-pointer ${
                   selectedFiles.includes(file.id) ? 'bg-blue-50' : ''
                 }`}
               >
@@ -32,20 +33,26 @@ export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelet
                 <td className="px-6 py-4">
                   <span className="text-sm text-gray-500">{file.modified}</span>
                 </td>
-                <td className="w-32 px-6 py-4">
+                <td className="w-32 px-6 py-4" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => onFileClick && onFileClick(file.id)}
                       className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                       title="View"
                     >
                       <HiEye className="w-4 h-4 text-gray-500" />
                     </button>
-                    <button
-                      className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                      title="Download"
-                    >
-                      <HiDownload className="w-4 h-4 text-gray-500" />
-                    </button>
+                    {file.fileUrl && (
+                      <a
+                        href={file.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Download"
+                      >
+                        <HiDownload className="w-4 h-4 text-gray-500" />
+                      </a>
+                    )}
                     <button
                       onClick={() => onDelete(file)}
                       className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
@@ -77,9 +84,11 @@ FilesListView.propTypes = {
       modified: PropTypes.string.isRequired,
       icon: PropTypes.elementType.isRequired,
       color: PropTypes.string.isRequired,
+      fileUrl: PropTypes.string,
     })
   ).isRequired,
   selectedFiles: PropTypes.array.isRequired,
   onToggleSelection: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
+  onFileClick: PropTypes.func,
 };

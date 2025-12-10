@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { HiEye, HiDownload, HiTrash, HiDotsVertical } from 'react-icons/hi';
 
-export const FilesGridView = ({ files, selectedFiles, onToggleSelection, onDelete }) => {
+export const FilesGridView = ({ files, selectedFiles, onToggleSelection, onDelete, onFileClick }) => {
   if (files.length === 0) return null;
 
   return (
@@ -11,14 +11,18 @@ export const FilesGridView = ({ files, selectedFiles, onToggleSelection, onDelet
         {files.map((file) => (
           <div
             key={file.id}
-            className={`bg-white rounded-xl p-5 border-2 transition-all group relative ${
+            onClick={() => onFileClick && onFileClick(file.id)}
+            className={`bg-white rounded-xl p-5 border-2 transition-all group relative cursor-pointer ${
               selectedFiles.includes(file.id)
                 ? 'border-blue-400 shadow-md'
                 : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
             }`}
           >
             {/* More Options */}
-            <button className="absolute top-4 right-4 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-100 rounded-lg transition-all">
+            <button
+              onClick={(e) => e.stopPropagation()}
+              className="absolute top-4 right-4 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-100 rounded-lg transition-all"
+            >
               <HiDotsVertical className="w-4 h-4 text-gray-500" />
             </button>
 
@@ -45,19 +49,33 @@ export const FilesGridView = ({ files, selectedFiles, onToggleSelection, onDelet
             </div>
 
             {/* Quick Actions */}
-            <div className="flex items-center justify-center gap-1 pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-center gap-1 pt-3 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
               <button
+                onClick={() => onFileClick && onFileClick(file.id)}
                 className="flex-1 p-2 hover:bg-gray-50 rounded-lg transition-colors"
                 title="View"
               >
                 <HiEye className="w-4 h-4 text-gray-600 mx-auto" />
               </button>
-              <button
-                className="flex-1 p-2 hover:bg-gray-50 rounded-lg transition-colors"
-                title="Download"
-              >
-                <HiDownload className="w-4 h-4 text-gray-600 mx-auto" />
-              </button>
+              {file.fileUrl ? (
+                <a
+                  href={file.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                  title="Download"
+                >
+                  <HiDownload className="w-4 h-4 text-gray-600 mx-auto" />
+                </a>
+              ) : (
+                <button
+                  className="flex-1 p-2 hover:bg-gray-50 rounded-lg transition-colors opacity-50 cursor-not-allowed"
+                  title="Download"
+                  disabled
+                >
+                  <HiDownload className="w-4 h-4 text-gray-600 mx-auto" />
+                </button>
+              )}
               <button
                 onClick={() => onDelete(file)}
                 className="flex-1 p-2 hover:bg-red-50 rounded-lg transition-colors"
@@ -83,9 +101,11 @@ FilesGridView.propTypes = {
       modified: PropTypes.string.isRequired,
       icon: PropTypes.elementType.isRequired,
       color: PropTypes.string.isRequired,
+      fileUrl: PropTypes.string,
     })
   ).isRequired,
   selectedFiles: PropTypes.array.isRequired,
   onToggleSelection: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
+  onFileClick: PropTypes.func,
 };
