@@ -6,6 +6,12 @@ from django.db import connections
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
+# Import all shared fixtures
+pytest_plugins = [
+    "tests.fixtures.users",
+    "tests.fixtures.models",
+]
+
 User = get_user_model()
 
 # Test credentials - not used in production
@@ -45,10 +51,9 @@ def create_user(db):
         role="member",
         **kwargs,
     ):
-        user = User.objects.create_user(
+        return User.objects.create_user(
             username=username, email=email, password=password, role=role, **kwargs
         )
-        return user
 
     return _create_user
 
@@ -85,23 +90,3 @@ def admin_client(api_client, admin_user):
     refresh = RefreshToken.for_user(admin_user)
     api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
     return api_client
-
-
-@pytest.fixture
-def user_tokens(user):
-    """Return access and refresh tokens for regular user."""
-    refresh = RefreshToken.for_user(user)
-    return {
-        "access": str(refresh.access_token),
-        "refresh": str(refresh),
-    }
-
-
-@pytest.fixture
-def admin_tokens(admin_user):
-    """Return access and refresh tokens for admin user."""
-    refresh = RefreshToken.for_user(admin_user)
-    return {
-        "access": str(refresh.access_token),
-        "refresh": str(refresh),
-    }
