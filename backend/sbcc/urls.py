@@ -25,6 +25,7 @@ urlpatterns = [
     path("api/visitors/", include("apps.visitors.urls")),
     path("api/settings/", include("apps.settings.urls")),
     path("api/tasks/", include("apps.tasks.urls")),
+    path("api/meeting-minutes/", include("apps.meeting_minutes.urls")),
     # Dashboard (aggregates data from multiple apps)
     path("api/dashboard/", include("core.urls")),
     # Public APIs (no auth required)
