@@ -19,6 +19,7 @@ import { FoldersGridView } from '../components/FoldersGridView';
 import { FilesGridView } from '../components/FilesGridView';
 import { MeetingMinutesModal } from '../components/MeetingMinutesModal';
 import { useMeetingMinutes } from '../hooks/useMeetingMinutes';
+import { meetingMinutesApi } from '../../../api/meeting-minutes.api';
 
 export const FileManagementPage = () => {
   const {
@@ -239,6 +240,30 @@ export const FileManagementPage = () => {
     }
   }, [deleteState, deleteAttachment, deleteMeeting, closeDeleteModal, refetch]);
 
+  // Fetch versions for a meeting
+  const handleFetchVersions = useCallback(async (meetingId) => {
+    try {
+      return await meetingMinutesApi.getVersions(meetingId);
+    } catch (err) {
+      console.error('Failed to fetch versions:', err);
+      return [];
+    }
+  }, []);
+
+  // Restore a version
+  const handleRestoreVersion = useCallback(async (meetingId, versionNumber) => {
+    try {
+      const restored = await meetingMinutesApi.restoreVersion(meetingId, versionNumber);
+      // Refresh the meeting data
+      const updated = await getMeeting(meetingId);
+      setModalState((prev) => ({ ...prev, meeting: updated }));
+      return restored;
+    } catch (err) {
+      console.error('Failed to restore version:', err);
+      throw err;
+    }
+  }, [getMeeting]);
+
   return (
     <div className="h-full bg-gray-50 flex flex-col">
       {/* Header */}
@@ -440,6 +465,8 @@ export const FileManagementPage = () => {
         onCancel={closeModal}
         onUploadAttachment={handleUploadAttachment}
         onDeleteAttachment={handleDeleteAttachmentFromModal}
+        onFetchVersions={handleFetchVersions}
+        onRestoreVersion={handleRestoreVersion}
         loading={saving}
       />
 
