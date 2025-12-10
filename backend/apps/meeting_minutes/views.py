@@ -5,9 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
-from common.permissions import IsAdminOrReadOnly
-
-from .models import MeetingMinutes, MeetingMinutesAttachment, MeetingMinutesVersion
+from .models import MeetingMinutes, MeetingMinutesAttachment
 from .serializers import (
     MeetingMinutesAttachmentSerializer,
     MeetingMinutesListSerializer,
