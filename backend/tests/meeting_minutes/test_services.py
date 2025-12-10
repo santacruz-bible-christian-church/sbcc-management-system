@@ -121,7 +121,7 @@ class TestMeetingMinutesSearchService:
             extracted_text="Revenue growth and profit margins analysis",
         )
 
-        meeting2 = meeting_minutes_factory(title="Regular Meeting")
+        meeting2 = meeting_minutes_factory(title="Regular Meeting")  # noqa: F841
 
         results = search_meeting_minutes(query="Revenue", include_attachments=True)
         titles = [m.title for m in results]
