@@ -11,6 +11,7 @@ import { CSVImportModal } from '../components/CSVImportModal';
 import { MemberFormModal } from '../components/MemberFormModal';
 import { MemberDetailsModal } from '../components/MemberDetailsModal';
 import { membersApi } from '../../../api/members.api';
+import { showError } from '../../../utils/toast';
 
 const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
 
@@ -98,7 +99,7 @@ export const MembershipListPage = () => {
       closeArchiveModal();
     } catch (err) {
       console.error('Archive member error:', err);
-      alert(err.response?.data?.detail || 'Failed to archive member');
+      showError(err.response?.data?.detail || 'Failed to archive member');
     }
   }, [archiveState.member, refreshMembers, pagination.currentPage, closeArchiveModal]);
 
@@ -109,7 +110,7 @@ export const MembershipListPage = () => {
       await refreshMembers(pagination.currentPage);
     } catch (err) {
       console.error('Restore member error:', err);
-      alert(err.response?.data?.detail || 'Failed to restore member');
+      showError(err.response?.data?.detail || 'Failed to restore member');
     }
   }, [refreshMembers, pagination.currentPage]);
 

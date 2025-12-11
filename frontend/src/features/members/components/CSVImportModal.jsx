@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { HiOutlineUpload, HiOutlineDocumentText, HiX, HiOutlineDownload } from 'react-icons/hi';
+import { showWarning } from '../../../utils/toast';
 
 // Sample CSV template data
 const SAMPLE_CSV_CONTENT = `first_name,last_name,email,phone,gender,date_of_birth,baptism_date,address
@@ -46,7 +47,7 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
       if (droppedFile.type === 'text/csv' || droppedFile.name.endsWith('.csv')) {
         setFile(droppedFile);
       } else {
-        alert('Please upload a CSV file');
+        showWarning('Please upload a CSV file');
       }
     }
   };
@@ -58,14 +59,14 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
       if (selectedFile.type === 'text/csv' || selectedFile.name.endsWith('.csv')) {
         setFile(selectedFile);
       } else {
-        alert('Please upload a CSV file');
+        showWarning('Please upload a CSV file');
       }
     }
   };
 
   const handleSubmit = async () => {
     if (!file) {
-      alert('Please select a file');
+      showWarning('Please select a file');
       return;
     }
     await onImport(file);

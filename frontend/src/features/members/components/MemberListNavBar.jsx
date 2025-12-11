@@ -6,6 +6,7 @@ import { HiOutlinePlus, HiOutlineUpload } from 'react-icons/hi';
 import CSVImportModal from './CSVImportModal';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
+import { showSuccess, showError } from '../../../utils/toast';
 
 const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
 
@@ -37,11 +38,11 @@ export const MemberListNavBar = ({
         try {
             await membersApi.importCSV(file);
             await refreshMembers(pagination.currentPage);
-            alert('Members imported successfully!');
+            showSuccess('Members imported successfully!');
             setCsvModalOpen(false);
         } catch (err) {
             console.error('CSV import error:', err);
-            alert(err.response?.data?.detail || 'Failed to import CSV');
+            showError(err.response?.data?.detail || 'Failed to import CSV');
         } finally {
             setImporting(false);
         }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Calendar as CalIcon, AlertCircle } from 'lucide-react';
 import { eventsApi } from '../../../api/events.api';
+import { showWarning } from '../../../utils/toast';
 
 const ACCENT = '#FDB54A';
 
@@ -212,7 +213,7 @@ export default function AttendanceSheetInput({ open = false, onClose = () => {},
   const handleSubmit = () => {
     // Validate event
     if (!eventId) {
-      alert('Please select an event');
+      showWarning('Please select an event');
       return;
     }
 

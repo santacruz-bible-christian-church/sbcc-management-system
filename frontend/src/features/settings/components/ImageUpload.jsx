@@ -1,7 +1,7 @@
-// frontend/src/features/settings/components/ImageUpload.jsx
 import { useState, useRef } from 'react';
 import { HiOutlineUpload, HiOutlineTrash, HiOutlinePhotograph } from 'react-icons/hi';
 import { IconButton } from '../../../components/ui/Button';
+import { showWarning } from '../../../utils/toast';
 
 export const ImageUpload = ({
   label,
@@ -21,7 +21,7 @@ export const ImageUpload = ({
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file');
+      showWarning('Please upload an image file');
       return;
     }
 

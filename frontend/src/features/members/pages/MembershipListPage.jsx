@@ -11,6 +11,7 @@ import { membersApi } from '../../../api/members.api';
 import { MemberDetailsModal } from '../components/MemberDetailsModal';
 import { MemberFormModal } from '../components/MemberFormModal';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
+import { showError, showSuccess } from '../../../utils/toast';
 
 const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
 
@@ -90,7 +91,7 @@ export const MembershipListPage = () => {
             closeArchiveModal();
         } catch (err) {
             console.error('Archive member error:', err);
-            alert(err.response?.data?.detail || 'Failed to archive member');
+            showError(err.response?.data?.detail || 'Failed to archive member');
         }
     }, [archiveState.member, refreshMembers, pagination.currentPage, closeArchiveModal]);
 
@@ -101,7 +102,7 @@ export const MembershipListPage = () => {
             await refreshMembers(pagination.currentPage);
         } catch (err) {
             console.error('Restore member error:', err);
-            alert(err.response?.data?.detail || 'Failed to restore member');
+            showError(err.response?.data?.detail || 'Failed to restore member');
         }
     }, [refreshMembers, pagination.currentPage]);
 
@@ -144,11 +145,7 @@ export const MembershipListPage = () => {
                 // Check for specific "user already exists" error
                 if (errorData.user && Array.isArray(errorData.user)) {
                     if (errorData.user[0].includes('already exists')) {
-                        alert(
-                            `A member with this email already exists.\n\n` +
-                            `Please check if this person is already in the system, ` +
-                            `or use a different email address.`
-                        );
+                        showError('A member with this email already exists. Please check if this person is already in the system.');
                         return;
                     }
                 }
@@ -161,13 +158,13 @@ export const MembershipListPage = () => {
                             return `${field}: ${msg}`;
                         })
                         .join('\n');
-                    alert(`Validation Error:\n\n${errorMessages}`);
+                    showError(`Validation Error: ${errorMessages}`);
                 } else {
                     // Simple error message
-                    alert(errorData.detail || JSON.stringify(errorData));
+                    showError(errorData.detail || 'An error occurred');
                 }
             } else {
-                alert('Failed to save member - Unknown error');
+                showError('Failed to save member - Unknown error');
             }
         } finally {
             setFormLoading(false);
