@@ -30,17 +30,16 @@ class TestPrayerRequestPermissions:
         assert "Test Prayer Request" in titles
         assert "Public Prayer Request" in titles
 
-    def test_member_sees_own_and_public_requests(
-        self, auth_client, prayer_request, public_prayer_request, member_profile
+    def test_authenticated_user_sees_public_requests(
+        self, auth_client, prayer_request, public_prayer_request
     ):
-        """Test that members see only their own and public requests."""
+        """Test that authenticated users can see public requests."""
         url = reverse("prayer-request-list")
         response = auth_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
         titles = [r["title"] for r in response.data["results"]]
-        assert "Test Prayer Request" in titles  # Own request
-        assert "Public Prayer Request" in titles  # Public request
+        assert "Public Prayer Request" in titles
 
 
 # =============================================================================
@@ -50,8 +49,8 @@ class TestPrayerRequestPermissions:
 class TestPrayerRequestSubmission:
     """Tests for prayer request submission."""
 
-    def test_submit_as_authenticated_member(self, auth_client, member_profile):
-        """Test submitting a prayer request as authenticated member."""
+    def test_submit_with_member_id(self, auth_client, member_for_prayer):
+        """Test submitting a prayer request linked to a member."""
         url = reverse("prayer-request-submit")
         response = auth_client.post(
             url,
@@ -59,6 +58,7 @@ class TestPrayerRequestSubmission:
                 "title": "New Prayer Request",
                 "description": "Please pray for me.",
                 "category": "spiritual",
+                "member_id": member_for_prayer.id,
             },
             format="json",
         )
@@ -67,7 +67,7 @@ class TestPrayerRequestSubmission:
         assert PrayerRequest.objects.filter(title="New Prayer Request").exists()
 
         pr = PrayerRequest.objects.get(title="New Prayer Request")
-        assert pr.requester == member_profile
+        assert pr.requester == member_for_prayer
 
     def test_submit_as_anonymous(self, api_client):
         """Test submitting a prayer request anonymously."""
@@ -213,14 +213,21 @@ class TestPrayerRequestFollowUp:
 class TestPrayerRequestCustomEndpoints:
     """Tests for custom prayer request endpoints."""
 
-    def test_my_requests(self, auth_client, prayer_request, member_profile):
-        """Test getting user's own prayer requests."""
+    def test_my_requests(self, auth_client, prayer_request, member_for_prayer):
+        """Test getting prayer requests for a specific member."""
         url = reverse("prayer-request-my-requests")
-        response = auth_client.get(url)
+        response = auth_client.get(url, {"member_id": member_for_prayer.id})
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data) == 1
         assert response.data[0]["title"] == "Test Prayer Request"
+
+    def test_my_requests_requires_member_id(self, auth_client):
+        """Test that my_requests requires member_id parameter."""
+        url = reverse("prayer-request-my-requests")
+        response = auth_client.get(url)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_assigned_to_me(self, pastor_client, assigned_prayer_request):
         """Test getting prayer requests assigned to current user."""
@@ -267,10 +274,8 @@ class TestFollowUpViewSet:
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["results"]) == 1
 
-    def test_list_follow_ups_as_member_excludes_private(
-        self, auth_client, follow_up, member_profile
-    ):
-        """Test that members don't see private follow-ups."""
+    def test_list_follow_ups_as_member_excludes_private(self, auth_client, follow_up):
+        """Test that regular users don't see private follow-ups."""
         url = reverse("prayer-follow-up-list")
         response = auth_client.get(url)
 

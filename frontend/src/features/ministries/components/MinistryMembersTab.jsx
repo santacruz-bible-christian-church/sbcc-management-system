@@ -159,13 +159,11 @@ export const MinistryMembersTab = ({ ministry, onRefresh }) => {
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {paginatedMembers.map((member) => {
-                    const userName = member.user
-                      ? `${member.user.first_name || ''} ${member.user.last_name || ''}`.trim() ||
-                        member.user.username ||
-                        member.user.email
-                      : 'Unknown User';
-
-                    const userEmail = member.user?.email || 'No email';
+                    const userName = member.member
+                      ? `${member.member.first_name || ''} ${member.member.last_name || ''}`.trim() ||
+                        member.member.full_name
+                      : 'Unknown';
+                    const userEmail = member.member?.email || 'No email';
 
                     return (
                       <tr key={member.id} className="hover:bg-gray-50 transition-colors">
