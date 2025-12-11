@@ -12,6 +12,7 @@ import {
 import { membersApi } from '../../../api/members.api';
 import { MemberAttendanceHistory } from './MemberAttendanceHistory';
 import { MemberCelebrationCard } from './MemberCelebrationCard';
+import { showError } from '../../../utils/toast';
 
 // Utility functions
 const formatDate = (dateString) => {
@@ -80,7 +81,7 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Profile export error:', err);
-      alert('Failed to export profile. Please try again.');
+      showError('Failed to export profile. Please try again.');
     } finally {
       setExporting(false);
     }

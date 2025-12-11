@@ -107,15 +107,10 @@ export const EventsPage = () => {
   const handleFormSubmit = async (payload) => {
     setSubmitting(true);
     try {
-      console.log('📤 Submitting event (before adding organizer):', payload);
-
-      // ✅ FIX: Add organizer (current user ID)
       const finalPayload = {
         ...payload,
-        organizer: user.id,  // ← Add current user as organizer
+        organizer: user.id,
       };
-
-      console.log('📤 Final payload with organizer:', finalPayload);
 
       if (formState.mode === 'create') {
         await createEvent(finalPayload);

@@ -63,10 +63,6 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
         notes: formData.notes || '',
       };
 
-      console.log('=== CREATING SHIFTS ===');
-      console.log('Base data:', baseShiftData);
-      console.log('Quantity:', formData.quantity);
-
       // Create multiple shifts with the same details
       const createPromises = Array.from({ length: formData.quantity }, (_, index) => {
         const shiftData = {
@@ -76,7 +72,6 @@ export const CreateShiftModal = ({ open, onClose, ministry, ministryId, onSucces
             : `Shift ${index + 1}/${formData.quantity}`
         };
 
-        console.log(`Creating shift ${index + 1}:`, shiftData);
         return ministriesApi.createShift(shiftData);
       });
 

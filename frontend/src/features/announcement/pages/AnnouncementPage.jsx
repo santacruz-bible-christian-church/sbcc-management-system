@@ -9,6 +9,7 @@ import PreviewRecipientsModal from '../components/PreviewRecipientsModal';
 import SendNowModal from '../components/SendNowModal';
 import DeactivateModal from '../components/DeactivateModal';
 import { getAnnouncementStatus } from '../utils/constants';
+import { showSuccess, showError } from '../../../utils/toast';
 
 const AnnouncementPage = () => {
   const {
@@ -76,7 +77,7 @@ const AnnouncementPage = () => {
       setEditingAnnouncement(null);
     } catch (error) {
       console.error('Error saving announcement:', error);
-      alert('Failed to save announcement. Please try again.');
+      showError('Failed to save announcement. Please try again.');
     }
   };
 
@@ -86,7 +87,7 @@ const AnnouncementPage = () => {
         await deleteAnnouncement(announcement.id);
       } catch (error) {
         console.error('Error deleting announcement:', error);
-        alert('Failed to delete announcement. Please try again.');
+        showError('Failed to delete announcement. Please try again.');
       }
     }
   };
@@ -97,7 +98,7 @@ const AnnouncementPage = () => {
       setPreviewModal({ isOpen: true, data: result, announcement });
     } catch (error) {
       console.error('Error previewing recipients:', error);
-      alert('Failed to load recipients. Please try again.');
+      showError('Failed to load recipients. Please try again.');
     }
   };
 
@@ -111,15 +112,11 @@ const AnnouncementPage = () => {
       setSendNowModal({ isOpen: false, announcement: null });
 
       // Success notification
-      alert(
-        `✅ ${result.message}\n\n` +
-        `Recipients: ${result.recipients}\n` +
-        `Successfully sent: ${result.sent}`
-      );
+      showSuccess(`Announcement sent! ${result.emails_sent} email(s) delivered.`);
     } catch (error) {
       console.error('Error sending announcement:', error);
       const errorMsg = error.response?.data?.error || 'Failed to send notifications.';
-      alert(`❌ ${errorMsg}`);
+      showError(errorMsg);
       setSendNowModal({ isOpen: false, announcement: null });
     }
   };
@@ -134,7 +131,7 @@ const AnnouncementPage = () => {
       setDeactivateModal({ isOpen: false, announcement: null });
     } catch (error) {
       console.error('Error deactivating announcement:', error);
-      alert('Failed to deactivate announcement. Please try again.');
+      showError('Failed to deactivate announcement. Please try again.');
       setDeactivateModal({ isOpen: false, announcement: null });
     }
   };
