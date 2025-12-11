@@ -76,6 +76,23 @@ export const membersApi = {
     });
     return response.data;
   },
+
+  // Export members list as PDF
+  exportPDF: async (params = {}) => {
+    const response = await apiClient.get('/members/export-pdf/', {
+      params,
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Export single member profile as PDF
+  exportProfilePDF: async (id) => {
+    const response = await apiClient.get(`/members/${id}/export-profile-pdf/`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
 };
 
 export default membersApi;
