@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
-from django.utils.crypto import get_random_string
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -9,7 +8,7 @@ from rest_framework.response import Response
 from apps.members.models import Member
 
 from .models import Visitor, VisitorAttendance
-from .serializers import VisitorAttendanceSerializer, VisitorConvertSerializer, VisitorSerializer
+from .serializers import VisitorAttendanceSerializer, VisitorSerializer
 from .services import AttendanceService
 
 User = get_user_model()
@@ -61,16 +60,32 @@ class VisitorViewSet(viewsets.ModelViewSet):
         """
         visitor = self.get_object()
 
-        if visitor.status == "member":
+        # Check if already converted
+        if visitor.status == "member" or visitor.converted_to_member:
             return Response(
-                {"error": "Visitor is already a member"},
+                {"error": "Visitor has already been converted to a member"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate date_of_birth is required
+        date_of_birth = request.data.get("date_of_birth")
+        if not date_of_birth:
+            return Response(
+                {"error": "date_of_birth is required for conversion"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
-            email = visitor.email or request.data.get("email", "")
-            phone = visitor.phone or request.data.get("phone", "")
-            date_of_birth = request.data.get("date_of_birth")
+            # Use request data if provided, otherwise fall back to visitor data
+            # Phone: prefer request override, then visitor phone
+            phone = request.data.get("phone") or visitor.phone or ""
+
+            # Email: prefer request override, then visitor email, then placeholder
+            email = request.data.get("email") or visitor.email
+            if not email:
+                # Generate placeholder email for visitors without email
+                safe_name = visitor.full_name.lower().replace(" ", "_")
+                email = f"{safe_name}@placeholder.local"
 
             # Split full_name into first/last
             name_parts = visitor.full_name.strip().split(" ", 1)

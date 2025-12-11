@@ -29,7 +29,7 @@ class Command(BaseCommand):
         count = users_to_delete.count()
 
         if dry_run:
-            self.stdout.write(f"\n=== DRY RUN ===")
+            self.stdout.write("\n=== DRY RUN ===")
             self.stdout.write(f"Would delete {count} users:\n")
             for user in users_to_delete[:20]:
                 self.stdout.write(f"  - {user.username} ({user.role})")

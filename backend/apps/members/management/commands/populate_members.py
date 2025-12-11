@@ -105,7 +105,7 @@ class Command(BaseCommand):
             "Hill",
             "Flores",
             "Green",
-            "Adams",
+            "AdAMS",
             "Nelson",
             "Baker",
             "Hall",
@@ -192,7 +192,7 @@ class Command(BaseCommand):
                     skipped_count += 1
                     continue
 
-                member_user = User.objects.create_user(
+                User.objects.create_user(
                     username=username,
                     email=email,
                     first_name=first_name,
