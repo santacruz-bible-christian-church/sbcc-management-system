@@ -4,6 +4,7 @@ import pytest
 from django.utils import timezone
 
 from apps.announcements.models import Announcement
+from apps.members.models import Member
 from apps.ministries.models import MinistryMember
 
 
@@ -62,10 +63,10 @@ def ministry_announcement(db, admin_user, ministry):
 
 
 @pytest.fixture
-def ministry_member(db, ministry, user):
-    """Create a ministry membership for the test user."""
+def ministry_member(db, ministry, member):
+    """Create a ministry membership for a test member."""
     return MinistryMember.objects.create(
-        user=user,
+        member=member,
         ministry=ministry,
         role="volunteer",
         is_active=True,

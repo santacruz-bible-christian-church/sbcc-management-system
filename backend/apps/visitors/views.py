@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
-from django.utils.crypto import get_random_string
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -9,7 +8,7 @@ from rest_framework.response import Response
 from apps.members.models import Member
 
 from .models import Visitor, VisitorAttendance
-from .serializers import VisitorAttendanceSerializer, VisitorConvertSerializer, VisitorSerializer
+from .serializers import VisitorAttendanceSerializer, VisitorSerializer
 from .services import AttendanceService
 
 User = get_user_model()
@@ -61,38 +60,40 @@ class VisitorViewSet(viewsets.ModelViewSet):
         """
         visitor = self.get_object()
 
-        if visitor.converted_to_member:
+        # Check if already converted
+        if visitor.status == "member" or visitor.converted_to_member:
             return Response(
                 {"error": "Visitor has already been converted to a member"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        serializer = VisitorConvertSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        date_of_birth = serializer.validated_data["date_of_birth"]
-        phone = serializer.validated_data.get("phone") or visitor.phone or "N/A"
+        # Validate date_of_birth is required
+        date_of_birth = request.data.get("date_of_birth")
+        if not date_of_birth:
+            return Response(
+                {"error": "date_of_birth is required for conversion"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
-            # Create user account
-            username = visitor.email or f"member_{visitor.id}"
-            email = visitor.email or f"{username}@placeholder.local"
+            # Use request data if provided, otherwise fall back to visitor data
+            # Phone: prefer request override, then visitor phone
+            phone = request.data.get("phone") or visitor.phone or ""
 
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=get_random_string(16),  # Fix: use Django's utility
-                role="member",
-            )
+            # Email: prefer request override, then visitor email, then placeholder
+            email = request.data.get("email") or visitor.email
+            if not email:
+                # Generate placeholder email for visitors without email
+                safe_name = visitor.full_name.lower().replace(" ", "_")
+                email = f"{safe_name}@placeholder.local"
 
             # Split full_name into first/last
             name_parts = visitor.full_name.strip().split(" ", 1)
             first_name = name_parts[0]
             last_name = name_parts[1] if len(name_parts) > 1 else ""
 
-            # Create member
+            # Create member (no User needed)
             member = Member.objects.create(
-                user=user,
                 first_name=first_name,
                 last_name=last_name,
                 email=email,

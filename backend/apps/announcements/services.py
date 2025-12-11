@@ -19,12 +19,12 @@ def get_announcement_recipients(announcement):
         )
 
     elif announcement.audience == "ministry" and announcement.ministry:
-        # Get ministry members via MinistryMember → User relationship
+        # Get ministry members via MinistryMember → Member relationship
         return (
             announcement.ministry.ministry_members.filter(is_active=True)
-            .exclude(user__email__isnull=True)
-            .exclude(user__email="")
-            .values_list("user__email", flat=True)
+            .exclude(member__email__isnull=True)
+            .exclude(member__email="")
+            .values_list("member__email", flat=True)
         )
 
     return []

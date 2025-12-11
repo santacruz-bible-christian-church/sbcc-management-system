@@ -10,7 +10,6 @@ class MemberSerializer(serializers.ModelSerializer):
         model = Member
         fields = [
             "id",
-            "user",
             "first_name",
             "last_name",
             "full_name",

@@ -1,12 +1,16 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from apps.members.models import Member
+
 from .models import Assignment, Ministry, MinistryMember, Shift
 
 User = get_user_model()
 
 
 class UserSimpleSerializer(serializers.ModelSerializer):
+    """Serializer for User (operators/management only)"""
+
     full_name = serializers.SerializerMethodField()
 
     class Meta:
@@ -17,10 +21,20 @@ class UserSimpleSerializer(serializers.ModelSerializer):
         return f"{obj.first_name} {obj.last_name}".strip() or obj.username
 
 
+class MemberSimpleSerializer(serializers.ModelSerializer):
+    """Serializer for Member (church member records)"""
+
+    full_name = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Member
+        fields = ["id", "first_name", "last_name", "email", "phone", "full_name"]
+
+
 class MinistryMemberSerializer(serializers.ModelSerializer):
-    user = UserSimpleSerializer(read_only=True)
-    user_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), write_only=True, source="user"
+    member = MemberSimpleSerializer(read_only=True)
+    member_id = serializers.PrimaryKeyRelatedField(
+        queryset=Member.objects.all(), write_only=True, source="member"
     )
     ministry_name = serializers.CharField(source="ministry.name", read_only=True)
 
@@ -28,8 +42,8 @@ class MinistryMemberSerializer(serializers.ModelSerializer):
         model = MinistryMember
         fields = [
             "id",
-            "user",
-            "user_id",
+            "member",
+            "member_id",
             "ministry",
             "ministry_name",
             "role",
@@ -40,41 +54,9 @@ class MinistryMemberSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["created_at"]
 
-    def update(self, instance, validated_data):
-        """Override update to sync Ministry.leader"""
-        old_role = instance.role
-        new_role = validated_data.get("role", old_role)
-
-        # Update the member
-        instance = super().update(instance, validated_data)
-
-        # If role changed to 'lead', update Ministry.leader
-        if new_role == "lead" and instance.is_active:
-            ministry = instance.ministry
-            if ministry.leader != instance.user:
-                ministry.leader = instance.user
-                ministry.save(update_fields=["leader"])
-
-        # If role changed from 'lead' to something else, remove leadership
-        elif old_role == "lead" and new_role != "lead":
-            ministry = instance.ministry
-            if ministry.leader == instance.user:
-                ministry.leader = None
-                ministry.save(update_fields=["leader"])
-
-        return instance
-
-    def create(self, validated_data):
-        """Override create to sync Ministry.leader"""
-        instance = super().create(validated_data)
-
-        # If new member is a leader, update Ministry.leader
-        if instance.role == "lead" and instance.is_active:
-            ministry = instance.ministry
-            ministry.leader = instance.user
-            ministry.save(update_fields=["leader"])
-
-        return instance
+    # NOTE: Removed update/create overrides that synced Ministry.leader
+    # Ministry.leader is a User (operator), not a Member
+    # Leaders should be assigned directly via Ministry API/admin
 
 
 class ShiftSerializer(serializers.ModelSerializer):
@@ -100,13 +82,12 @@ class ShiftSerializer(serializers.ModelSerializer):
         """Return assignment details if shift is assigned."""
         try:
             assignment = obj.assignment
-            user = assignment.user
+            member = assignment.member
             return {
                 "id": assignment.id,
-                "user": getattr(user, "username", str(user)),
-                "user_id": user.pk,
-                "user_name": f"{user.first_name} {user.last_name}".strip() or user.username,
-                "user_email": user.email,
+                "member_id": member.pk,
+                "member_name": member.full_name,
+                "member_email": member.email or "",
                 "attended": assignment.attended,
             }
         except Assignment.DoesNotExist:
@@ -114,9 +95,9 @@ class ShiftSerializer(serializers.ModelSerializer):
 
 
 class AssignmentSerializer(serializers.ModelSerializer):
-    user = UserSimpleSerializer(read_only=True)
-    user_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), write_only=True, source="user"
+    member = MemberSimpleSerializer(read_only=True)
+    member_id = serializers.PrimaryKeyRelatedField(
+        queryset=Member.objects.all(), write_only=True, source="member"
     )
     shift = ShiftSerializer(read_only=True)
     shift_id = serializers.PrimaryKeyRelatedField(
@@ -129,12 +110,11 @@ class AssignmentSerializer(serializers.ModelSerializer):
             "id",
             "shift",
             "shift_id",
-            "user",
-            "user_id",
+            "member",
+            "member_id",
             "assigned_at",
-            "attended",  # ← Changed from notified
-            "notes",  # ← Add this
-            # REMOVED: "reminded"  ← Remove this
+            "attended",
+            "notes",
         ]
         read_only_fields = ["assigned_at"]
 

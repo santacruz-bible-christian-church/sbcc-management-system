@@ -31,7 +31,7 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
   const [members, setMembers] = useState([]);
   const [selectedDays, setSelectedDays] = useState([]);
   const [formData, setFormData] = useState({
-    user: '',
+    member: '',  // ← Changed from 'user' to 'member'
     role: 'volunteer',
     is_active: true,
     max_consecutive_shifts: '2',
@@ -43,7 +43,7 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
       checkExistingLeader(ministry.id);
       // Reset form when modal opens
       setFormData({
-        user: '',
+        member: '',  // ← Changed from 'user' to 'member'
         role: 'volunteer',
         is_active: true,
         max_consecutive_shifts: '2',
@@ -60,7 +60,7 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
         ministry: ministry.id,
         is_active: true,
         status: 'active',
-        page_size: 1000  // ← Fetch all members
+        page_size: 1000
       });
 
       const ministryMembers = Array.isArray(membersResponse)
@@ -70,25 +70,23 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
       // Step 2: Fetch ALL current volunteers (MinistryMember records)
       const volunteersResponse = await ministriesApi.listMembers({
         ministry: ministry.id,
-        page_size: 1000  // ← Fetch all volunteers
+        page_size: 1000
       });
 
       const currentVolunteers = Array.isArray(volunteersResponse)
         ? volunteersResponse
         : volunteersResponse.results || [];
 
-      // Step 3: Extract user IDs from volunteers using Set for fast lookup
-      const volunteerUserIds = new Set(
+      // Step 3: Extract member IDs from volunteers using Set for fast lookup
+      const volunteerMemberIds = new Set(
         currentVolunteers
-          .filter(v => v.user && v.user.id)
-          .map(v => v.user.id)
+          .filter(v => v.member && v.member.id)
+          .map(v => v.member.id)  // ← Changed from v.user.id to v.member.id
       );
 
       // Step 4: Filter members - exclude those already in volunteer roster
       const availableMembers = ministryMembers.filter(member => {
-        const memberUserId = member.user; // This is the user ID (number)
-        const isAlreadyVolunteer = volunteerUserIds.has(memberUserId);
-
+        const isAlreadyVolunteer = volunteerMemberIds.has(member.id);  // ← Changed: compare member.id directly
         return !isAlreadyVolunteer;
       });
 
@@ -114,7 +112,7 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!formData.user) {
+    if (!formData.member) {  // ← Changed from formData.user
       showError('Please select a member');
       return;
     }
@@ -129,7 +127,7 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
     try {
       const payload = {
         ministry: ministry.id,
-        user_id: Number(formData.user),
+        member_id: Number(formData.member),  // ← Changed from user_id to member_id
         role: formData.role,
         is_active: formData.is_active,
         max_consecutive_shifts: Number(formData.max_consecutive_shifts),
@@ -140,7 +138,7 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
       showSuccess('Volunteer added successfully!');
 
       setFormData({
-        user: '',
+        member: '',  // ← Changed from 'user' to 'member'
         role: 'volunteer',
         is_active: true,
         max_consecutive_shifts: '2',
@@ -171,7 +169,7 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
   const handleClose = () => {
     if (!loading) {
       setFormData({
-        user: '',
+        member: '',  // ← Changed from 'user' to 'member'
         role: 'volunteer',
         is_active: true,
         max_consecutive_shifts: '2',
@@ -225,16 +223,16 @@ export const AddVolunteerModal = ({ open, onClose, ministry, onSuccess }) => {
                   </div>
                 ) : (
                   <select
-                    value={formData.user}
-                    onChange={(e) => setFormData({ ...formData, user: e.target.value })}
+                    value={formData.member}  // ← Changed from formData.user
+                    onChange={(e) => setFormData({ ...formData, member: e.target.value })}  // ← Changed
                     required
                     disabled={loading}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent"
                   >
                     <option value="">Choose a member...</option>
                     {members.map((member) => (
-                      <option key={member.id} value={member.user}>
-                        {member.first_name} {member.last_name} ({member.email})
+                      <option key={member.id} value={member.id}>  {/* ← Changed: value is member.id directly */}
+                        {member.first_name} {member.last_name} ({member.email || 'No email'})
                       </option>
                     ))}
                   </select>

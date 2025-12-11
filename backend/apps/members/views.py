@@ -1,7 +1,6 @@
 from datetime import date
 from io import BytesIO
 
-from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.http import HttpResponse
 from django.utils import timezone
@@ -25,13 +24,11 @@ from .services import (
     get_upcoming_birthdays,
 )
 
-User = get_user_model()
-
 
 class MemberViewSet(viewsets.ModelViewSet):
     """ViewSet for Member model"""
 
-    queryset = Member.objects.select_related("user", "ministry").all()
+    queryset = Member.objects.select_related("ministry").all()  # Remove "user"
     serializer_class = MemberSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -42,54 +39,8 @@ class MemberViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        """Create a member - simple data record, no User account."""
         data = request.data.copy()
-
-        # Generate unique username from email or name
-        email = data.get("email", "")
-        first_name = data.get("first_name", "")
-        last_name = data.get("last_name", "")
-
-        # Create username from email or name
-        if email:
-            username_base = email.split("@")[0]
-        else:
-            username_base = f"{first_name.lower()}{last_name.lower()}"
-
-        # Make username unique
-        username = username_base
-        counter = 1
-        while User.objects.filter(username=username).exists():
-            username = f"{username_base}{counter}"
-            counter += 1
-
-        # Check if user with this email already exists
-        existing_user = User.objects.filter(email=email).first() if email else None
-
-        if existing_user:
-            # Check if this user already has a member profile
-            if hasattr(existing_user, "member_profile"):
-                return Response(
-                    {"detail": f"A member profile already exists for {email}"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            # Use existing user
-            data["user"] = existing_user.pk
-        else:
-            # Create new user with random password
-            # FIX: Use Django's get_random_string instead
-            from django.utils.crypto import get_random_string
-
-            random_password = get_random_string(length=12)
-
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                first_name=first_name,
-                last_name=last_name,
-                role="member",
-                password=random_password,  # Use the random string
-            )
-            data["user"] = user.pk
 
         # Default status to 'active' if not provided
         if not data.get("status"):
@@ -107,29 +58,9 @@ class MemberViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         data = request.data.copy()
 
-        # Prevent changing the user relation
-        if "user" in data:
-            data.pop("user")
-
         # Restrict changing status to staff only
         if "status" in data and not request.user.is_staff:
             data.pop("status")
-
-        # Update user model fields if provided
-        if instance.user:
-            user_updated = False
-            if "first_name" in data:
-                instance.user.first_name = data["first_name"]
-                user_updated = True
-            if "last_name" in data:
-                instance.user.last_name = data["last_name"]
-                user_updated = True
-            if "email" in data:
-                instance.user.email = data["email"]
-                user_updated = True
-
-            if user_updated:
-                instance.user.save()
 
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
