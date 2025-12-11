@@ -7,6 +7,7 @@ import { SBCCInfoCard } from '../components/SBCCInfoCard';
 import { StatsGrid } from '../components/StatsGrid';
 import { RecentActivities } from '../components/RecentActivities';
 import { TaskWidgets } from '../components/TaskWidgets';
+import { AbsentMemberAlerts } from '../components/AbsentMemberAlerts';
 import TotalMembersStatsCard from '../components/TotalMembersStatsCard';
 import MinistryPieChart from '../components/MinistryPieChart';
 
@@ -67,6 +68,9 @@ export const DashboardPage = () => {
 
           {/* Task Widgets - Full Width */}
           <TaskWidgets />
+
+          {/* Absent Member Alerts - Full Width */}
+          <AbsentMemberAlerts />
         </div>
       </div>
     </div>
