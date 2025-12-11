@@ -323,7 +323,6 @@ This project will be stored in a separate GitHub repository.
 5. **Testing & QA:** Conduct UAT with church staff; fix based on feedback
 6. **Deployment:**
    - Web: Deployed on a cloud server (e.g., AWS, DigitalOcean, or Heroku)
-   - Desktop (For offline use): Packaged with Tauri for offline distribution
 
 ---
 
