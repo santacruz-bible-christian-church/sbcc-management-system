@@ -48,20 +48,20 @@ class TestAnnouncementServices:
         assert "jane_svc@example.com" in recipients
         assert "inactive_svc@example.com" not in recipients
 
-    def test_get_recipients_ministry_audience(self, ministry_announcement, ministry, user):
+    def test_get_recipients_ministry_audience(self, ministry_announcement, ministry, member):
         """Test get_announcement_recipients for ministry audience."""
         from apps.announcements.services import get_announcement_recipients
 
-        # Add user to ministry (user already exists from fixture)
+        # Add member to ministry
         MinistryMember.objects.get_or_create(
-            user=user,
+            member=member,
             ministry=ministry,
             defaults={"role": "volunteer", "is_active": True},
         )
 
         recipients = list(get_announcement_recipients(ministry_announcement))
 
-        assert user.email in recipients
+        assert member.email in recipients
 
     def test_get_recipients_excludes_null_emails(self, announcement):
         """Test that null/empty emails are excluded from ministry audience."""
