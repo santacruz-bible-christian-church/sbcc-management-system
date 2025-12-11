@@ -18,9 +18,9 @@ class MinistryAdmin(admin.ModelAdmin):
 
 @admin.register(MinistryMember)
 class MinistryMemberAdmin(admin.ModelAdmin):
-    list_display = ["user", "ministry", "role", "is_active", "created_at"]
+    list_display = ["member", "ministry", "role", "is_active", "created_at"]
     list_filter = ["ministry", "role", "is_active"]
-    search_fields = ["user__first_name", "user__last_name", "user__email"]
+    search_fields = ["member__first_name", "member__last_name", "member__email"]
     ordering = ["-created_at"]
 
 
@@ -40,12 +40,12 @@ class ShiftAdmin(admin.ModelAdmin):
 
 @admin.register(Assignment)
 class AssignmentAdmin(admin.ModelAdmin):
-    list_display = ["shift", "user", "assigned_at", "attended"]
+    list_display = ["shift", "member", "assigned_at", "attended"]
     list_filter = ["attended", "assigned_at", "shift__ministry"]
     search_fields = [
-        "user__username",
-        "user__first_name",
-        "user__last_name",
+        "member__first_name",
+        "member__last_name",
+        "member__email",
         "shift__ministry__name",
     ]
     ordering = ["-assigned_at"]
@@ -53,4 +53,4 @@ class AssignmentAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         """Optimize queries by selecting related objects."""
         qs = super().get_queryset(request)
-        return qs.select_related("shift__ministry", "user")
+        return qs.select_related("shift__ministry", "member")

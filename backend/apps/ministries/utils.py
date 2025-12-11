@@ -46,7 +46,7 @@ def rotate_and_assign(
         print(f"Notify: {notify}")
 
         shifts_qs = Shift.objects.filter(
-            date__gte=today, date__lte=end_date, assignment__isnull=True  # Only unassigned shifts
+            date__gte=today, date__lte=end_date, assignment__isnull=True
         ).select_related("ministry")
 
         if ministry_ids:
@@ -75,7 +75,7 @@ def rotate_and_assign(
             members = list(
                 MinistryMember.objects.filter(
                     ministry_id=ministry_id, is_active=True
-                ).select_related("user")
+                ).select_related("member")
             )
 
             if not members:
@@ -89,22 +89,21 @@ def rotate_and_assign(
             member_last_assigned = {}
             for mem in members:
                 last_assignment = (
-                    Assignment.objects.filter(user=mem.user, shift__ministry_id=ministry_id)
+                    Assignment.objects.filter(member=mem.member, shift__ministry_id=ministry_id)
                     .order_by("-assigned_at")
                     .first()
                 )
-                member_last_assigned[mem.user.pk] = (
+                member_last_assigned[mem.member.pk] = (
                     last_assignment.assigned_at if last_assignment else None
                 )
 
             # Sort: Never assigned (None) → Oldest → Newest
-            # Use a tuple where None sorts first
             members_sorted = sorted(
                 members,
                 key=lambda m: (
-                    member_last_assigned.get(m.user.pk) is not None,  # False (None) sorts first
-                    member_last_assigned.get(m.user.pk) or timezone.now(),  # Then by date
-                    m.pk,  # Then by ID for consistency
+                    member_last_assigned.get(m.member.pk) is not None,
+                    member_last_assigned.get(m.member.pk) or timezone.now(),
+                    m.pk,
                 ),
             )
 
@@ -138,9 +137,7 @@ def rotate_and_assign(
                         print(f"Error getting shift day: {e}")
                         shift_day = None
 
-                    print(
-                        f"  Trying {candidate.user.get_full_name() or candidate.user.username}..."
-                    )
+                    print(f"  Trying {candidate.member.full_name}...")
 
                     # === SMART FILTERING ===
 
@@ -156,7 +153,7 @@ def rotate_and_assign(
                         cutoff_date = shift.date - timedelta(days=recent_days)
 
                         recent_count = Assignment.objects.filter(
-                            user=candidate.user,
+                            member=candidate.member,
                             shift__ministry_id=ministry_id,
                             shift__date__gte=cutoff_date,
                             shift__date__lt=shift.date,
@@ -169,19 +166,17 @@ def rotate_and_assign(
                             continue
 
                     # === PASSED ALL CHECKS - ASSIGN! ===
-                    print(
-                        f"    ✅ ASSIGNED to {candidate.user.get_full_name() or candidate.user.username}"
-                    )
+                    print(f"    ✅ ASSIGNED to {candidate.member.full_name}")
 
                     if not dry_run:
                         try:
                             with transaction.atomic():
                                 assignment = Assignment.objects.create(
-                                    shift=shift, user=candidate.user
+                                    shift=shift, member=candidate.member
                                 )
 
                                 # Send notification if requested
-                                if notify:
+                                if notify and candidate.member.email:
                                     try:
                                         _send_assignment_notification(assignment, shift, candidate)
                                         summary["emailed"] += 1
@@ -189,7 +184,7 @@ def rotate_and_assign(
                                     except Exception as email_err:
                                         print("    ⚠️ Email failed: " + str(email_err))
                                         summary["errors"].append(
-                                            f"Email to {candidate.user.email}: {str(email_err)}"
+                                            f"Email to {candidate.member.email}: {str(email_err)}"
                                         )
 
                                 summary["created"] += 1
@@ -207,7 +202,7 @@ def rotate_and_assign(
 
                 # If no one could be assigned
                 if not assigned:
-                    print("  ⚠️ Could not assign shift (no available volunteers)")  # Line 210 FIXED
+                    print("  ⚠️ Could not assign shift (no available volunteers)")
                     summary["skipped_no_available"].append(shift.id)
 
             print(f"\n--- Ministry {ministry_id} complete: {created_for_ministry} assignments ---")
@@ -228,7 +223,11 @@ def rotate_and_assign(
 def _send_assignment_notification(assignment, shift, ministry_member):
     """Send email notification to assigned volunteer."""
     try:
-        user = assignment.user
+        member = assignment.member
+
+        if not member.email:
+            print(f"Member {member.full_name} has no email, skipping notification")
+            return
 
         # Format time
         try:
@@ -248,7 +247,7 @@ def _send_assignment_notification(assignment, shift, ministry_member):
 
         notes_section = "Notes: " + shift.notes if shift.notes else ""
         message = f"""
-Hello {user.first_name or user.username},
+Hello {member.first_name},
 
 You have been assigned to a shift:
 
@@ -264,17 +263,17 @@ Thank you for serving!
 SBCC Management System
         """.strip()
 
-        print(f"Sending email to {user.email}")
+        print(f"Sending email to {member.email}")
 
         send_mail(
             subject=subject,
             message=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
+            recipient_list=[member.email],
             fail_silently=False,
         )
 
-        print(f"Email sent successfully to {user.email}")
+        print(f"Email sent successfully to {member.email}")
 
     except Exception as e:
         print(f"Failed to send email: {e}")

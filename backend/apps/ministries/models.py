@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from apps.members.models import Member
+
 User = get_user_model()
 
 
@@ -33,7 +35,7 @@ class Ministry(models.Model):
 
 class MinistryMember(models.Model):
     """
-    Link a User to a Ministry with role and availability preferences.
+    Link a Member (church member record) to a Ministry with role and availability preferences.
     Role is either 'volunteer' or 'lead' (ministry coordinator).
     """
 
@@ -42,7 +44,11 @@ class MinistryMember(models.Model):
         ("lead", "Lead"),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="ministry_memberships")
+    member = models.ForeignKey(
+        Member,
+        on_delete=models.CASCADE,
+        related_name="ministry_memberships",
+    )
     ministry = models.ForeignKey(
         Ministry,
         on_delete=models.CASCADE,
@@ -56,11 +62,11 @@ class MinistryMember(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("user", "ministry")
-        ordering = ["ministry__name", "user__username"]
+        unique_together = ("member", "ministry")
+        ordering = ["ministry__name", "member__last_name", "member__first_name"]
 
     def __str__(self):
-        return f"{self.user.get_full_name()} - {self.ministry.name} ({self.role})"
+        return f"{self.member.full_name} - {self.ministry.name} ({self.role})"
 
 
 class Shift(models.Model):
@@ -85,10 +91,10 @@ class Shift(models.Model):
 
 
 class Assignment(models.Model):
-    """Assign a user to a shift."""
+    """Assign a member to a shift."""
 
     shift = models.OneToOneField(Shift, on_delete=models.CASCADE, related_name="assignment")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="assignments")
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="assignments")
     assigned_at = models.DateTimeField(auto_now_add=True)
     attended = models.BooleanField(default=False)
     notes = models.TextField(blank=True, null=True)
@@ -97,4 +103,4 @@ class Assignment(models.Model):
         ordering = ["-assigned_at"]
 
     def __str__(self):
-        return f"{self.user.get_full_name()} → {self.shift}"
+        return f"{self.member.full_name} → {self.shift}"
