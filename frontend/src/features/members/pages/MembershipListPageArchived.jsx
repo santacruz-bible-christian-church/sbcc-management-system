@@ -11,7 +11,7 @@ import { CSVImportModal } from '../components/CSVImportModal';
 import { MemberFormModal } from '../components/MemberFormModal';
 import { MemberDetailsModal } from '../components/MemberDetailsModal';
 import { membersApi } from '../../../api/members.api';
-import { showError } from '../../../utils/toast';
+import { showError, showSuccess } from '../../../utils/toast';
 
 const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
 
@@ -121,10 +121,10 @@ export const MembershipListPage = () => {
       await membersApi.importCSV(file);
       setCsvImportOpen(false);
       await refreshMembers(pagination.currentPage);
-      alert('Members imported successfully!');
+      showSuccess('Members imported successfully!'); // ← Changed from alert()
     } catch (err) {
       console.error('CSV import error:', err);
-      alert(err.response?.data?.detail || 'Failed to import CSV');
+      showError(err.response?.data?.detail || 'Failed to import CSV'); // ← Changed from alert()
     } finally {
       setImporting(false);
     }
@@ -156,7 +156,7 @@ export const MembershipListPage = () => {
       closeFormModal();
     } catch (err) {
       console.error('Form submit error:', err);
-      alert(err.response?.data?.detail || 'Failed to save member');
+      showError(err.response?.data?.detail || 'Failed to save member'); // ← Changed from alert()
     } finally {
       setFormLoading(false);
     }
