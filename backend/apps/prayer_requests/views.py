@@ -53,14 +53,11 @@ class PrayerRequestViewSet(viewsets.ModelViewSet):
             return queryset
         elif user.role == "ministry_leader":
             # Ministry leaders see public and their assigned requests
-            return queryset.filter(
-                models.Q(is_public=True)
-                | models.Q(assigned_to=user)
-                | models.Q(requester__user=user)
-            )
+            return queryset.filter(models.Q(is_public=True) | models.Q(assigned_to=user))
         else:
-            # Regular members see only public and their own requests
-            return queryset.filter(models.Q(is_public=True) | models.Q(requester__user=user))
+            # Regular members see only public requests
+            # (They can use my_requests endpoint with member_id to see their own)
+            return queryset.filter(is_public=True)
 
     def get_serializer_class(self):
         if self.action in ["retrieve", "my_requests"]:
@@ -75,17 +72,20 @@ class PrayerRequestViewSet(viewsets.ModelViewSet):
     def submit(self, request):
         """
         Public endpoint for submitting prayer requests.
-        Can be used by non-authenticated users.
+        Optionally link to a member if member_id is provided.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # If user is authenticated and has a member profile, link it
-        if request.user.is_authenticated:
+        # If member_id is provided, link it
+        member_id = request.data.get("member_id")
+        if member_id:
             try:
-                member = request.user.member_profile
+                from apps.members.models import Member
+
+                member = Member.objects.get(id=member_id)
                 serializer.save(requester=member)
-            except AttributeError:
+            except Member.DoesNotExist:
                 serializer.save()
         else:
             serializer.save()
@@ -155,17 +155,21 @@ class PrayerRequestViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def my_requests(self, request):
-        """Get prayer requests submitted by the current user"""
-        try:
-            member = request.user.member_profile
-            queryset = PrayerRequest.objects.filter(requester=member)
-            serializer = self.get_serializer(queryset, many=True)
-            return Response(serializer.data)
-        except AttributeError:
+        """
+        Get prayer requests for a specific member.
+        Query param: ?member_id=123
+        """
+        member_id = request.query_params.get("member_id")
+
+        if not member_id:
             return Response(
-                {"error": "No member profile found"},
-                status=status.HTTP_404_NOT_FOUND,
+                {"detail": "member_id query parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
+
+        queryset = PrayerRequest.objects.filter(requester_id=member_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
     def assigned_to_me(self, request):

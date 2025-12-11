@@ -203,7 +203,6 @@ class Command(BaseCommand):
 
                 # Create member profile
                 Member.objects.create(
-                    user=member_user,
                     first_name=first_name,
                     last_name=last_name,
                     email=email,

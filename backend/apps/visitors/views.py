@@ -61,38 +61,24 @@ class VisitorViewSet(viewsets.ModelViewSet):
         """
         visitor = self.get_object()
 
-        if visitor.converted_to_member:
+        if visitor.status == "member":
             return Response(
-                {"error": "Visitor has already been converted to a member"},
+                {"error": "Visitor is already a member"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        serializer = VisitorConvertSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        date_of_birth = serializer.validated_data["date_of_birth"]
-        phone = serializer.validated_data.get("phone") or visitor.phone or "N/A"
-
         try:
-            # Create user account
-            username = visitor.email or f"member_{visitor.id}"
-            email = visitor.email or f"{username}@placeholder.local"
-
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=get_random_string(16),  # Fix: use Django's utility
-                role="member",
-            )
+            email = visitor.email or request.data.get("email", "")
+            phone = visitor.phone or request.data.get("phone", "")
+            date_of_birth = request.data.get("date_of_birth")
 
             # Split full_name into first/last
             name_parts = visitor.full_name.strip().split(" ", 1)
             first_name = name_parts[0]
             last_name = name_parts[1] if len(name_parts) > 1 else ""
 
-            # Create member
+            # Create member (no User needed)
             member = Member.objects.create(
-                user=user,
                 first_name=first_name,
                 last_name=last_name,
                 email=email,
