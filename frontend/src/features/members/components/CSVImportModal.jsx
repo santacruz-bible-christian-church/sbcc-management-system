@@ -1,6 +1,25 @@
 import { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { HiOutlineUpload, HiOutlineDocumentText, HiX } from 'react-icons/hi';
+import { HiOutlineUpload, HiOutlineDocumentText, HiX, HiOutlineDownload } from 'react-icons/hi';
+
+// Sample CSV template data
+const SAMPLE_CSV_CONTENT = `first_name,last_name,email,phone,gender,date_of_birth,baptism_date,address
+Juan,Dela Cruz,juan.delacruz@example.com,0917-123-4567,male,1990-05-15,2010-12-25,123 Main St. Quezon City
+Maria,Santos,maria.santos@example.com,0918-234-5678,female,1985-03-20,2008-06-10,456 Church Ave. Manila
+Pedro,Garcia,pedro.garcia@example.com,0919-345-6789,male,1995-11-08,,789 Faith Rd. Makati
+Ana,Reyes,ana.reyes@example.com,0920-456-7890,female,2000-07-22,2020-01-15,321 Hope St. Pasig`;
+
+const downloadSampleCSV = () => {
+  const blob = new Blob([SAMPLE_CSV_CONTENT], { type: 'text/csv;charset=utf-8;' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'sbcc_members_import_template.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
 
 export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
   const [file, setFile] = useState(null);
@@ -92,9 +111,10 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
               <h4 className="text-sm font-semibold text-blue-800 mb-2">CSV Format Requirements:</h4>
               <ul className="text-xs text-blue-700 list-disc list-inside space-y-1">
                 <li>First row must contain column headers</li>
-                <li>Required columns: first_name, last_name, email</li>
-                <li>Optional columns: phone, date_of_birth, gender, address, etc.</li>
-                <li>Date format: YYYY-MM-DD</li>
+                <li><strong>Required:</strong> first_name, last_name, email, date_of_birth</li>
+                <li><strong>Optional:</strong> phone, gender, baptism_date, address</li>
+                <li>Date format: YYYY-MM-DD (e.g., 1990-05-15)</li>
+                <li>Gender: male, female, or other</li>
               </ul>
             </div>
 
@@ -163,16 +183,14 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
 
             {/* Sample CSV Download Link */}
             <div className="text-center">
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  alert('Sample CSV download will be implemented');
-                }}
-                className="text-sm text-[#FDB54A] hover:underline"
+              <button
+                type="button"
+                onClick={downloadSampleCSV}
+                className="inline-flex items-center gap-2 text-sm text-[#FDB54A] hover:text-[#e5a43b] hover:underline transition-colors"
               >
+                <HiOutlineDownload className="w-4 h-4" />
                 Download sample CSV template
-              </a>
+              </button>
             </div>
           </div>
 
