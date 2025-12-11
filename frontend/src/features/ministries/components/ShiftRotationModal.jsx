@@ -58,14 +58,7 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
     }
 
     try {
-      console.log('=== ROTATING SHIFTS ===');
-      console.log('Ministry:', ministry.name);
-      console.log('Params:', formData);
-
       const response = await ministriesApi.rotateShifts(ministry.id, formData);
-
-      console.log(`Rotation completed in ${processingTime}s`);
-      console.log('Rotation result:', response);
 
       setResult(response);
 
@@ -176,8 +169,6 @@ export const ShiftRotationModal = ({ open, onClose, ministry, onSuccess }) => {
         ...formData,
         dry_run: false,
       });
-
-      console.log(`Confirmation completed in ${processingTime}s`);
 
       setResult(response);
 

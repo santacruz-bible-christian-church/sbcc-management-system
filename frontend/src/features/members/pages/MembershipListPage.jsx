@@ -113,7 +113,6 @@ export const MembershipListPage = () => {
     }, []);
 
     const handleEditMember = useCallback((member) => {
-        console.log('Editing member:', member);  // ADD THIS
         setFormModalState({ open: true, member });
     }, []);
 
@@ -126,14 +125,9 @@ export const MembershipListPage = () => {
         try {
             if (formModalState.member) {
                 // Update existing member
-                console.log('=== UPDATING MEMBER ===');
-                console.log('Member ID:', formModalState.member.id);
-                console.log('Form data being sent:', formData);
                 await updateMember(formModalState.member.id, formData);
             } else {
                 // Create new member
-                console.log('=== CREATING MEMBER ===');
-                console.log('Form data being sent:', formData);
                 await createMember(formData);
             }
             closeFormModal();
