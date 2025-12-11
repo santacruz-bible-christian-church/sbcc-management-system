@@ -1,7 +1,14 @@
 import { formatDistanceToNow } from 'date-fns';
 import { HiCheckCircle } from 'react-icons/hi';
+import { useMinistryMembers } from '../hooks/useMinistryMembers';
 
 export const MinistryOverviewTab = ({ ministry }) => {
+  // Fetch ministry members to find the lead
+  const { members, loading: loadingMembers } = useMinistryMembers(ministry?.id);
+
+  // Find the member with 'lead' role
+  const leadMember = members.find(m => m.role === 'lead');
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -12,31 +19,56 @@ export const MinistryOverviewTab = ({ ministry }) => {
     });
   };
 
+  // Get leader display info - prefer MinistryMember lead, fallback to ministry.leader (User)
+  const getLeaderInfo = () => {
+    if (leadMember?.member) {
+      return {
+        name: leadMember.member.full_name || `${leadMember.member.first_name} ${leadMember.member.last_name}`.trim(),
+        email: leadMember.member.email || 'No email',
+        initial: leadMember.member.first_name?.charAt(0).toUpperCase() || 'L',
+      };
+    }
+    if (ministry.leader) {
+      return {
+        name: ministry.leader.full_name || ministry.leader.username,
+        email: ministry.leader.email,
+        initial: ministry.leader.full_name?.charAt(0).toUpperCase() || 'L',
+      };
+    }
+    return null;
+  };
+
+  const leaderInfo = getLeaderInfo();
+
   return (
     <div className="space-y-6 py-4">
       {/* Leader Information */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[18px] font-bold text-[#383838]">Ministry Leader</h3>
-          {ministry.leader && (
+          {leaderInfo && (
             <div className="flex items-center gap-1 text-green-600">
               <HiCheckCircle className="w-4 h-4" />
               <span className="text-xs font-medium">Assigned</span>
             </div>
           )}
         </div>
-        {ministry.leader ? (
+        {loadingMembers ? (
+          <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-sbcc-primary border-t-transparent"></div>
+          </div>
+        ) : leaderInfo ? (
           <div className="bg-gradient-to-br from-sbcc-light-orange to-white border border-sbcc-orange rounded-lg p-4">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-full bg-sbcc-primary flex items-center justify-center text-white font-bold text-lg">
-                {ministry.leader.full_name?.charAt(0).toUpperCase() || 'L'}
+                {leaderInfo.initial}
               </div>
               <div>
                 <p className="text-[16px] font-semibold text-[#383838]">
-                  {ministry.leader.full_name || ministry.leader.username}
+                  {leaderInfo.name}
                 </p>
                 <p className="text-[14px] text-[#A0A0A0]">
-                  {ministry.leader.email}
+                  {leaderInfo.email}
                 </p>
               </div>
             </div>

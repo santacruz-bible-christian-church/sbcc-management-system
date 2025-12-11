@@ -40,10 +40,10 @@ export const useLeaderValidation = () => {
   }, [existingLeader]);
 
   const getLeaderName = useCallback(() => {
-    if (!existingLeader || !existingLeader.user) return 'Another volunteer';
+    if (!existingLeader || !existingLeader.member) return 'Another volunteer';
 
-    const { first_name, last_name, username } = existingLeader.user;
-    return `${first_name || ''} ${last_name || ''}`.trim() || username || 'Another volunteer';
+    const { first_name, last_name, full_name } = existingLeader.member;
+    return `${first_name || ''} ${last_name || ''}`.trim() || full_name || 'Another volunteer';
   }, [existingLeader]);
 
   return {

@@ -303,14 +303,14 @@ export const MinistryShiftsTab = ({ ministryId, ministry, canManage, onRefresh }
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
                                       <div className="w-8 h-8 rounded-full bg-sbcc-primary flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
-                                        {shift.assignment_info.user_name?.charAt(0).toUpperCase() || 'V'}
+                                        {shift.assignment_info.member_name?.charAt(0).toUpperCase() || 'V'}  {/* ← Changed */}
                                       </div>
                                       <div className="min-w-0 flex-1">
                                         <p className="text-sm font-semibold text-gray-900 truncate">
-                                          {shift.assignment_info.user_name}
+                                          {shift.assignment_info.member_name}  {/* ← Changed */}
                                         </p>
                                         <p className="text-xs text-gray-600 truncate">
-                                          {shift.assignment_info.user_email}
+                                          {shift.assignment_info.member_email}  {/* ← Changed */}
                                         </p>
                                       </div>
                                     </div>
@@ -381,10 +381,10 @@ export const MinistryShiftsTab = ({ ministryId, ministry, canManage, onRefresh }
                                   ? 'bg-sbcc-primary text-white'
                                   : 'bg-gray-300 text-gray-600'
                               }`}
-                              title={shift.assignment_info?.user_name || 'Empty slot'}
+                              title={shift.assignment_info?.member_name || 'Empty slot'}
                             >
                               {shift.assignment_info
-                                ? shift.assignment_info.user_name?.charAt(0).toUpperCase()
+                                ? shift.assignment_info.member_name?.charAt(0).toUpperCase()
                                 : <HiOutlineUserCircle className="w-5 h-5" />}
                             </div>
                           ))}
