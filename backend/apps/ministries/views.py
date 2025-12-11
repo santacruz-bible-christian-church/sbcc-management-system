@@ -25,7 +25,9 @@ class MinistryViewSet(viewsets.ModelViewSet):
     ordering_fields = ["name", "created_at"]
     ordering = ["name"]
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    @action(
+        detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated]
+    )  # ← Changed from IsAdminUser
     def rotate_shifts(self, request, pk=None):
         """
         Rotate and assign shifts for this ministry.
@@ -33,6 +35,15 @@ class MinistryViewSet(viewsets.ModelViewSet):
         Body: { "days": 7, "dry_run": false, "notify": false, "limit_per_ministry": 0 }
         """
         ministry = self.get_object()
+
+        # Optional: Add role-based check
+        user = request.user
+        if not (user.is_staff or user.role in ["admin", "pastor", "ministry_leader"]):
+            return Response(
+                {"detail": "You do not have permission to rotate shifts."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         data = request.data or {}
         days = int(data.get("days", 7))
         dry_run = bool(data.get("dry_run", False))
