@@ -5,7 +5,10 @@ User = get_user_model()
 
 
 class Member(models.Model):
-    """Church member profiles"""
+    """
+    Church member profiles - standalone data records.
+    These are membership records, NOT login accounts.
+    """
 
     STATUS_CHOICES = [
         ("active", "Active"),
@@ -20,14 +23,16 @@ class Member(models.Model):
         ("other", "Other"),
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="member_profile")
+    # Personal Information
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=15)
+    email = models.EmailField(blank=True)  # Optional - not all members have email
+    phone = models.CharField(max_length=15, blank=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
-    date_of_birth = models.DateField()
+    date_of_birth = models.DateField(null=True, blank=True)
     baptism_date = models.DateField(null=True, blank=True)
+
+    # Ministry relationship
     ministry = models.ForeignKey(
         "ministries.Ministry",
         on_delete=models.SET_NULL,
@@ -35,6 +40,8 @@ class Member(models.Model):
         blank=True,
         related_name="members",
     )
+
+    # Status tracking
     is_active = models.BooleanField(default=True)
     archived_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
