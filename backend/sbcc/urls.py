@@ -10,8 +10,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from apps.settings.urls import public_urlpatterns as settings_public_urls
-
 urlpatterns = [
     path("admin/", admin.site.urls),
     # Authentication
@@ -31,7 +29,7 @@ urlpatterns = [
     # Dashboard (aggregates data from multiple apps)
     path("api/dashboard/", include("core.urls")),
     # Public APIs (no auth required)
-    path("api/public/", include(settings_public_urls)),
+    path("api/public/", include("sbcc.public_urls")),
 ]
 
 # Serve media files in development
