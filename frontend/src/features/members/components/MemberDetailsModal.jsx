@@ -1,46 +1,101 @@
+import { useState } from 'react';
 import PropTypes from 'prop-types';
-import { HiX, HiOutlineMail, HiOutlinePhone, HiOutlineCalendar, HiOutlineUser, HiOutlineOfficeBuilding } from 'react-icons/hi';
+import {
+  HiX,
+  HiOutlineMail,
+  HiOutlinePhone,
+  HiOutlineCalendar,
+  HiOutlineUser,
+  HiOutlineOfficeBuilding,
+  HiOutlineDocumentDownload,
+} from 'react-icons/hi';
+import { membersApi } from '../../../api/members.api';
+import { MemberAttendanceHistory } from './MemberAttendanceHistory';
+import { MemberCelebrationCard } from './MemberCelebrationCard';
+
+// Utility functions
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+const calculateAge = (dateOfBirth) => {
+  if (!dateOfBirth) return null;
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+};
+
+// Reusable info display component
+const InfoItem = ({ icon: Icon, iconBg, label, value }) => (
+  <div className="flex items-center gap-3">
+    <div className={`p-2 rounded-lg ${iconBg}`}>
+      <Icon className="w-5 h-5" />
+    </div>
+    <div>
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="text-sm font-medium text-gray-900">{value || 'N/A'}</p>
+    </div>
+  </div>
+);
+
+// Section wrapper
+const Section = ({ title, children }) => (
+  <div className="mb-6">
+    <h4 className="text-lg font-semibold text-gray-900 mb-4">{title}</h4>
+    {children}
+  </div>
+);
 
 export const MemberDetailsModal = ({ open, onClose, member }) => {
+  const [exporting, setExporting] = useState(false);
+
   if (!open || !member) return null;
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  const calculateAge = (dateOfBirth) => {
-    if (!dateOfBirth) return null;
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
   const age = calculateAge(member.date_of_birth);
+
+  const handleExportProfile = async () => {
+    if (!member?.id) return;
+
+    setExporting(true);
+    try {
+      const blob = await membersApi.exportProfilePDF(member.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const safeName = member.full_name?.replace(/\s+/g, '_').toLowerCase() || 'member';
+      link.download = `member_profile_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Profile export error:', err);
+      alert('Failed to export profile. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={onClose} />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-gray-200">
             <div>
               <h3 className="text-2xl font-semibold text-gray-900">
                 {member.full_name || `${member.first_name} ${member.last_name}`}
@@ -49,7 +104,7 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
             >
               <HiX className="w-6 h-6" />
             </button>
@@ -60,147 +115,106 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
             {/* Status Badge */}
             {member.status && (
               <div className="mb-6">
-                <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
-                  member.status === 'active' ? 'bg-green-100 text-green-700' :
-                  member.status === 'archived' ? 'bg-gray-100 text-gray-700' :
-                  'bg-yellow-100 text-yellow-700'
-                }`}>
+                <span
+                  className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
+                    member.status === 'active'
+                      ? 'bg-green-100 text-green-700'
+                      : member.status === 'archived'
+                      ? 'bg-gray-100 text-gray-700'
+                      : 'bg-yellow-100 text-yellow-700'
+                  }`}
+                >
                   {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                 </span>
               </div>
             )}
 
+            {/* Upcoming Celebrations */}
+            {(member.date_of_birth || member.membership_date) && (
+              <Section title="Upcoming Celebrations">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <MemberCelebrationCard date={member.date_of_birth} type="birthday" label="Birthday" />
+                  <MemberCelebrationCard date={member.membership_date} type="anniversary" label="Membership Anniversary" />
+                </div>
+              </Section>
+            )}
+
             {/* Contact Information */}
-            <div className="mb-6">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h4>
+            <Section title="Contact Information">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#FDB54A] bg-opacity-10 rounded-lg">
-                    <HiOutlineMail className="w-5 h-5 text-[#FDB54A]" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Email</p>
-                    <p className="text-sm font-medium text-gray-900">{member.email || 'N/A'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#FDB54A] bg-opacity-10 rounded-lg">
-                    <HiOutlinePhone className="w-5 h-5 text-[#FDB54A]" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Phone</p>
-                    <p className="text-sm font-medium text-gray-900">{member.phone || 'N/A'}</p>
-                  </div>
-                </div>
+                <InfoItem
+                  icon={HiOutlineMail}
+                  iconBg="bg-[#FDB54A] bg-opacity-10 text-[#FDB54A]"
+                  label="Email"
+                  value={member.email}
+                />
+                <InfoItem
+                  icon={HiOutlinePhone}
+                  iconBg="bg-[#FDB54A] bg-opacity-10 text-[#FDB54A]"
+                  label="Phone"
+                  value={member.phone}
+                />
               </div>
-
               {member.address && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                   <p className="text-xs text-gray-500 mb-1">Address</p>
                   <p className="text-sm text-gray-900">{member.address}</p>
                 </div>
               )}
-            </div>
+            </Section>
 
             {/* Personal Information */}
-            <div className="mb-6">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h4>
+            <Section title="Personal Information">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <HiOutlineUser className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Gender</p>
-                    <p className="text-sm font-medium text-gray-900 capitalize">
-                      {member.gender || 'N/A'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <HiOutlineCalendar className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Date of Birth</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {formatDate(member.date_of_birth)}
-                      {age && ` (${age} years old)`}
-                    </p>
-                  </div>
-                </div>
-
+                <InfoItem
+                  icon={HiOutlineUser}
+                  iconBg="bg-blue-100 text-blue-600"
+                  label="Gender"
+                  value={member.gender ? member.gender.charAt(0).toUpperCase() + member.gender.slice(1) : null}
+                />
+                <InfoItem
+                  icon={HiOutlineCalendar}
+                  iconBg="bg-purple-100 text-purple-600"
+                  label="Date of Birth"
+                  value={`${formatDate(member.date_of_birth)}${age ? ` (${age} years old)` : ''}`}
+                />
                 {member.baptism_date && (
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-cyan-100 rounded-lg">
-                      <HiOutlineCalendar className="w-5 h-5 text-cyan-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Baptism Date</p>
-                      <p className="text-sm font-medium text-gray-900">{formatDate(member.baptism_date)}</p>
-                    </div>
-                  </div>
+                  <InfoItem
+                    icon={HiOutlineCalendar}
+                    iconBg="bg-cyan-100 text-cyan-600"
+                    label="Baptism Date"
+                    value={formatDate(member.baptism_date)}
+                  />
                 )}
               </div>
-            </div>
+            </Section>
 
             {/* Ministry Information */}
-            <div className="mb-6">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Ministry Information</h4>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#FDB54A] bg-opacity-10 rounded-lg">
-                  <HiOutlineOfficeBuilding className="w-5 h-5 text-[#FDB54A]" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Current Ministry</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {member.ministry_name || 'Unassigned'}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <Section title="Ministry Information">
+              <InfoItem
+                icon={HiOutlineOfficeBuilding}
+                iconBg="bg-[#FDB54A] bg-opacity-10 text-[#FDB54A]"
+                label="Current Ministry"
+                value={member.ministry_name || 'Unassigned'}
+              />
+            </Section>
 
             {/* Membership Details */}
-            <div className="mb-6">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Membership Details</h4>
+            <Section title="Membership Details">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-xs text-gray-500 mb-1">Member Since</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {formatDate(member.membership_date)}
-                  </p>
+                  <p className="text-sm font-medium text-gray-900">{formatDate(member.membership_date)}</p>
                 </div>
-
-                {member.attendance_rate !== undefined && (
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Attendance Rate</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {member.attendance_rate}%
-                    </p>
-                  </div>
-                )}
-
-                {member.last_attended && (
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Last Attended</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {formatDate(member.last_attended)}
-                    </p>
-                  </div>
-                )}
-
-                {member.consecutive_absences !== undefined && member.consecutive_absences > 0 && (
-                  <div className="p-4 bg-red-50 rounded-lg">
-                    <p className="text-xs text-red-600 mb-1">Consecutive Absences</p>
-                    <p className="text-sm font-medium text-red-700">
-                      {member.consecutive_absences} {member.consecutive_absences === 1 ? 'time' : 'times'}
-                    </p>
-                  </div>
-                )}
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Member ID</p>
+                  <p className="text-sm font-medium text-gray-900">#{member.id}</p>
+                </div>
               </div>
-            </div>
+            </Section>
+
+            {/* Attendance History */}
+            <MemberAttendanceHistory memberId={member.id} />
 
             {/* Timestamps */}
             <div className="pt-4 border-t border-gray-200">
@@ -216,7 +230,28 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+          <div className="sticky bottom-0 bg-white flex justify-end gap-3 p-6 border-t border-gray-200">
+            <button
+              onClick={handleExportProfile}
+              disabled={exporting}
+              className={`px-4 py-2 border border-[#FDB54A] text-[#FDB54A] rounded-lg hover:bg-[#FDB54A] hover:text-white transition-colors flex items-center gap-2 ${
+                exporting ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {exporting ? (
+                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              ) : (
+                <HiOutlineDocumentDownload className="w-4 h-4" />
+              )}
+              Export PDF
+            </button>
             <button
               onClick={onClose}
               className="px-6 py-2 bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] transition-colors"
