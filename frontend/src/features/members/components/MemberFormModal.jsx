@@ -1,11 +1,39 @@
 import { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
-import { HiX } from "react-icons/hi";
-import {
-  formatPhoneNumber,
-  validatePhoneNumber,
-  getPhoneErrorMessage,
-} from "../../../utils/phoneFormatter";
+import { HiX, HiChevronLeft, HiChevronRight, HiCheck } from "react-icons/hi";
+import PersonalInfoStep from "./steps/PersonalInfoStep";
+import EducationalBackgroundStep from "./steps/EducationalBackgroundStep";
+import FamilyBackgroundStep from "./steps/FamilyBackgroundStep";
+import SpiritualInfoStep from "./steps/SpiritualInfoStep";
+import ChurchBackgroundStep from "./steps/ChurchBackgroundStep";
+
+const STEPS = [
+  {
+    id: "personal",
+    title: "Personal Information",
+    component: PersonalInfoStep,
+  },
+  {
+    id: "education",
+    title: "Educational Background",
+    component: EducationalBackgroundStep,
+  },
+  {
+    id: "family",
+    title: "Family Background",
+    component: FamilyBackgroundStep,
+  },
+  {
+    id: "spiritual",
+    title: "Spiritual Information",
+    component: SpiritualInfoStep,
+  },
+  {
+    id: "church",
+    title: "Church Background",
+    component: ChurchBackgroundStep,
+  },
+];
 
 export const MemberFormModal = ({
   open,
@@ -16,6 +44,8 @@ export const MemberFormModal = ({
   ministries,
 }) => {
   const isEdit = !!member;
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState(new Set());
 
   const [formData, setFormData] = useState({
     first_name: "",
@@ -24,118 +54,223 @@ export const MemberFormModal = ({
     phone: "",
     date_of_birth: "",
     gender: "",
+    complete_address: "",
+    occupation: "",
+    marital_status: "",
+    wedding_anniversary: "",
+    elementary_school: "",
+    elementary_year_graduated: "",
+    secondary_school: "",
+    secondary_year_graduated: "",
+    vocational_school: "",
+    vocational_year_graduated: "",
+    college: "",
+    college_year_graduated: "",
+    family_members: [],
+    accepted_jesus: false,
+    salvation_testimony: "",
+    spiritual_birthday: "",
+    baptism_date: "",
+    willing_to_be_baptized: false,
     ministry: "",
+    previous_church: "",
+    how_introduced: "",
+    began_attending_since: "",
     is_active: true,
   });
 
   const [errors, setErrors] = useState({});
 
+  // Initialize form data when member changes or modal opens
   useEffect(() => {
-    if (member) {
-      setFormData({
-        first_name: member.first_name || "",
-        last_name: member.last_name || "",
-        email: member.email || "",
-        phone: member.phone || "",
-        date_of_birth: member.date_of_birth || "",
-        gender: member.gender || "",
-        ministry: member.ministry ? String(member.ministry) : "",
-        is_active:
-          member.is_active !== undefined ? member.is_active : true,
-      });
-    } else {
-      setFormData({
-        first_name: "",
-        last_name: "",
-        email: "",
-        phone: "",
-        date_of_birth: "",
-        gender: "",
-        ministry: "",
-        is_active: true,
-      });
+    if (open) {
+      if (member) {
+        setFormData({
+          first_name: member.first_name || "",
+          last_name: member.last_name || "",
+          email: member.email || "",
+          phone: member.phone || "",
+          date_of_birth: member.date_of_birth || "",
+          gender: member.gender || "",
+          complete_address: member.complete_address || "",
+          occupation: member.occupation || "",
+          marital_status: member.marital_status || "",
+          wedding_anniversary: member.wedding_anniversary || "",
+          elementary_school: member.elementary_school || "",
+          elementary_year_graduated: member.elementary_year_graduated || "",
+          secondary_school: member.secondary_school || "",
+          secondary_year_graduated: member.secondary_year_graduated || "",
+          vocational_school: member.vocational_school || "",
+          vocational_year_graduated: member.vocational_year_graduated || "",
+          college: member.college || "",
+          college_year_graduated: member.college_year_graduated || "",
+          family_members: member.family_members || [],
+          accepted_jesus: member.accepted_jesus || false,
+          salvation_testimony: member.salvation_testimony || "",
+          spiritual_birthday: member.spiritual_birthday || "",
+          baptism_date: member.baptism_date || "",
+          willing_to_be_baptized: member.willing_to_be_baptized || false,
+          ministry: member.ministry?.id || member.ministry || "",
+          previous_church: member.previous_church || "",
+          how_introduced: member.how_introduced || "",
+          began_attending_since: member.began_attending_since || "",
+          is_active: member.is_active !== undefined ? member.is_active : true,
+        });
+      } else {
+        setFormData({
+          first_name: "",
+          last_name: "",
+          email: "",
+          phone: "",
+          date_of_birth: "",
+          gender: "",
+          complete_address: "",
+          occupation: "",
+          marital_status: "",
+          wedding_anniversary: "",
+          elementary_school: "",
+          elementary_year_graduated: "",
+          secondary_school: "",
+          secondary_year_graduated: "",
+          vocational_school: "",
+          vocational_year_graduated: "",
+          college: "",
+          college_year_graduated: "",
+          family_members: [],
+          accepted_jesus: false,
+          salvation_testimony: "",
+          spiritual_birthday: "",
+          baptism_date: "",
+          willing_to_be_baptized: false,
+          ministry: "",
+          previous_church: "",
+          how_introduced: "",
+          began_attending_since: "",
+          is_active: true,
+        });
+      }
+      setErrors({});
+      setCurrentStep(0);
+      setCompletedSteps(new Set());
     }
-    setErrors({});
   }, [member, open]);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const updateFormData = useCallback((stepData) => {
+    setFormData((prev) => ({ ...prev, ...stepData }));
+  }, []);
 
-    if (name === "phone") {
-      const formatted = formatPhoneNumber(value);
-      setFormData((prev) => ({
-        ...prev,
-        phone: formatted,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: type === "checkbox" ? checked : value,
-      }));
-    }
+  const validateStep = useCallback(
+    (stepIndex) => {
+      const newErrors = {};
 
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  const validate = useCallback(() => {
-    const newErrors = {};
-
-    if (!formData.first_name.trim())
-      newErrors.first_name = "First name is required";
-    if (!formData.last_name.trim())
-      newErrors.last_name = "Last name is required";
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    // Philippine mobile number validation
-    if (!formData.phone || !formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    } else if (!validatePhoneNumber(formData.phone)) {
-      newErrors.phone = getPhoneErrorMessage();
-    }
-
-    if (!formData.date_of_birth) {
-      newErrors.date_of_birth = "Date of birth is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [formData]);
-
-  const handleSubmit = useCallback(
-    async (e) => {
-      e.preventDefault();
-
-      if (!validate()) return;
-
-      const cleanData = {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        email: formData.email,
-        phone: formData.phone,
-        date_of_birth: formData.date_of_birth,
-        gender: formData.gender || null,
-        ministry: formData.ministry || null,
-        is_active: formData.is_active,
-      };
-
-      Object.keys(cleanData).forEach((key) => {
-        if (cleanData[key] === "") {
-          cleanData[key] = null;
+      if (stepIndex === 0) {
+        // Personal Information validation
+        if (!formData.first_name?.trim()) {
+          newErrors.first_name = "First name is required";
         }
-      });
+        if (!formData.last_name?.trim()) {
+          newErrors.last_name = "Last name is required";
+        }
+        if (!formData.email?.trim()) {
+          newErrors.email = "Email is required";
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+          newErrors.email = "Email is invalid";
+        }
+        if (!formData.phone?.trim()) {
+          newErrors.phone = "Phone is required";
+        }
+        if (!formData.date_of_birth) {
+          newErrors.date_of_birth = "Date of birth is required";
+        }
+      }
 
-      await onSubmit(cleanData);
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
     },
-    [formData, onSubmit, validate] // include validate to fix ESLint warning
+    [formData]
   );
 
-  const handleCancel = () => {
+  // Sanitize form data before submission
+  const sanitizeFormData = useCallback((data) => {
+    const sanitized = { ...data };
+
+    // Convert empty strings to null for optional text fields
+    const textFields = [
+      'gender',
+      'complete_address',
+      'occupation',
+      'marital_status',
+      'elementary_school',
+      'secondary_school',
+      'vocational_school',
+      'college',
+      'salvation_testimony',
+      'previous_church',
+      'how_introduced',
+      'ministry'
+    ];
+
+    textFields.forEach(field => {
+      if (sanitized[field] === '') {
+        sanitized[field] = null;
+      }
+    });
+
+    // Convert empty strings to null for date fields
+    const dateFields = [
+      'wedding_anniversary',
+      'spiritual_birthday',
+      'baptism_date',
+      'began_attending_since'
+    ];
+
+    dateFields.forEach(field => {
+      if (!sanitized[field] || sanitized[field] === '') {
+        sanitized[field] = null;
+      }
+    });
+
+    // Convert empty strings to null for integer fields
+    const integerFields = [
+      'elementary_year_graduated',
+      'secondary_year_graduated',
+      'vocational_year_graduated',
+      'college_year_graduated'
+    ];
+
+    integerFields.forEach(field => {
+      if (sanitized[field] === '' || sanitized[field] === null) {
+        sanitized[field] = null;
+      } else if (typeof sanitized[field] === 'string') {
+        const parsed = parseInt(sanitized[field], 10);
+        sanitized[field] = isNaN(parsed) ? null : parsed;
+      }
+    });
+
+    return sanitized;
+  }, []);
+
+  const handleNext = useCallback(() => {
+    if (validateStep(currentStep)) {
+      setCompletedSteps((prev) => new Set([...prev, currentStep]));
+      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
+    }
+  }, [currentStep, validateStep]);
+
+  const handlePrevious = useCallback(() => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  }, []);
+
+  const handleStepClick = useCallback(
+    (stepIndex) => {
+      if (stepIndex < currentStep || completedSteps.has(stepIndex)) {
+        setCurrentStep(stepIndex);
+      }
+    },
+    [completedSteps, currentStep]
+  );
+
+  const handleCancel = useCallback(() => {
     setFormData({
       first_name: "",
       last_name: "",
@@ -143,14 +278,71 @@ export const MemberFormModal = ({
       phone: "",
       date_of_birth: "",
       gender: "",
+      complete_address: "",
+      occupation: "",
+      marital_status: "",
+      wedding_anniversary: "",
+      elementary_school: "",
+      elementary_year_graduated: "",
+      secondary_school: "",
+      secondary_year_graduated: "",
+      vocational_school: "",
+      vocational_year_graduated: "",
+      college: "",
+      college_year_graduated: "",
+      family_members: [],
+      accepted_jesus: false,
+      salvation_testimony: "",
+      spiritual_birthday: "",
+      baptism_date: "",
+      willing_to_be_baptized: false,
       ministry: "",
+      previous_church: "",
+      how_introduced: "",
+      began_attending_since: "",
       is_active: true,
     });
     setErrors({});
+    setCurrentStep(0);
+    setCompletedSteps(new Set());
     onClose();
-  };
+  }, [onClose]);
+
+  const handleSubmit = useCallback(
+    async () => {
+      if (!validateStep(currentStep)) {
+        return;
+      }
+
+      // Mark current step as completed
+      setCompletedSteps((prev) => new Set([...prev, currentStep]));
+
+      // If not on last step, move to next
+      if (currentStep < STEPS.length - 1) {
+        setCurrentStep((prev) => prev + 1);
+        return;
+      }
+
+      // On last step, sanitize and submit the form
+      try {
+        const sanitizedData = sanitizeFormData(formData);
+        await onSubmit(sanitizedData);
+        
+        // Close modal on success
+        handleCancel();
+      } catch (error) {
+        // Error is handled by parent
+        console.error('Form submission error:', error);
+      }
+    },
+    [currentStep, formData, onSubmit, validateStep, sanitizeFormData, handleCancel]
+  );
 
   if (!open) return null;
+
+  const CurrentStepComponent = STEPS[currentStep].component;
+  const progress = ((currentStep + 1) / STEPS.length) * 100;
+  const isLastStep = currentStep === STEPS.length - 1;
 
   return (
     <>
@@ -162,233 +354,159 @@ export const MemberFormModal = ({
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900">
-              {isEdit ? "Edit Member" : "Add New Member"}
-            </h3>
-            <button
-              onClick={handleCancel}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-              disabled={loading}
-            >
-              <HiX className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* First Name */}
+          <div className="px-6 py-5 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="first_name"
-                  value={formData.first_name}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
-                    errors.first_name
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                  disabled={loading}
-                />
-                {errors.first_name && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.first_name}
-                  </p>
-                )}
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {isEdit ? "Edit Member" : "Add New Member"}
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Step {currentStep + 1} of {STEPS.length}:{" "}
+                  {STEPS[currentStep].title}
+                </p>
               </div>
-
-              {/* Last Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="last_name"
-                  value={formData.last_name}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
-                    errors.last_name
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                  disabled={loading}
-                />
-                {errors.last_name && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.last_name}
-                  </p>
-                )}
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
-                    errors.email
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                  disabled={loading}
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.email}
-                  </p>
-                )}
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="0912-345-6789"
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
-                    errors.phone
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                  disabled={loading}
-                />
-                {errors.phone && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.phone}
-                  </p>
-                )}
-              </div>
-
-              {/* Date of Birth */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date of Birth <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="date_of_birth"
-                  value={formData.date_of_birth}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent ${
-                    errors.date_of_birth
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                  disabled={loading}
-                />
-                {errors.date_of_birth && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.date_of_birth}
-                  </p>
-                )}
-              </div>
-
-              {/* Gender */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Gender
-                </label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
-                  disabled={loading}
-                >
-                  <option value="">Select Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              {/* Ministry */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Ministry
-                </label>
-                <select
-                  name="ministry"
-                  value={formData.ministry}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
-                  disabled={loading}
-                >
-                  <option value="">Select Ministry</option>
-                  {ministries?.map((ministry) => (
-                    <option key={ministry.id} value={ministry.id}>
-                      {ministry.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Active Status Toggle - only when editing */}
-              {isEdit && (
-                <div className="md:col-span-2">
-                  <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                    <input
-                      type="checkbox"
-                      name="is_active"
-                      checked={formData.is_active}
-                      onChange={handleChange}
-                      className="w-5 h-5 text-[#FDB54A] border-gray-300 rounded focus:ring-[#FDB54A] focus:ring-2"
-                      disabled={loading}
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        Active Member
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Uncheck to mark this member as inactive
-                      </p>
-                    </div>
-                  </label>
-                </div>
-              )}
+              <button
+                onClick={handleCancel}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+                disabled={loading}
+              >
+                <HiX className="w-6 h-6" />
+              </button>
             </div>
 
-            {/* Footer Buttons */}
-            <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-[#FDB54A] h-2 transition-all duration-300 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+
+            {/* Step Indicators */}
+            <div className="flex justify-between mt-4">
+              {STEPS.map((step, index) => {
+                const isActive = index === currentStep;
+                const isCompleted = completedSteps.has(index);
+                const isClickable = index < currentStep || completedSteps.has(index);
+
+                return (
+                  <button
+                    key={step.id}
+                    onClick={() => handleStepClick(index)}
+                    disabled={!isClickable || loading}
+                    className={`flex-1 flex flex-col items-center gap-2 transition-all ${
+                      isClickable && !loading
+                        ? "cursor-pointer"
+                        : "cursor-not-allowed"
+                    }`}
+                  >
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
+                        isActive
+                          ? "bg-[#FDB54A] text-white ring-4 ring-[#FDB54A] ring-opacity-20"
+                          : isCompleted
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-200 text-gray-500"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <HiCheck className="w-5 h-5" />
+                      ) : (
+                        index + 1
+                      )}
+                    </div>
+                    <span
+                      className={`text-xs text-center hidden md:block transition-colors ${
+                        isActive ? "text-[#FDB54A] font-semibold" : "text-gray-500"
+                      }`}
+                    >
+                      {step.title}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Body - Step Content */}
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            <CurrentStepComponent
+              formData={formData}
+              updateFormData={updateFormData}
+              errors={errors}
+              setErrors={setErrors}
+              loading={loading}
+              ministries={ministries}
+            />
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-gray-50">
+            <button
+              onClick={handlePrevious}
+              disabled={currentStep === 0 || loading}
+              className="px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            >
+              <HiChevronLeft className="w-5 h-5" />
+              Previous
+            </button>
+
+            <div className="flex gap-3">
               <button
-                type="button"
                 onClick={handleCancel}
                 disabled={loading}
-                className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                className="px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2 bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {loading
-                  ? "Saving..."
-                  : isEdit
-                  ? "Update Member"
-                  : "Add Member"}
-              </button>
+
+              {isLastStep ? (
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="px-6 py-2 text-sm font-medium bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      {isEdit ? "Updating..." : "Creating..."}
+                    </>
+                  ) : (
+                    <>
+                      <HiCheck className="w-5 h-5" />
+                      {isEdit ? "Update Member" : "Create Member"}
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  disabled={loading}
+                  className="px-5 py-2 text-sm font-medium bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                >
+                  Next
+                  <HiChevronRight className="w-5 h-5" />
+                </button>
+              )}
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </>
