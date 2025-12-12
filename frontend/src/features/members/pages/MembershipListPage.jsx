@@ -9,7 +9,8 @@ import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 import ArchiveIllustration from '../../../assets/Archive-Illustration.svg';
 import { membersApi } from '../../../api/members.api';
 import { MemberDetailsModal } from '../components/MemberDetailsModal';
-import { MemberFormModal } from '../components/MemberFormModal';
+// import { MemberFormModal } from '../components/MemberFormModal';
+import { MemberFormWizard } from '../components/MemberFormWizard';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
 import { showError, showSuccess } from '../../../utils/toast';
 
@@ -247,13 +248,22 @@ export const MembershipListPage = () => {
                 loading={loading}
             />
 
-            <MemberFormModal
+            {/* <MemberFormModal
                 open={formModalState.open}
                 onClose={closeFormModal}
                 onSubmit={handleFormSubmit}
                 member={formModalState.member}
                 loading={formLoading}
                 ministries={ministries}
+            /> */}
+
+            <MemberFormWizard
+            open={formModalState.open}
+            onClose={closeFormModal}
+            onSubmit={handleFormSubmit}
+            member={formModalState.member}
+            loading={loading}
+            ministries={ministries}
             />
 
             {/* Member Details Modal */}
