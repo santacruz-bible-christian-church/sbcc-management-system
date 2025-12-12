@@ -37,13 +37,15 @@ class Member(models.Model):
     occupation = models.CharField(max_length=100, blank=True, null=True)
 
     MARITAL_STATUS_CHOICES = [
-        ('single', 'Single'),
-        ('married', 'Married'),
-        ('divorced', 'Divorced'),
-        ('widowed', 'Widowed'),
-        ('remarried', 'Remarried'),
+        ("single", "Single"),
+        ("married", "Married"),
+        ("divorced", "Divorced"),
+        ("widowed", "Widowed"),
+        ("remarried", "Remarried"),
     ]
-    marital_status = models.CharField(max_length=20, choices=MARITAL_STATUS_CHOICES, blank=True, null=True)
+    marital_status = models.CharField(
+        max_length=20, choices=MARITAL_STATUS_CHOICES, blank=True, null=True
+    )
     wedding_anniversary = models.DateField(blank=True, null=True)
 
     # Educational Background
@@ -140,10 +142,10 @@ class Member(models.Model):
 
 # Create separate model for family members
 class FamilyMember(models.Model):
-    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='family_members')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="family_members")
     name = models.CharField(max_length=200)
     relationship = models.CharField(max_length=100)
     birthdate = models.DateField(blank=True, null=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
