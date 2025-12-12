@@ -46,7 +46,7 @@ const FamilyBackgroundStep = ({ formData, updateFormData, loading }) => {
               name="name"
               value={newMember.name}
               onChange={handleNewMemberChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent placeholder:text-gray-400"
               disabled={loading}
               placeholder="Full Name"
             />
@@ -60,7 +60,7 @@ const FamilyBackgroundStep = ({ formData, updateFormData, loading }) => {
               name="relationship"
               value={newMember.relationship}
               onChange={handleNewMemberChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent placeholder:text-gray-400"
               disabled={loading}
               placeholder="e.g., Spouse, Child"
             />

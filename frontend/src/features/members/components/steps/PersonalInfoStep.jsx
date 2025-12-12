@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { formatPhoneNumber, validatePhoneNumber, getPhoneErrorMessage } from '../../../../utils/phoneFormatter';
+import { formatPhoneNumber } from '../../../../utils/phoneFormatter';
 
 const PersonalInfoStep = ({ formData, updateFormData, errors, setErrors, loading }) => {
   const handleChange = (e) => {
@@ -33,7 +33,7 @@ const PersonalInfoStep = ({ formData, updateFormData, errors, setErrors, loading
               name="first_name"
               value={formData.first_name}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all placeholder:text-gray-400 ${
                 errors.first_name ? 'border-red-500' : 'border-gray-300'
               }`}
               disabled={loading}
@@ -54,7 +54,7 @@ const PersonalInfoStep = ({ formData, updateFormData, errors, setErrors, loading
               name="last_name"
               value={formData.last_name}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all placeholder:text-gray-400 ${
                 errors.last_name ? 'border-red-500' : 'border-gray-300'
               }`}
               disabled={loading}
@@ -75,7 +75,7 @@ const PersonalInfoStep = ({ formData, updateFormData, errors, setErrors, loading
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all placeholder:text-gray-400 ${
                 errors.email ? 'border-red-500' : 'border-gray-300'
               }`}
               disabled={loading}
@@ -96,7 +96,7 @@ const PersonalInfoStep = ({ formData, updateFormData, errors, setErrors, loading
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all placeholder:text-gray-400 ${
                 errors.phone ? 'border-red-500' : 'border-gray-300'
               }`}
               disabled={loading}
@@ -136,10 +136,10 @@ const PersonalInfoStep = ({ formData, updateFormData, errors, setErrors, loading
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all text-gray-900"
               disabled={loading}
             >
-              <option value="">Select Gender</option>
+              <option value="" className="text-gray-400">Select Gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
               <option value="other">Other</option>
@@ -161,7 +161,7 @@ const PersonalInfoStep = ({ formData, updateFormData, errors, setErrors, loading
               value={formData.complete_address}
               onChange={handleChange}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all resize-none placeholder:text-gray-400"
               disabled={loading}
               placeholder="123 Main St, Barangay, City, Province"
             />
@@ -178,7 +178,7 @@ const PersonalInfoStep = ({ formData, updateFormData, errors, setErrors, loading
                 name="occupation"
                 value={formData.occupation}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all placeholder:text-gray-400"
                 disabled={loading}
                 placeholder="Software Engineer"
               />
@@ -193,10 +193,10 @@ const PersonalInfoStep = ({ formData, updateFormData, errors, setErrors, loading
                 name="marital_status"
                 value={formData.marital_status}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent transition-all text-gray-900"
                 disabled={loading}
               >
-                <option value="">Select Status</option>
+                <option value="" className="text-gray-400">Select Status</option>
                 <option value="single">Single</option>
                 <option value="married">Married</option>
                 <option value="divorced">Divorced</option>

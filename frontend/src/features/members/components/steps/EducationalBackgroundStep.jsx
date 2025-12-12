@@ -30,7 +30,7 @@ const EducationalBackgroundStep = ({ formData, updateFormData, loading }) => {
               name="elementary_school"
               value={formData.elementary_school}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent placeholder:text-gray-400"
               disabled={loading}
               placeholder="e.g., ABC Elementary School"
             />
@@ -43,10 +43,10 @@ const EducationalBackgroundStep = ({ formData, updateFormData, loading }) => {
               name="elementary_year_graduated"
               value={formData.elementary_year_graduated}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent text-gray-900"
               disabled={loading}
             >
-              <option value="">Select Year</option>
+              <option value="" className="text-gray-400">Select Year</option>
               {years.map(year => (
                 <option key={year} value={year}>{year}</option>
               ))}
@@ -68,7 +68,7 @@ const EducationalBackgroundStep = ({ formData, updateFormData, loading }) => {
               name="secondary_school"
               value={formData.secondary_school}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent placeholder:text-gray-400"
               disabled={loading}
               placeholder="e.g., XYZ High School"
             />
@@ -81,10 +81,10 @@ const EducationalBackgroundStep = ({ formData, updateFormData, loading }) => {
               name="secondary_year_graduated"
               value={formData.secondary_year_graduated}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent text-gray-900"
               disabled={loading}
             >
-              <option value="">Select Year</option>
+              <option value="" className="text-gray-400">Select Year</option>
               {years.map(year => (
                 <option key={year} value={year}>{year}</option>
               ))}
@@ -106,7 +106,7 @@ const EducationalBackgroundStep = ({ formData, updateFormData, loading }) => {
               name="vocational_school"
               value={formData.vocational_school}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent placeholder:text-gray-400"
               disabled={loading}
               placeholder="e.g., Technical Institute"
             />
@@ -119,10 +119,10 @@ const EducationalBackgroundStep = ({ formData, updateFormData, loading }) => {
               name="vocational_year_graduated"
               value={formData.vocational_year_graduated}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent text-gray-900"
               disabled={loading}
             >
-              <option value="">Select Year</option>
+              <option value="" className="text-gray-400">Select Year</option>
               {years.map(year => (
                 <option key={year} value={year}>{year}</option>
               ))}
@@ -144,7 +144,7 @@ const EducationalBackgroundStep = ({ formData, updateFormData, loading }) => {
               name="college"
               value={formData.college}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent placeholder:text-gray-400"
               disabled={loading}
               placeholder="e.g., University of the Philippines"
             />
@@ -157,10 +157,10 @@ const EducationalBackgroundStep = ({ formData, updateFormData, loading }) => {
               name="college_year_graduated"
               value={formData.college_year_graduated}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent text-gray-900"
               disabled={loading}
             >
-              <option value="">Select Year</option>
+              <option value="" className="text-gray-400">Select Year</option>
               {years.map(year => (
                 <option key={year} value={year}>{year}</option>
               ))}

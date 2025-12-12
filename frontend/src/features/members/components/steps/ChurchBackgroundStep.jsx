@@ -23,10 +23,10 @@ const ChurchBackgroundStep = ({ formData, updateFormData, ministries, loading })
           name="ministry"
           value={formData.ministry}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent text-gray-900"
           disabled={loading}
         >
-          <option value="">Select Ministry (Optional)</option>
+          <option value="" className="text-gray-400">Select Ministry (Optional)</option>
           {ministries?.map((ministry) => (
             <option key={ministry.id} value={ministry.id}>
               {ministry.name}
@@ -48,7 +48,7 @@ const ChurchBackgroundStep = ({ formData, updateFormData, ministries, loading })
           name="previous_church"
           value={formData.previous_church}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent placeholder:text-gray-400"
           disabled={loading}
           placeholder="e.g., First Baptist Church Manila"
         />
@@ -67,7 +67,7 @@ const ChurchBackgroundStep = ({ formData, updateFormData, ministries, loading })
           value={formData.how_introduced}
           onChange={handleChange}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent resize-none"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent resize-none placeholder:text-gray-400"
           disabled={loading}
           placeholder="e.g., Invited by a friend, Found online, Passing by, etc."
         />
