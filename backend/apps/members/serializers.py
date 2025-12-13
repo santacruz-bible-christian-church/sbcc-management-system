@@ -60,6 +60,12 @@ class MemberSerializer(serializers.ModelSerializer):
             "archived_at",
             "created_at",
             "updated_at",
+            # Membership and attendance tracking
+            "full_name",
+            "membership_date",
+            "last_attended",
+            "attendance_rate",
+            "consecutive_absences",
         ]
         read_only_fields = [
             "id",
@@ -68,6 +74,9 @@ class MemberSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "archived_at",
+            "last_attended",
+            "attendance_rate",
+            "consecutive_absences",
         ]
 
     def create(self, validated_data):

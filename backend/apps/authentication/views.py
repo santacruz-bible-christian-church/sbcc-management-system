@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .permissions import IsSuperAdmin
+from .permissions import IsAdminOrSuperAdmin, IsSuperAdmin
 from .serializers import (
     ChangePasswordSerializer,
     CustomTokenObtainPairSerializer,
@@ -29,11 +29,11 @@ User = get_user_model()
 class RegisterView(generics.CreateAPIView):
     """
     POST /api/auth/register/
-    Register a new user (admin only)
+    Register a new user (admin/super_admin only)
     """
 
     queryset = User.objects.all()
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrSuperAdmin]
     serializer_class = RegisterSerializer
 
     def create(self, request, *args, **kwargs):

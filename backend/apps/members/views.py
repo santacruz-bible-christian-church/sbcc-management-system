@@ -1,9 +1,9 @@
-from datetime import date, datetime
-from io import BytesIO
 import csv
 import io
-from dateutil import parser as date_parser 
+from datetime import date, datetime
+from io import BytesIO
 
+from dateutil import parser as date_parser
 from django.db import models, transaction
 from django.http import HttpResponse
 from django.utils import timezone
@@ -596,34 +596,34 @@ class MemberViewSet(viewsets.ModelViewSet):
         Parse various date formats to YYYY-MM-DD
         Handles: YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY, etc.
         """
-        if not date_str or str(date_str).strip() == '':
+        if not date_str or str(date_str).strip() == "":
             return None
-        
+
         try:
             # Try parsing with dateutil (handles most formats)
             parsed_date = date_parser.parse(str(date_str).strip())
             # Return in Django's expected format
-            return parsed_date.strftime('%Y-%m-%d')
+            return parsed_date.strftime("%Y-%m-%d")
         except (ValueError, TypeError, date_parser.ParserError):
             # If parsing fails, try manual formats
             date_formats = [
-                '%Y-%m-%d',      # 2024-12-14
-                '%m/%d/%Y',      # 12/14/2024
-                '%d/%m/%Y',      # 14/12/2024
-                '%Y/%m/%d',      # 2024/12/14
-                '%m-%d-%Y',      # 12-14-2024
-                '%d-%m-%Y',      # 14-12-2024
-                '%B %d, %Y',     # December 14, 2024
-                '%b %d, %Y',     # Dec 14, 2024
+                "%Y-%m-%d",  # 2024-12-14
+                "%m/%d/%Y",  # 12/14/2024
+                "%d/%m/%Y",  # 14/12/2024
+                "%Y/%m/%d",  # 2024/12/14
+                "%m-%d-%Y",  # 12-14-2024
+                "%d-%m-%Y",  # 14-12-2024
+                "%B %d, %Y",  # December 14, 2024
+                "%b %d, %Y",  # Dec 14, 2024
             ]
-            
+
             for fmt in date_formats:
                 try:
                     parsed_date = datetime.strptime(str(date_str).strip(), fmt)
-                    return parsed_date.strftime('%Y-%m-%d')
+                    return parsed_date.strftime("%Y-%m-%d")
                 except ValueError:
                     continue
-            
+
             # If all parsing fails, return None
             return None
 
@@ -631,8 +631,9 @@ class MemberViewSet(viewsets.ModelViewSet):
     def import_csv(self, request):
         """Import members from CSV file"""
         import logging
+
         logger = logging.getLogger(__name__)
-        
+
         if "file" not in request.FILES:
             return Response(
                 {"detail": "No file provided"},
@@ -670,33 +671,59 @@ class MemberViewSet(viewsets.ModelViewSet):
                         "last_name": row.get("last_name", "").strip(),
                         "email": row.get("email", "").strip(),
                         "phone": row.get("phone", "").strip(),
-                        "date_of_birth": self._parse_date(row.get("date_of_birth")),  # ✅ Parse date
+                        "date_of_birth": self._parse_date(
+                            row.get("date_of_birth")
+                        ),  # ✅ Parse date
                         "gender": row.get("gender", "").lower() if row.get("gender") else None,
                         "complete_address": row.get("complete_address") or None,
                         "occupation": row.get("occupation") or None,
-                        "marital_status": row.get("marital_status", "").lower() if row.get("marital_status") else None,
-                        "wedding_anniversary": self._parse_date(row.get("wedding_anniversary")),  # ✅ Parse date
+                        "marital_status": (
+                            row.get("marital_status", "").lower()
+                            if row.get("marital_status")
+                            else None
+                        ),
+                        "wedding_anniversary": self._parse_date(
+                            row.get("wedding_anniversary")
+                        ),  # ✅ Parse date
                         "elementary_school": row.get("elementary_school") or None,
-                        "elementary_year_graduated": self._parse_year(row.get("elementary_year_graduated")),
+                        "elementary_year_graduated": self._parse_year(
+                            row.get("elementary_year_graduated")
+                        ),
                         "secondary_school": row.get("secondary_school") or None,
-                        "secondary_year_graduated": self._parse_year(row.get("secondary_year_graduated")),
+                        "secondary_year_graduated": self._parse_year(
+                            row.get("secondary_year_graduated")
+                        ),
                         "vocational_school": row.get("vocational_school") or None,
-                        "vocational_year_graduated": self._parse_year(row.get("vocational_year_graduated")),
+                        "vocational_year_graduated": self._parse_year(
+                            row.get("vocational_year_graduated")
+                        ),
                         "college": row.get("college") or None,
-                        "college_year_graduated": self._parse_year(row.get("college_year_graduated")),
+                        "college_year_graduated": self._parse_year(
+                            row.get("college_year_graduated")
+                        ),
                         "accepted_jesus": parse_bool(row.get("accepted_jesus")),
                         "salvation_testimony": row.get("salvation_testimony") or None,
-                        "spiritual_birthday": self._parse_date(row.get("spiritual_birthday")),  # ✅ Parse date
+                        "spiritual_birthday": self._parse_date(
+                            row.get("spiritual_birthday")
+                        ),  # ✅ Parse date
                         "baptism_date": self._parse_date(row.get("baptism_date")),  # ✅ Parse date
                         "willing_to_be_baptized": parse_bool(row.get("willing_to_be_baptized")),
                         "previous_church": row.get("previous_church") or None,
                         "how_introduced": row.get("how_introduced") or None,
-                        "began_attending_since": self._parse_date(row.get("began_attending_since")),  # ✅ Parse date
-                        "is_active": parse_bool(row.get("is_active")) if row.get("is_active") else True,
+                        "began_attending_since": self._parse_date(
+                            row.get("began_attending_since")
+                        ),  # ✅ Parse date
+                        "is_active": (
+                            parse_bool(row.get("is_active")) if row.get("is_active") else True
+                        ),
                     }
 
-                    logger.info(f"Row {row_number}: Creating {member_data['first_name']} {member_data['last_name']}")
-                    logger.debug(f"Parsed dates - DOB: {member_data['date_of_birth']}, Wedding: {member_data['wedding_anniversary']}")
+                    logger.info(
+                        f"Row {row_number}: Creating {member_data['first_name']} {member_data['last_name']}"
+                    )
+                    logger.debug(
+                        f"Parsed dates - DOB: {member_data['date_of_birth']}, Wedding: {member_data['wedding_anniversary']}"
+                    )
 
                     serializer = MemberSerializer(data=member_data)
                     if serializer.is_valid():
@@ -705,29 +732,27 @@ class MemberViewSet(viewsets.ModelViewSet):
                         logger.info(f"✅ Success: {member.full_name}")
                     else:
                         logger.error(f"❌ Validation failed row {row_number}: {serializer.errors}")
-                        errors.append({
-                            "row": row_number,
-                            "data": {
-                                "first_name": row.get("first_name"),
-                                "last_name": row.get("last_name"),
-                                "email": row.get("email"),
-                            },
-                            "errors": serializer.errors
-                        })
+                        errors.append(
+                            {
+                                "row": row_number,
+                                "data": {
+                                    "first_name": row.get("first_name"),
+                                    "last_name": row.get("last_name"),
+                                    "email": row.get("email"),
+                                },
+                                "errors": serializer.errors,
+                            }
+                        )
 
                 except Exception as e:
                     logger.error(f"❌ Exception row {row_number}: {str(e)}", exc_info=True)
-                    errors.append({
-                        "row": row_number,
-                        "data": row,
-                        "error": str(e)
-                    })
+                    errors.append({"row": row_number, "data": row, "error": str(e)})
 
             response_data = {
                 "members_created": len(members_created),
                 "members": members_created,
                 "errors": errors,
-                "total_rows": row_number - 1
+                "total_rows": row_number - 1,
             }
 
             logger.info(f"Import summary: {len(members_created)} created, {len(errors)} errors")

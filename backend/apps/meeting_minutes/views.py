@@ -23,7 +23,7 @@ from .services import (
 class IsMeetingMinutesEditor(permissions.BasePermission):
     """
     Permission for meeting minutes editing.
-    - Admin, Pastor: full access
+    - Super Admin, Admin, Pastor: full access
     - Ministry Leader: can create/edit for their ministry
     - Member: read only
     """
@@ -36,8 +36,13 @@ class IsMeetingMinutesEditor(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Write access for admin, pastor, ministry_leader
-        return request.user.role in ["admin", "pastor", "ministry_leader"]
+        # Write access for super_admin, admin, pastor, ministry_leader
+        return request.user.is_superuser or request.user.role in [
+            "super_admin",
+            "admin",
+            "pastor",
+            "ministry_leader",
+        ]
 
     def has_object_permission(self, request, view, obj):
         if not request.user or not request.user.is_authenticated:
@@ -47,8 +52,8 @@ class IsMeetingMinutesEditor(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Admin and pastor have full access
-        if request.user.role in ["admin", "pastor"]:
+        # Super admin, admin and pastor have full access
+        if request.user.is_superuser or request.user.role in ["super_admin", "admin", "pastor"]:
             return True
 
         # Ministry leaders can edit their ministry's meetings
