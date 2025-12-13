@@ -6,8 +6,6 @@ import {
     Users,
     Package,
     FileText,
-    Headphones,
-    File,
     HelpCircle,
     ChevronDown,
     ChevronUp,
@@ -27,7 +25,6 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
     const location = useLocation();
     const { user, logout } = useAuth();
     const [membershipOpen, setMembershipOpen] = useState(false);
-    const [supportOpen, setSupportOpen] = useState(false);
     const { settings: systemSettings } = usePublicSettings();
 
     const handleLogout = async () => {
@@ -248,44 +245,7 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         path="/tasks"
                     />
 
-                    {!collapsed && <div className="my-3 border-t border-gray-200"></div>}
 
-                    {!collapsed && (
-                        <div className="px-2 py-2">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                Support & Resources
-                            </p>
-                        </div>
-                    )}
-
-                    <div className="mt-1">
-                        <NavButton
-                            id="support"
-                            icon={Headphones}
-                            label="Support"
-                            isOpen={!collapsed && supportOpen}
-                            onClick={!collapsed ? () => setSupportOpen(!supportOpen) : undefined}
-                            path={collapsed ? '/support/helpdesk' : undefined}
-                        />
-                        {!collapsed && (
-                            <div
-                                id="support-submenu"
-                                role="region"
-                                aria-labelledby="support"
-                                className={`${supportOpen ? 'block' : 'hidden'} mt-1 space-y-1`}
-                            >
-                                <SubLink id="support-helpdesk" path="/support/helpdesk">Helpdesk</SubLink>
-                                <SubLink id="support-contact" path="/support/contact">Contact</SubLink>
-                            </div>
-                        )}
-                    </div>
-
-                    <NavButton
-                        id="docs"
-                        icon={File}
-                        label="Documentation"
-                        path="/docs"
-                    />
 
                     <NavButton
                         id="help"
