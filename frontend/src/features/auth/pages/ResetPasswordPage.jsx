@@ -2,13 +2,17 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { HiEye, HiEyeOff, HiArrowLeft, HiCheckCircle, HiExclamationCircle, HiLockClosed } from 'react-icons/hi';
 import { authApi } from '../../../api/auth.api';
+import { usePublicSettings } from '../../settings/hooks/usePublicSettings';
 import ChurchImage from '../../../assets/ChurchImage.jpeg';
-import SBCCLogo from '../../../assets/SBCCLogoHD.svg';
+import SBCCLogoDefault from '../../../assets/SBCCLogoHD.svg';
 
 export const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get('token');
+  const { settings, loading: settingsLoading } = usePublicSettings();
+  const logoUrl = settings?.logo || SBCCLogoDefault;
+  const appName = settings?.app_name || 'SBCC Management System';
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -122,8 +126,8 @@ export const ResetPasswordPage = () => {
 
         <div className="absolute inset-0 flex items-center justify-center">
           <img
-            src={SBCCLogo}
-            alt="SBCC Logo"
+            src={logoUrl}
+            alt="Logo"
             className="w-80 h-80 object-contain"
             style={{
               filter: 'drop-shadow(0 10px 30px rgba(255, 255, 255, 0.8)) drop-shadow(0 20px 60px rgba(255, 255, 255, 0.6))'
@@ -138,13 +142,15 @@ export const ResetPasswordPage = () => {
           {/* Logo and Title */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <img
-                src={SBCCLogo}
-                alt="SBCC Logo"
-                className="w-10 h-10 object-contain"
-              />
+              {!settingsLoading && (
+                <img
+                  src={logoUrl}
+                  alt="Logo"
+                  className="w-10 h-10 object-contain"
+                />
+              )}
               <h1 className="text-4xl font-bold text-[#FDB54A]">
-                SBCC Management System
+                {appName}
               </h1>
             </div>
           </div>
