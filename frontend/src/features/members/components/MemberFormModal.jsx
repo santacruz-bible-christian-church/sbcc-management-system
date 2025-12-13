@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
-import { HiX, HiChevronLeft, HiChevronRight, HiCheck } from "react-icons/hi";
+import { HiX, HiChevronLeft, HiChevronRight, HiCheck, HiDownload } from "react-icons/hi";
 import PersonalInfoStep from "./steps/PersonalInfoStep";
 import EducationalBackgroundStep from "./steps/EducationalBackgroundStep";
 import FamilyBackgroundStep from "./steps/FamilyBackgroundStep";
 import SpiritualInfoStep from "./steps/SpiritualInfoStep";
 import ChurchBackgroundStep from "./steps/ChurchBackgroundStep";
+import { generateMembershipFormPDF } from "../../../utils/memberFormPDF";
 
 const STEPS = [
   {
@@ -67,11 +68,11 @@ export const MemberFormModal = ({
     college: "",
     college_year_graduated: "",
     family_members: [],
-    accepted_jesus: false,
+    accepted_jesus: null,
     salvation_testimony: "",
     spiritual_birthday: "",
     baptism_date: "",
-    willing_to_be_baptized: false,
+    willing_to_be_baptized: null,
     ministry: "",
     previous_church: "",
     how_introduced: "",
@@ -105,11 +106,11 @@ export const MemberFormModal = ({
           college: member.college || "",
           college_year_graduated: member.college_year_graduated || "",
           family_members: member.family_members || [],
-          accepted_jesus: member.accepted_jesus || false,
+          accepted_jesus: member.accepted_jesus ?? null,  
           salvation_testimony: member.salvation_testimony || "",
           spiritual_birthday: member.spiritual_birthday || "",
           baptism_date: member.baptism_date || "",
-          willing_to_be_baptized: member.willing_to_be_baptized || false,
+          willing_to_be_baptized: member.willing_to_be_baptized ?? null, 
           ministry: member.ministry?.id || member.ministry || "",
           previous_church: member.previous_church || "",
           how_introduced: member.how_introduced || "",
@@ -137,11 +138,11 @@ export const MemberFormModal = ({
           college: "",
           college_year_graduated: "",
           family_members: [],
-          accepted_jesus: false,
+          accepted_jesus: null,
           salvation_testimony: "",
           spiritual_birthday: "",
           baptism_date: "",
-          willing_to_be_baptized: false,
+          willing_to_be_baptized: null,
           ministry: "",
           previous_church: "",
           how_introduced: "",
@@ -247,6 +248,113 @@ export const MemberFormModal = ({
       }
     });
 
+   
+    const booleanFields = ['accepted_jesus', 'willing_to_be_baptized'];
+    
+    booleanFields.forEach(field => {
+      if (sanitized[field] === null || sanitized[field] === undefined || sanitized[field] === '') {
+  
+        sanitized[field] = null;
+      } else {
+     
+        sanitized[field] = Boolean(sanitized[field]);
+      }
+    });
+
+    // ✅ Sanitize and validate family members
+    if (sanitized.family_members && Array.isArray(sanitized.family_members)) {
+      sanitized.family_members = sanitized.family_members
+        .map(member => {
+          // Ensure member is an object
+          if (typeof member !== 'object' || member === null) {
+            console.warn('Invalid family member data:', member);
+            return null;
+          }
+
+          // Clean and validate each field
+          const cleanMember = {
+            name: (member.name || '').toString().trim(),
+            relationship: (member.relationship || '').toString().trim(),
+            birthdate: member.birthdate || null,
+          };
+
+          // Validate birthdate format if provided
+          if (cleanMember.birthdate && cleanMember.birthdate !== '') {
+            const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+            if (!datePattern.test(cleanMember.birthdate)) {
+              console.warn('Invalid birthdate format:', cleanMember.birthdate);
+              cleanMember.birthdate = null;
+            }
+          } else {
+            cleanMember.birthdate = null;
+          }
+
+          return cleanMember;
+        })
+        .filter(member => {
+          // Remove invalid entries
+          if (!member) return false;
+          // Remove entries with no name
+          if (!member.name) return false;
+          // Remove entries with no relationship
+          if (!member.relationship) return false;
+          return true;
+        });
+    } else {
+      sanitized.family_members = [];
+    }
+
+    // Validate required fields (final check before submission)
+    const requiredFields = {
+      first_name: 'First name',
+      last_name: 'Last name',
+      email: 'Email',
+      phone: 'Phone number',
+      date_of_birth: 'Date of birth',
+    };
+
+    Object.entries(requiredFields).forEach(([field, label]) => {
+      if (!sanitized[field] || sanitized[field].toString().trim() === '') {
+        console.error(`Validation Error: ${label} is required`);
+      }
+    });
+
+    // Validate email format
+    if (sanitized.email) {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(sanitized.email)) {
+        console.error('Validation Error: Invalid email format');
+      }
+    }
+
+    // Validate phone format (Philippine format)
+    if (sanitized.phone) {
+      const phonePattern = /^(\+63|0)?\d{3}-?\d{3}-?\d{4}$/;
+      if (!phonePattern.test(sanitized.phone.replace(/\s/g, ''))) {
+        console.warn('Phone number format may be invalid:', sanitized.phone);
+      }
+    }
+
+    // Validate date of birth (not in the future)
+    if (sanitized.date_of_birth) {
+      const dob = new Date(sanitized.date_of_birth);
+      const today = new Date();
+      if (dob > today) {
+        console.error('Validation Error: Date of birth cannot be in the future');
+      }
+    }
+
+    // Validate marital status - wedding anniversary required if married
+    if (sanitized.marital_status === 'married' && !sanitized.wedding_anniversary) {
+      console.warn('Wedding anniversary recommended for married status');
+    }
+
+    // Log sanitized data for debugging
+    console.log('Sanitized form data:', {
+      ...sanitized,
+      family_members_count: sanitized.family_members.length,
+    });
+
     return sanitized;
   }, []);
 
@@ -291,11 +399,11 @@ export const MemberFormModal = ({
       college: "",
       college_year_graduated: "",
       family_members: [],
-      accepted_jesus: false,
+      accepted_jesus: null,
       salvation_testimony: "",
       spiritual_birthday: "",
       baptism_date: "",
-      willing_to_be_baptized: false,
+      willing_to_be_baptized: null,
       ministry: "",
       previous_church: "",
       how_introduced: "",
@@ -308,35 +416,53 @@ export const MemberFormModal = ({
     onClose();
   }, [onClose]);
 
-  const handleSubmit = useCallback(
-    async () => {
-      if (!validateStep(currentStep)) {
-        return;
-      }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const sanitizedData = sanitizeFormData(formData);
+    
+    // ✅ Debug: Check boolean values
+    console.log('Boolean field values:', {
+      accepted_jesus: sanitizedData.accepted_jesus,
+      willing_to_be_baptized: sanitizedData.willing_to_be_baptized,
+      accepted_jesus_type: typeof sanitizedData.accepted_jesus,
+      willing_type: typeof sanitizedData.willing_to_be_baptized,
+    });
+    
+    if (!validateStep(currentStep)) {
+      return;
+    }
 
-      // Mark current step as completed
-      setCompletedSteps((prev) => new Set([...prev, currentStep]));
+    // Mark current step as completed
+    setCompletedSteps((prev) => new Set([...prev, currentStep]));
 
-      // If not on last step, move to next
-      if (currentStep < STEPS.length - 1) {
-        setCurrentStep((prev) => prev + 1);
-        return;
-      }
+    // If not on last step, move to next
+    if (currentStep < STEPS.length - 1) {
+      setCurrentStep((prev) => prev + 1);
+      return;
+    }
 
-      // On last step, sanitize and submit the form
-      try {
-        const sanitizedData = sanitizeFormData(formData);
-        await onSubmit(sanitizedData);
-        
-        // Close modal on success
-        handleCancel();
-      } catch (error) {
-        // Error is handled by parent
-        console.error('Form submission error:', error);
+    // On last step, sanitize and submit the form
+    try {
+      const sanitizedData = sanitizeFormData(formData);
+      await onSubmit(sanitizedData);
+      
+      // Auto-generate PDF for new members (not when editing)
+      if (!isEdit) {
+        generateMembershipFormPDF(formData);
       }
-    },
-    [currentStep, formData, onSubmit, validateStep, sanitizeFormData, handleCancel]
-  );
+      
+      // Close modal on success
+      handleCancel();
+    } catch (error) {
+      // Error is handled by parent
+      console.error('Form submission error:', error);
+    }
+  };
+
+  const handleExportPDF = useCallback(() => {
+    generateMembershipFormPDF(formData);
+  }, [formData]);
 
   if (!open) return null;
 
@@ -367,13 +493,25 @@ export const MemberFormModal = ({
                   {STEPS[currentStep].title}
                 </p>
               </div>
-              <button
-                onClick={handleCancel}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
-                disabled={loading}
-              >
-                <HiX className="w-6 h-6" />
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Export PDF Button */}
+                <button
+                  onClick={handleExportPDF}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  title="Download Membership Form as PDF"
+                >
+                  <HiDownload className="w-5 h-5" />
+                  <span className="hidden sm:inline">Export PDF</span>
+                </button>
+                
+                <button
+                  onClick={handleCancel}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+                  disabled={loading}
+                >
+                  <HiX className="w-6 h-6" />
+                </button>
+              </div>
             </div>
 
             {/* Progress Bar */}

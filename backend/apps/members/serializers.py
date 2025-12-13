@@ -13,6 +13,10 @@ class MemberSerializer(serializers.ModelSerializer):
     ministry_name = serializers.CharField(source="ministry.name", read_only=True, allow_null=True)
     family_members = FamilyMemberSerializer(many=True, required=False)
 
+    # ✅ Explicitly allow null for boolean fields
+    accepted_jesus = serializers.BooleanField(required=False, allow_null=True)
+    willing_to_be_baptized = serializers.BooleanField(required=False, allow_null=True)
+
     class Meta:
         model = Member
         fields = [
