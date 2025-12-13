@@ -2,10 +2,10 @@ import React from 'react'
 import { Disclosure } from '@headlessui/react'
 import { HiChevronDown } from 'react-icons/hi'
 
-const GettingStartedItem = ({ title, children, defaultOpen = false, id }) => (
+const GettingStartedItem = ({ title, children, defaultOpen = false }) => (
     <Disclosure defaultOpen={defaultOpen}>
         {({ open }) => (
-            <div id={id} className="border-b border-gray-100 last:border-b-0 transition-all duration-300">
+            <div className="border-b border-gray-100 last:border-b-0">
                 <Disclosure.Button className="w-full px-4 md:px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors">
                     <span className="text-gray-900 font-medium text-sm md:text-base">{title}</span>
                     <HiChevronDown
@@ -33,7 +33,7 @@ export default function GettingStarted() {
                     </p>
                 </div>
                 <div>
-                    <GettingStartedItem title="Overview & User Roles" id="overview-user-roles" defaultOpen={false}>
+                    <GettingStartedItem title="Overview & User Roles" defaultOpen={false}>
                         <div className="space-y-3">
                             <p>
                                 The SBCC Management System has three primary user roles, each with specific permissions and
@@ -62,7 +62,7 @@ export default function GettingStarted() {
                         </div>
                     </GettingStartedItem>
 
-                    <GettingStartedItem title="Navigating the Application" id="navigating-application" defaultOpen={true}>
+                    <GettingStartedItem title="Navigating the Application" defaultOpen={false}>
                         <div className="space-y-3">
                             <p>
                                 The SBCC Management System uses a sidebar navigation layout for easy access to all modules:
@@ -112,7 +112,7 @@ export default function GettingStarted() {
                         </div>
                     </GettingStartedItem>
 
-                    <GettingStartedItem title="Managing Members & Attendance" id="managing-members-attendance" defaultOpen={true}>
+                    <GettingStartedItem title="Managing Members & Attendance" defaultOpen={false}>
                         <div className="space-y-3">
                             <p>The Membership module is your comprehensive tool for managing church members:</p>
                             <div>
@@ -143,7 +143,7 @@ export default function GettingStarted() {
                         </div>
                     </GettingStartedItem>
 
-                    <GettingStartedItem title="Documents & File Management" id="documents-file-management" defaultOpen={true}>
+                    <GettingStartedItem title="Documents & File Management" defaultOpen={false}>
                         <div className="space-y-3">
                             <p>
                                 The Documents module provides a robust file management system similar to familiar file
@@ -191,7 +191,7 @@ export default function GettingStarted() {
                         </div>
                     </GettingStartedItem>
 
-                    <GettingStartedItem title="Events & Calendar Management" id="events-calendar-management" defaultOpen={true}>
+                    <GettingStartedItem title="Events & Calendar Management" defaultOpen={false}>
                         <div className="space-y-3">
                             <p>
                                 Events are at the heart of church activities. The Events module helps you plan, communicate,
@@ -223,7 +223,7 @@ export default function GettingStarted() {
                         </div>
                     </GettingStartedItem>
 
-                    <GettingStartedItem title="Ministry Coordination & Volunteers" id="ministry-coordination-volunteers" defaultOpen={true}>
+                    <GettingStartedItem title="Ministry Coordination & Volunteers" defaultOpen={false}>
                         <div className="space-y-3">
                             <p>
                                 Ministries are the building blocks of church organization, allowing you to group members by
@@ -252,7 +252,7 @@ export default function GettingStarted() {
                         </div>
                     </GettingStartedItem>
 
-                    <GettingStartedItem title="Tasks & Project Management" id="tasks-project-management" defaultOpen={true}>
+                    <GettingStartedItem title="Tasks & Project Management" defaultOpen={false}>
                         <div className="space-y-3">
                             <p>
                                 The Tasks module helps teams stay organized and accountable with clear assignments and
@@ -289,7 +289,7 @@ export default function GettingStarted() {
                         </div>
                     </GettingStartedItem>
 
-                    <GettingStartedItem title="Inventory & Asset Tracking" id="inventory-asset-tracking" defaultOpen={true}>
+                    <GettingStartedItem title="Inventory & Asset Tracking" defaultOpen={false}>
                         <div className="space-y-3">
                             <p>
                                 Keep track of church property, equipment, and supplies with the Inventory module:
@@ -317,7 +317,7 @@ export default function GettingStarted() {
                         </div>
                     </GettingStartedItem>
 
-                    <GettingStartedItem title="Announcements & Communication" id="announcements-communication" defaultOpen={true}>
+                    <GettingStartedItem title="Announcements & Communication" defaultOpen={false}>
                         <div className="space-y-3">
                             <p>
                                 Keep your congregation informed with timely announcements visible throughout the application:
@@ -346,7 +346,7 @@ export default function GettingStarted() {
                         </div>
                     </GettingStartedItem>
 
-                    <GettingStartedItem title="Prayer Requests & Spiritual Support" id="prayer-requests-spiritual-support" defaultOpen={true}>
+                    <GettingStartedItem title="Prayer Requests & Spiritual Support" defaultOpen={false}>
                         <div className="space-y-3">
                             <p>
                                 The Prayer Requests module provides a sacred space for the church community to share needs
@@ -374,7 +374,7 @@ export default function GettingStarted() {
                         </div>
                     </GettingStartedItem>
 
-                    <GettingStartedItem title="System Settings & Administration" id="system-settings-administration" defaultOpen={true}>
+                    <GettingStartedItem title="System Settings & Administration" defaultOpen={false}>
                         <div className="space-y-3">
                             <p>
                                 <em>(Admin Only)</em> The Settings module provides comprehensive control over system
@@ -399,7 +399,7 @@ export default function GettingStarted() {
                         </div>
                     </GettingStartedItem>
 
-                    <GettingStartedItem title="Tips for Success & Best Practices" id="tips-success-best-practices" defaultOpen={true}>
+                    <GettingStartedItem title="Tips for Success & Best Practices" defaultOpen={false}>
                         <div className="space-y-3">
                             <p>
                                 Maximize your effectiveness with the SBCC Management System using these proven practices:
