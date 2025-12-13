@@ -48,7 +48,7 @@ def create_user(db):
         username="testuser",
         email="test@example.com",
         password=TEST_PASSWORD,
-        role="admin",
+        role="pastor",  # Default to non-admin role for "regular user" tests
         **kwargs,
     ):
         return User.objects.create_user(
@@ -60,7 +60,7 @@ def create_user(db):
 
 @pytest.fixture
 def user(create_user):
-    """Create a regular admin user."""
+    """Create a regular (non-admin) user."""
     return create_user()
 
 
