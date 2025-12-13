@@ -5,7 +5,10 @@ User = get_user_model()
 
 
 class Member(models.Model):
-    """Church member profiles"""
+    """
+    Church member profiles - standalone data records.
+    These are membership records, NOT login accounts.
+    """
 
     STATUS_CHOICES = [
         ("active", "Active"),
@@ -20,14 +23,53 @@ class Member(models.Model):
         ("other", "Other"),
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="member_profile")
+    # Personal Information
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=15)
+    email = models.EmailField(blank=True)  # Optional - not all members have email
+    phone = models.CharField(max_length=15, blank=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
-    date_of_birth = models.DateField()
+    date_of_birth = models.DateField(null=True, blank=True)
     baptism_date = models.DateField(null=True, blank=True)
+
+    # Personal Information (Extended)
+    complete_address = models.TextField(blank=True, null=True)
+    occupation = models.CharField(max_length=100, blank=True, null=True)
+
+    MARITAL_STATUS_CHOICES = [
+        ("single", "Single"),
+        ("married", "Married"),
+        ("divorced", "Divorced"),
+        ("widowed", "Widowed"),
+        ("remarried", "Remarried"),
+    ]
+    marital_status = models.CharField(
+        max_length=20, choices=MARITAL_STATUS_CHOICES, blank=True, null=True
+    )
+    wedding_anniversary = models.DateField(blank=True, null=True)
+
+    # Educational Background
+    elementary_school = models.CharField(max_length=200, blank=True, null=True)
+    elementary_year_graduated = models.IntegerField(blank=True, null=True)
+    secondary_school = models.CharField(max_length=200, blank=True, null=True)
+    secondary_year_graduated = models.IntegerField(blank=True, null=True)
+    vocational_school = models.CharField(max_length=200, blank=True, null=True)
+    vocational_year_graduated = models.IntegerField(blank=True, null=True)
+    college = models.CharField(max_length=200, blank=True, null=True)
+    college_year_graduated = models.IntegerField(blank=True, null=True)
+
+    # Spiritual Information
+    accepted_jesus = models.BooleanField(null=True, blank=True, default=None)
+    salvation_testimony = models.TextField(blank=True, null=True)
+    spiritual_birthday = models.DateField(blank=True, null=True)
+    willing_to_be_baptized = models.BooleanField(null=True, blank=True, default=None)
+
+    # Church Background
+    previous_church = models.CharField(max_length=200, blank=True, null=True)
+    how_introduced = models.TextField(blank=True, null=True)
+    began_attending_since = models.DateField(blank=True, null=True)
+
+    # Ministry relationship
     ministry = models.ForeignKey(
         "ministries.Ministry",
         on_delete=models.SET_NULL,
@@ -35,6 +77,8 @@ class Member(models.Model):
         blank=True,
         related_name="members",
     )
+
+    # Status tracking
     is_active = models.BooleanField(default=True)
     archived_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
@@ -94,3 +138,14 @@ class Member(models.Model):
             self.last_attended = last.sheet.date
 
         self.save(update_fields=["attendance_rate", "consecutive_absences", "last_attended"])
+
+
+# Create separate model for family members
+class FamilyMember(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="family_members")
+    name = models.CharField(max_length=200)
+    relationship = models.CharField(max_length=100)
+    birthdate = models.DateField(blank=True, null=True)
+
+    class Meta:
+        ordering = ["name"]

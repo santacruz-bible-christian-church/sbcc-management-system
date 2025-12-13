@@ -25,7 +25,9 @@ class MinistryViewSet(viewsets.ModelViewSet):
     ordering_fields = ["name", "created_at"]
     ordering = ["name"]
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    @action(
+        detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated]
+    )  # ← Changed from IsAdminUser
     def rotate_shifts(self, request, pk=None):
         """
         Rotate and assign shifts for this ministry.
@@ -33,6 +35,19 @@ class MinistryViewSet(viewsets.ModelViewSet):
         Body: { "days": 7, "dry_run": false, "notify": false, "limit_per_ministry": 0 }
         """
         ministry = self.get_object()
+
+        # Optional: Add role-based check
+        user = request.user
+        if not (
+            user.is_staff
+            or user.is_superuser
+            or user.role in ["super_admin", "admin", "pastor", "ministry_leader"]
+        ):
+            return Response(
+                {"detail": "You do not have permission to rotate shifts."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         data = request.data or {}
         days = int(data.get("days", 7))
         dry_run = bool(data.get("dry_run", False))
@@ -57,12 +72,12 @@ class MinistryViewSet(viewsets.ModelViewSet):
 class MinistryMemberViewSet(viewsets.ModelViewSet):
     """ViewSet for MinistryMember model"""
 
-    queryset = MinistryMember.objects.select_related("user", "ministry").all()
+    queryset = MinistryMember.objects.select_related("member", "ministry").all()
     serializer_class = MinistryMemberSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["ministry", "role", "is_active"]
-    search_fields = ["user__first_name", "user__last_name", "user__email"]
+    search_fields = ["member__first_name", "member__last_name", "member__email"]
     ordering_fields = ["created_at", "role"]
     ordering = ["-created_at"]
 
@@ -74,13 +89,8 @@ class ShiftViewSet(viewsets.ModelViewSet):
     serializer_class = ShiftSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-
-    # Remove 'role' from filterset_fields
     filterset_fields = ["ministry", "date"]
-
-    # Remove 'role' from search_fields
     search_fields = ["ministry__name", "notes"]
-
     ordering_fields = ["date", "start_time"]
     ordering = ["date", "start_time"]
 
@@ -88,16 +98,11 @@ class ShiftViewSet(viewsets.ModelViewSet):
 class AssignmentViewSet(viewsets.ModelViewSet):
     """ViewSet for Assignment model"""
 
-    queryset = Assignment.objects.select_related("shift__ministry", "user").all()
+    queryset = Assignment.objects.select_related("shift__ministry", "member").all()
     serializer_class = AssignmentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-
-    # Update filterset_fields - remove notified, reminded, shift__role
-    filterset_fields = ["shift__ministry", "user", "attended"]
-
-    # Update search_fields - remove shift__role
-    search_fields = ["user__first_name", "user__last_name", "shift__ministry__name"]
-
+    filterset_fields = ["shift__ministry", "member", "attended"]
+    search_fields = ["member__first_name", "member__last_name", "shift__ministry__name"]
     ordering_fields = ["assigned_at"]
     ordering = ["-assigned_at"]

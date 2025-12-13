@@ -53,7 +53,7 @@ export const membersApi = {
   importCSV: async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await apiClient.post('/members/import_csv/', formData, {
+    const response = await apiClient.post('/members/import-csv/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -73,6 +73,23 @@ export const membersApi = {
   upcomingAnniversaries: async (days = 7) => {
     const response = await apiClient.get('/members/upcoming_anniversaries/', {
       params: { days },
+    });
+    return response.data;
+  },
+
+  // Export members list as PDF
+  exportPDF: async (params = {}) => {
+    const response = await apiClient.get('/members/export-pdf/', {
+      params,
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Export single member profile as PDF
+  exportProfilePDF: async (id) => {
+    const response = await apiClient.get(`/members/${id}/export-profile-pdf/`, {
+      responseType: 'blob',
     });
     return response.data;
   },

@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -63,7 +64,8 @@ INSTALLED_APPS = [
     "apps.meeting_minutes",
     "apps.prayer_requests",
     "apps.tasks",
-    "apps.volunteers",
+    "apps.visitors",
+    "apps.settings",
 ]
 
 # Custom User Model
@@ -153,8 +155,44 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# ========== Cloudflare R2 Configuration ==========
+USE_R2_STORAGE = os.getenv("USE_R2_STORAGE", "False").lower() == "true"
+
+if USE_R2_STORAGE:
+    # R2 Storage Settings
+    R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID")
+    R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID")
+    R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY")
+    R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "sbcc-files")
+    R2_ENDPOINT_URL = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+
+    # Public URL (if you set up public access)
+    # Format: https://pub-{hash}.r2.dev or your custom domain
+    R2_PUBLIC_URL = os.getenv("R2_PUBLIC_URL", f"https://pub-{R2_ACCOUNT_ID}.r2.dev")
+
+    # Use R2 for media files
+    DEFAULT_FILE_STORAGE = "common.storage.R2Storage"
+
+    # Storage settings
+    AWS_STORAGE_BUCKET_NAME = R2_BUCKET_NAME
+    AWS_S3_ENDPOINT_URL = R2_ENDPOINT_URL
+    AWS_S3_ACCESS_KEY_ID = R2_ACCESS_KEY_ID
+    AWS_S3_SECRET_ACCESS_KEY = R2_SECRET_ACCESS_KEY
+    AWS_S3_REGION_NAME = "auto"  # R2 uses auto
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = False  # Use public URLs
+
+else:
+    # Local file storage (development)
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
+
+# Max file upload size (10MB for church documents)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -221,7 +259,7 @@ SIMPLE_JWT = {
 }
 
 # Email Configuration
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = "sbcc.email_backend.CustomEmailBackend"
 EMAIL_HOST = config("EMAIL_HOST", default="smtp.gmail.com")
 EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)

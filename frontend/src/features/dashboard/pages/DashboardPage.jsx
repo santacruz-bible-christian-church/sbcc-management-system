@@ -6,6 +6,10 @@ import { WelcomeCard } from '../components/WelcomeCard';
 import { SBCCInfoCard } from '../components/SBCCInfoCard';
 import { StatsGrid } from '../components/StatsGrid';
 import { RecentActivities } from '../components/RecentActivities';
+import { TaskWidgets } from '../components/TaskWidgets';
+import { AbsentMemberAlerts } from '../components/AbsentMemberAlerts';
+import TotalMembersStatsCard from '../components/TotalMembersStatsCard';
+import MinistryPieChart from '../components/MinistryPieChart';
 
 export const DashboardPage = () => {
   const { user } = useAuth();
@@ -47,12 +51,26 @@ export const DashboardPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <WelcomeCard user={user} />
           <SBCCInfoCard stats={stats} />
-          <StatsGrid stats={stats} />
+
+          <div className="col-span-8">
+            <TotalMembersStatsCard />
+            <div className="flex mt-4">
+              <MinistryPieChart />
+              <StatsGrid stats={stats} loading={refreshing} />
+            </div>
+          </div>
+
           <RecentActivities
             activities={activities}
             refreshing={refreshing}
             onRefresh={refresh}
           />
+
+          {/* Task Widgets - Full Width */}
+          <TaskWidgets />
+
+          {/* Absent Member Alerts - Full Width */}
+          <AbsentMemberAlerts />
         </div>
       </div>
     </div>

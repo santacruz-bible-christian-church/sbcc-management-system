@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import PropTypes from 'prop-types';
 import {
     HiOutlineArchive,
     HiOutlineFolder,
@@ -74,11 +75,39 @@ const ActionButton = ({ onClick, title, icon: Icon, colorClass, className = '' }
     </button>
 );
 
-const MemberCard = ({ member, canManage, onEdit, onDelete, onViewDetails, onRestore, onArchive }) => {
+const MemberCard = ({
+    member,
+    canManage,
+    onEdit,
+    onDelete,
+    onViewDetails,
+    onRestore,
+    onArchive,
+    showCheckbox = false,
+    isSelected = false,
+    onSelect
+}) => {
     return (
-        <div className="flex justify-between pr-3 pl-3 pt-6 pb-6 rounded-[20px] shadow-[2px_2px_10px_rgba(0,0,0,0.2)]">
+        <div className={`flex justify-between pr-3 pl-3 pt-6 pb-6 rounded-[20px] shadow-[2px_2px_10px_rgba(0,0,0,0.2)] transition-all ${
+            isSelected ? 'ring-2 ring-[#FDB54A] bg-[#FFF8E7]' : ''
+        }`}>
+            {/* Checkbox */}
+            {showCheckbox && (
+                <div className="w-[5%] flex items-center justify-center">
+                    <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                            e.stopPropagation();
+                            onSelect?.(member.id, e.target.checked);
+                        }}
+                        className="w-4 h-4 rounded border-gray-300 text-[#FDB54A] focus:ring-[#FDB54A] cursor-pointer"
+                    />
+                </div>
+            )}
+
             {/* Name */}
-            <p className="font-bold text-[#383838] text-left items-center w-[18%]">
+            <p className={`font-bold text-[#383838] text-left items-center ${showCheckbox ? 'w-[15%]' : 'w-[18%]'}`}>
                 {member.full_name || `${member.first_name} ${member.last_name}`}
             </p>
 
@@ -235,7 +264,10 @@ export const ListCards = ({
     onRestore,
     onArchive,
     pagination,
-    onPageChange
+    onPageChange,
+    showCheckbox = false,
+    selectedIds = [],
+    onSelect
 }) => {
     return (
         <div className="space-y-3.5">
@@ -250,6 +282,9 @@ export const ListCards = ({
                     onViewDetails={onViewDetails}
                     onRestore={onRestore}
                     onArchive={onArchive}
+                    showCheckbox={showCheckbox}
+                    isSelected={selectedIds.includes(member.id)}
+                    onSelect={onSelect}
                 />
             ))}
 
@@ -267,4 +302,19 @@ export const ListCards = ({
             )}
         </div>
     );
+};
+
+ListCards.propTypes = {
+    members: PropTypes.array.isRequired,
+    canManage: PropTypes.bool,
+    onEdit: PropTypes.func,
+    onDelete: PropTypes.func,
+    onViewDetails: PropTypes.func,
+    onRestore: PropTypes.func,
+    onArchive: PropTypes.func,
+    pagination: PropTypes.object,
+    onPageChange: PropTypes.func,
+    showCheckbox: PropTypes.bool,
+    selectedIds: PropTypes.array,
+    onSelect: PropTypes.func,
 };

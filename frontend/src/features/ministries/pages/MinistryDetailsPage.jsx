@@ -14,7 +14,7 @@ import { SecondaryButton } from '../../../components/ui/Button';
 import { ShiftRotationModal } from '../components/ShiftRotationModal';
 import Snackbar from '../../../components/ui/Snackbar';
 
-const MANAGER_ROLES = ['admin', 'pastor', 'staff'];
+const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
 
 export const MinistryDetailsPage = () => {
   const { id } = useParams();

@@ -1,6 +1,8 @@
 import { Navigate } from 'react-router-dom';
 import { ProtectedWithLayout } from './ProtectedWithLayout';
 import { LoginPage } from '../features/auth/pages/LoginPage';
+import { ForgotPasswordPage } from '../features/auth/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { EventsPage } from '../features/events/pages/EventsPage';
 import { MembershipListPage } from '../features/members/pages/MembershipListPage';
@@ -10,6 +12,16 @@ import AttendanceSheetPage from '../features/attendance/pages/AttendanceSheetPag
 import AttendanceTracker from '../features/attendance/pages/AttendanceTracker';
 import { ComingSoon } from '../components/ui/ComingSoon';
 import Inventory from '../features/inventory/pages/Inventory';
+import AnnouncementPage from '../features/announcement/pages/AnnouncementPage';
+import { SettingsPage } from '../features/settings/pages/SettingsPage';
+import PrayerRequestsPage from '../features/prayer-requests/pages/PrayerRequestsPage';
+import { FileManagementPage } from '../features/file-management/pages/FileManagementPage';
+import { TasksPage } from '../features/tasks/pages/TasksPage';
+import HelpCenter from '../features/help/pages/HelpCenter';
+import GuidesDirectory from '../features/help/components/GuidesDirectory';
+import FAQsDirectory from '../features/help/components/FAQsDirectory';
+import { UserManagementPage } from '../features/user-management/pages/UserManagementPage';
+import { UnauthorizedPage } from '../components/ui/UnauthorizedPage';
 
 export const routes = [
   {
@@ -19,6 +31,18 @@ export const routes = [
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: '/reset-password',
+    element: <ResetPasswordPage />,
+  },
+  {
+    path: '/unauthorized',
+    element: <UnauthorizedPage />,
   },
   {
     path: '/dashboard',
@@ -88,7 +112,7 @@ export const routes = [
     path: '/documents',
     element: (
       <ProtectedWithLayout>
-        <ComingSoon title="Documents" />
+        <FileManagementPage />
       </ProtectedWithLayout>
     ),
   },
@@ -97,14 +121,6 @@ export const routes = [
     element: (
       <ProtectedWithLayout>
         <ComingSoon title="Helpdesk" />
-      </ProtectedWithLayout>
-    ),
-  },
-  {
-    path: '/support/contact',
-    element: (
-      <ProtectedWithLayout>
-        <ComingSoon title="Contact Support" />
       </ProtectedWithLayout>
     ),
   },
@@ -120,7 +136,63 @@ export const routes = [
     path: '/help',
     element: (
       <ProtectedWithLayout>
-        <ComingSoon title="Help Center" />
+        <HelpCenter />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: '/help/guides',
+    element: (
+      <ProtectedWithLayout>
+        <GuidesDirectory />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: '/help/faqs',
+    element: (
+      <ProtectedWithLayout>
+        <FAQsDirectory />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: "/announcements",
+    element: (
+      <ProtectedWithLayout>
+        <AnnouncementPage />
+      </ProtectedWithLayout>
+    )
+  },
+  {
+    path: '/settings',
+    element: (
+      <ProtectedWithLayout>
+        <SettingsPage />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: '/prayer-requests',
+    element: (
+      <ProtectedWithLayout>
+        <PrayerRequestsPage />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: '/tasks',
+    element: (
+      <ProtectedWithLayout>
+        <TasksPage />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: '/user-management',
+    element: (
+      <ProtectedWithLayout requiredRoles={['super_admin']}>
+        <UserManagementPage />
       </ProtectedWithLayout>
     ),
   },

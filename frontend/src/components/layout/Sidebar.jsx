@@ -6,23 +6,31 @@ import {
     Users,
     Package,
     FileText,
-    Headphones,
-    File,
     HelpCircle,
     ChevronDown,
     ChevronUp,
     Menu,
     X,
     LogOut,
+    Settings,
+    Heart,
+    Bell,
+    CheckSquare,
+    Shield,
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
+import { usePublicSettings } from '../../features/settings/hooks/usePublicSettings';
 
 export default function SCBCSidebar({ collapsed = false, onToggle }) {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, logout } = useAuth();
     const [membershipOpen, setMembershipOpen] = useState(false);
-    const [supportOpen, setSupportOpen] = useState(false);
+    const { settings: systemSettings } = usePublicSettings();
+
+    // Role checks
+    const isSuperAdmin = user?.role === 'super_admin';
+    const isAdminOrAbove = ['super_admin', 'admin'].includes(user?.role);
 
     const handleLogout = async () => {
         try {
@@ -105,6 +113,16 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
         return 'U';
     };
 
+    // Get app name initials for logo
+    const getAppInitials = () => {
+        if (!systemSettings?.app_name) return 'SC';
+        const words = systemSettings.app_name.split(' ');
+        if (words.length >= 2) {
+            return `${words[0][0]}${words[1][0]}`.toUpperCase();
+        }
+        return systemSettings.app_name.substring(0, 2).toUpperCase();
+    };
+
     return (
         <aside
             className={`${
@@ -114,11 +132,22 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
             {/* Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                 <div className={`flex items-center gap-3 ${collapsed ? 'justify-center w-full' : ''}`}>
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#F6C67E] to-[#FDB54A] rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
-                        <span className="text-white font-bold text-sm">SC</span>
-                    </div>
+                    {/* Dynamic Logo or Initials */}
+                    {systemSettings?.logo ? (
+                        <img
+                            src={systemSettings.logo}
+                            alt="Logo"
+                            className="w-8 h-8 rounded-full object-contain flex-shrink-0 shadow-lg"
+                        />
+                    ) : (
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#F6C67E] to-[#FDB54A] rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                            <span className="text-white font-bold text-sm">{getAppInitials()}</span>
+                        </div>
+                    )}
                     {!collapsed && (
-                        <h1 className="text-lg font-semibold text-gray-900 whitespace-nowrap">SBCC Management</h1>
+                        <h1 className="text-lg font-semibold text-gray-900 truncate max-w-[180px]">
+                            {systemSettings?.app_name || 'SBCC Management'}
+                        </h1>
                     )}
                 </div>
 
@@ -162,6 +191,13 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         path="/events"
                     />
 
+                    <NavButton
+                        id="announcements"
+                        icon={Bell}
+                        label="Announcements"
+                        path="/announcements"
+                    />
+
                     <div className="mt-1">
                         <NavButton
                             id="membership"
@@ -187,6 +223,13 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                     </div>
 
                     <NavButton
+                        id="prayer-requests"
+                        icon={Heart}
+                        label="Prayer Requests"
+                        path="/prayer-requests"
+                    />
+
+                    <NavButton
                         id="inventory"
                         icon={Package}
                         label="Inventory"
@@ -200,44 +243,14 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         path="/documents"
                     />
 
-                    {!collapsed && <div className="my-3 border-t border-gray-200"></div>}
-
-                    {!collapsed && (
-                        <div className="px-2 py-2">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                Support & Resources
-                            </p>
-                        </div>
-                    )}
-
-                    <div className="mt-1">
-                        <NavButton
-                            id="support"
-                            icon={Headphones}
-                            label="Support"
-                            isOpen={!collapsed && supportOpen}
-                            onClick={!collapsed ? () => setSupportOpen(!supportOpen) : undefined}
-                            path={collapsed ? '/support/helpdesk' : undefined}
-                        />
-                        {!collapsed && (
-                            <div
-                                id="support-submenu"
-                                role="region"
-                                aria-labelledby="support"
-                                className={`${supportOpen ? 'block' : 'hidden'} mt-1 space-y-1`}
-                            >
-                                <SubLink id="support-helpdesk" path="/support/helpdesk">Helpdesk</SubLink>
-                                <SubLink id="support-contact" path="/support/contact">Contact</SubLink>
-                            </div>
-                        )}
-                    </div>
-
                     <NavButton
-                        id="docs"
-                        icon={File}
-                        label="Documentation"
-                        path="/docs"
+                        id="tasks"
+                        icon={CheckSquare}
+                        label="Tasks"
+                        path="/tasks"
                     />
+
+
 
                     <NavButton
                         id="help"
@@ -248,7 +261,7 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                 </div>
             </nav>
 
-            {/* Footer - User Info & Logout */}
+            {/* Footer - User Info, Settings & Logout */}
             <div className="p-4 border-t border-gray-200 space-y-2">
                 {/* User Info */}
                 <div className={`flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
@@ -266,11 +279,37 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                                 }
                             </p>
                             <p className="text-xs text-gray-500 truncate">
-                                {user?.email || 'user@sbcc.com'}
+                                {user?.role === 'super_admin' ? 'Super Admin' : user?.email || 'user@sbcc.com'}
                             </p>
                         </div>
                     )}
                 </div>
+
+                {/* User Management - Super Admin Only */}
+                {isSuperAdmin && (
+                    <button
+                        onClick={() => navigate('/user-management')}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors rounded-lg hover:bg-amber-50 text-amber-700 ${
+                            location.pathname === '/user-management' ? 'bg-amber-50 text-amber-700' : ''
+                        } ${collapsed ? 'justify-center' : ''}`}
+                        title={collapsed ? 'User Management' : undefined}
+                    >
+                        <Shield size={18} className={`flex-shrink-0 ${location.pathname === '/user-management' ? 'text-amber-600' : 'text-amber-600'}`} />
+                        {!collapsed && <span className="font-medium">User Management</span>}
+                    </button>
+                )}
+
+                {/* Settings Button - All authenticated users can access */}
+                <button
+                    onClick={() => navigate('/settings')}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors rounded-lg hover:bg-gray-50 text-gray-700 ${
+                        location.pathname === '/settings' ? 'bg-orange-50 text-[#FDB54A]' : ''
+                    } ${collapsed ? 'justify-center' : ''}`}
+                    title={collapsed ? 'Settings' : undefined}
+                >
+                    <Settings size={18} className={`flex-shrink-0 ${location.pathname === '/settings' ? 'text-[#FDB54A]' : 'text-gray-600'}`} />
+                    {!collapsed && <span className="font-medium">Settings</span>}
+                </button>
 
                 {/* Logout Button */}
                 <button

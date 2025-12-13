@@ -1,6 +1,12 @@
 import { SBCC_COLORS } from '../../../store/theme.store';
+import {
+  HiClipboardList,
+  HiClock,
+  HiCheckCircle,
+  HiRefresh,
+} from 'react-icons/hi';
 
-export const MANAGER_ROLES = ['admin', 'pastor', 'staff'];
+export const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
 
 export const EVENT_TYPE_OPTIONS = [
   { value: 'service', label: 'Sunday Service' },
@@ -62,8 +68,8 @@ export const EVENT_TYPE_METADATA = {
 };
 
 export const SUMMARY_CARDS = [
-  { key: 'draft', icon: 'clock', variant: 'blue', title: 'In Draft' },
-  { key: 'published', icon: 'calendar', variant: 'orange', title: 'Published' },
-  { key: 'completed', icon: 'check', variant: 'green', title: 'Completed' },
-  { key: 'attendanceRate', icon: 'users', variant: 'purple', title: 'Attendance' },
+  { key: 'all', icon: HiClipboardList, title: 'All Requests', filterValue: 'all' },
+  { key: 'pending', icon: HiClock, title: 'Pending', filterValue: 'pending' },
+  { key: 'in_progress', icon: HiRefresh, title: 'In Prayer', filterValue: 'in_progress' },
+  { key: 'completed', icon: HiCheckCircle, title: 'Completed', filterValue: 'completed' },
 ];

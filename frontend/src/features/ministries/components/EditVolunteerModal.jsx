@@ -77,7 +77,7 @@ export const EditVolunteerModal = ({ open, onClose, member, onSuccess }) => {
     try {
       const payload = {
         ministry: member.ministry,
-        user_id: member.user.id,
+        member_id: member.member.id,  // ← Changed from member.user.id to member.member.id
         role: formData.role,
         is_active: formData.is_active,
         max_consecutive_shifts: Number(formData.max_consecutive_shifts),
@@ -110,11 +110,12 @@ export const EditVolunteerModal = ({ open, onClose, member, onSuccess }) => {
 
   if (!open || !member) return null;
 
-  const userName = member.user
-    ? `${member.user.first_name || ''} ${member.user.last_name || ''}`.trim() || member.user.username || 'Unknown'
-    : 'Unknown User';
+  // ← Changed: Access member.member.* instead of member.user.*
+  const userName = member.member
+    ? `${member.member.first_name || ''} ${member.member.last_name || ''}`.trim() || member.member.full_name || 'Unknown'
+    : 'Unknown Member';
 
-  const userEmail = member.user?.email || 'No email';
+  const userEmail = member.member?.email || 'No email';
   const isLeadBlocked = !canAssignLead(formData.role);
 
   return (

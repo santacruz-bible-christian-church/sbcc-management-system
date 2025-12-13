@@ -11,8 +11,9 @@ import { CSVImportModal } from '../components/CSVImportModal';
 import { MemberFormModal } from '../components/MemberFormModal';
 import { MemberDetailsModal } from '../components/MemberDetailsModal';
 import { membersApi } from '../../../api/members.api';
+import { showError, showSuccess } from '../../../utils/toast';
 
-const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
+const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
 
 export const MembershipListPage = () => {
   const { user } = useAuth();
@@ -98,7 +99,7 @@ export const MembershipListPage = () => {
       closeArchiveModal();
     } catch (err) {
       console.error('Archive member error:', err);
-      alert(err.response?.data?.detail || 'Failed to archive member');
+      showError(err.response?.data?.detail || 'Failed to archive member');
     }
   }, [archiveState.member, refreshMembers, pagination.currentPage, closeArchiveModal]);
 
@@ -109,7 +110,7 @@ export const MembershipListPage = () => {
       await refreshMembers(pagination.currentPage);
     } catch (err) {
       console.error('Restore member error:', err);
-      alert(err.response?.data?.detail || 'Failed to restore member');
+      showError(err.response?.data?.detail || 'Failed to restore member');
     }
   }, [refreshMembers, pagination.currentPage]);
 
@@ -120,10 +121,10 @@ export const MembershipListPage = () => {
       await membersApi.importCSV(file);
       setCsvImportOpen(false);
       await refreshMembers(pagination.currentPage);
-      alert('Members imported successfully!');
+      showSuccess('Members imported successfully!'); // ← Changed from alert()
     } catch (err) {
       console.error('CSV import error:', err);
-      alert(err.response?.data?.detail || 'Failed to import CSV');
+      showError(err.response?.data?.detail || 'Failed to import CSV'); // ← Changed from alert()
     } finally {
       setImporting(false);
     }
@@ -155,7 +156,7 @@ export const MembershipListPage = () => {
       closeFormModal();
     } catch (err) {
       console.error('Form submit error:', err);
-      alert(err.response?.data?.detail || 'Failed to save member');
+      showError(err.response?.data?.detail || 'Failed to save member'); // ← Changed from alert()
     } finally {
       setFormLoading(false);
     }

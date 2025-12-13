@@ -5,6 +5,8 @@ The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
 """
 
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
@@ -18,6 +20,18 @@ urlpatterns = [
     path("api/events/", include("apps.events.urls")),
     path("api/attendance/", include("apps.attendance.urls")),
     path("api/inventory/", include("apps.inventory.urls")),
+    path("api/announcements/", include("apps.announcements.urls")),
+    path("api/prayer-requests/", include("apps.prayer_requests.urls")),
+    path("api/visitors/", include("apps.visitors.urls")),
+    path("api/settings/", include("apps.settings.urls")),
+    path("api/tasks/", include("apps.tasks.urls")),
+    path("api/meeting-minutes/", include("apps.meeting_minutes.urls")),
     # Dashboard (aggregates data from multiple apps)
     path("api/dashboard/", include("core.urls")),
+    # Public APIs (no auth required)
+    path("api/public/", include("sbcc.public_urls")),
 ]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

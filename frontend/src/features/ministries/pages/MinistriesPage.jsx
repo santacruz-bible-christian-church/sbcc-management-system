@@ -7,8 +7,9 @@ import { MinistryCard } from '../components/MinistryCard';
 import { MinistryFormModal } from '../components/MinistryFormModal';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 import { useNavigate } from 'react-router-dom';
+import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 
-const MANAGER_ROLES = ['admin', 'pastor', 'staff'];
+const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
 
 export const MinistriesPage = () => {
   const { user } = useAuth();
@@ -267,10 +268,14 @@ export const MinistriesPage = () => {
       />
 
       {/* Delete Confirmation Modal */}
+      {/* NOTE: Updated to use two-column confirmation modal with illustration
+          (Trash-WarmTone.svg) — matches Attendance and Members delete modal. Illustration
+          is passed via the `illustration` prop so it remains configurable. */}
       <ConfirmationModal
         open={deleteState.open}
         title="Delete Ministry?"
         message={`Are you sure you want to delete "${deleteState.ministry?.name}"? This will also remove all associated members, shifts, and assignments. This action cannot be undone.`}
+        illustration={TrashIllustration}
         confirmText="Delete"
         confirmVariant="danger"
         onConfirm={handleDeleteConfirm}
