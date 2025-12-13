@@ -51,19 +51,18 @@ export const LoginPage = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#F5F5F5]">
         <div className="w-full max-w-md">
           {/* Logo and Title */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              {!settingsLoading && (
-                <img
-                  src={logoUrl}
-                  alt="Logo"
-                  className="w-10 h-10 object-contain"
-                />
-              )}
-              <h1 className="text-4xl font-bold text-[#FDB54A]">
-                {appName}
-              </h1>
-            </div>
+          <div className="mb-8 text-center">
+            {!settingsLoading && (
+              <img
+                src={logoUrl}
+                alt="Logo"
+                className="w-16 h-16 object-contain mx-auto mb-3"
+              />
+            )}
+            <h1 className="text-2xl font-bold text-gray-800">
+              {appName}
+            </h1>
+            <p className="text-gray-500 text-sm mt-1">Sign in to your account</p>
           </div>
 
           {/* Login Form Card */}

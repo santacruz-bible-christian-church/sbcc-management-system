@@ -17,8 +17,9 @@ export const SettingsPage = () => {
   const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
   const [activeTab, setActiveTab] = useState(0);
 
-  // Only admins can access settings
-  if (user?.role !== 'admin') {
+  // Only admins and super_admins can access settings
+  const isAdminOrAbove = ['super_admin', 'admin'].includes(user?.role);
+  if (!isAdminOrAbove) {
     return <Navigate to="/dashboard" replace />;
   }
 

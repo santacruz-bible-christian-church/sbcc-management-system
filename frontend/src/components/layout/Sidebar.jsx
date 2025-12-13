@@ -145,7 +145,7 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         </div>
                     )}
                     {!collapsed && (
-                        <h1 className="text-lg font-semibold text-gray-900 whitespace-nowrap">
+                        <h1 className="text-lg font-semibold text-gray-900 truncate max-w-[180px]">
                             {systemSettings?.app_name || 'SBCC Management'}
                         </h1>
                     )}
