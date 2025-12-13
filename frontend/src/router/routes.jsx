@@ -1,6 +1,8 @@
 import { Navigate } from 'react-router-dom';
 import { ProtectedWithLayout } from './ProtectedWithLayout';
 import { LoginPage } from '../features/auth/pages/LoginPage';
+import { ForgotPasswordPage } from '../features/auth/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { EventsPage } from '../features/events/pages/EventsPage';
 import { MembershipListPage } from '../features/members/pages/MembershipListPage';
@@ -18,6 +20,8 @@ import { TasksPage } from '../features/tasks/pages/TasksPage';
 import HelpCenter from '../features/help/pages/HelpCenter';
 import GuidesDirectory from '../features/help/components/GuidesDirectory';
 import FAQsDirectory from '../features/help/components/FAQsDirectory';
+import { UserManagementPage } from '../features/user-management/pages/UserManagementPage';
+import { UnauthorizedPage } from '../components/ui/UnauthorizedPage';
 
 export const routes = [
   {
@@ -27,6 +31,18 @@ export const routes = [
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: '/reset-password',
+    element: <ResetPasswordPage />,
+  },
+  {
+    path: '/unauthorized',
+    element: <UnauthorizedPage />,
   },
   {
     path: '/dashboard',
@@ -169,6 +185,14 @@ export const routes = [
     element: (
       <ProtectedWithLayout>
         <TasksPage />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: '/user-management',
+    element: (
+      <ProtectedWithLayout requiredRoles={['super_admin']}>
+        <UserManagementPage />
       </ProtectedWithLayout>
     ),
   },

@@ -16,6 +16,7 @@ import {
     Heart,
     Bell,
     CheckSquare,
+    Shield,
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { usePublicSettings } from '../../features/settings/hooks/usePublicSettings';
@@ -26,6 +27,10 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
     const { user, logout } = useAuth();
     const [membershipOpen, setMembershipOpen] = useState(false);
     const { settings: systemSettings } = usePublicSettings();
+
+    // Role checks
+    const isSuperAdmin = user?.role === 'super_admin';
+    const isAdminOrAbove = ['super_admin', 'admin'].includes(user?.role);
 
     const handleLogout = async () => {
         try {
@@ -140,7 +145,7 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                         </div>
                     )}
                     {!collapsed && (
-                        <h1 className="text-lg font-semibold text-gray-900 whitespace-nowrap">
+                        <h1 className="text-lg font-semibold text-gray-900 truncate max-w-[180px]">
                             {systemSettings?.app_name || 'SBCC Management'}
                         </h1>
                     )}
@@ -274,14 +279,28 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                                 }
                             </p>
                             <p className="text-xs text-gray-500 truncate">
-                                {user?.email || 'user@sbcc.com'}
+                                {user?.role === 'super_admin' ? 'Super Admin' : user?.email || 'user@sbcc.com'}
                             </p>
                         </div>
                     )}
                 </div>
 
-                {/* Settings Button - Admin Only */}
-                {user?.role === 'admin' && (
+                {/* User Management - Super Admin Only */}
+                {isSuperAdmin && (
+                    <button
+                        onClick={() => navigate('/user-management')}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors rounded-lg hover:bg-amber-50 text-amber-700 ${
+                            location.pathname === '/user-management' ? 'bg-amber-50 text-amber-700' : ''
+                        } ${collapsed ? 'justify-center' : ''}`}
+                        title={collapsed ? 'User Management' : undefined}
+                    >
+                        <Shield size={18} className={`flex-shrink-0 ${location.pathname === '/user-management' ? 'text-amber-600' : 'text-amber-600'}`} />
+                        {!collapsed && <span className="font-medium">User Management</span>}
+                    </button>
+                )}
+
+                {/* Settings Button - Admin & Super Admin */}
+                {isAdminOrAbove && (
                     <button
                         onClick={() => navigate('/settings')}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors rounded-lg hover:bg-gray-50 text-gray-700 ${

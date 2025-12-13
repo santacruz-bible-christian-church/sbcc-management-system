@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Spinner, Tabs } from 'flowbite-react';
-import { HiOutlineCog, HiOutlineInformationCircle, HiOutlinePhone } from 'react-icons/hi';
+import { HiOutlineCog, HiOutlineInformationCircle, HiOutlinePhone, HiOutlineUser } from 'react-icons/hi';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useSettings } from '../hooks/useSettings';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { BrandingTab } from '../components/BrandingTab';
 import { AboutTab } from '../components/AboutTab';
 import { ContactTab } from '../components/ContactTab';
+import { ProfileTab } from '../components/ProfileTab';
 import { SettingsPreview } from '../components/SettingsPreview';
 import Snackbar from '../../../components/ui/Snackbar';
 import { Navigate } from 'react-router-dom';
@@ -17,8 +18,9 @@ export const SettingsPage = () => {
   const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
   const [activeTab, setActiveTab] = useState(0);
 
-  // Only admins can access settings
-  if (user?.role !== 'admin') {
+  // Only admins and super_admins can access settings
+  const isAdminOrAbove = ['super_admin', 'admin'].includes(user?.role);
+  if (!isAdminOrAbove) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -119,6 +121,19 @@ export const SettingsPage = () => {
                 <ContactTab
                   settings={settings}
                   onSave={handleSave}
+                  saving={saving}
+                />
+              </div>
+            </Tabs.Item>
+
+            <Tabs.Item
+              active={activeTab === 3}
+              title="Profile"
+              icon={HiOutlineUser}
+            >
+              <div className="py-6">
+                <ProfileTab
+                  user={user}
                   saving={saving}
                 />
               </div>
