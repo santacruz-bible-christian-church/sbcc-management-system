@@ -68,7 +68,7 @@ class TestPermissions:
         other_user = User.objects.create_user(
             username="other", password="pass", role="ministry_leader"
         )
-        other_task = Task.objects.create(
+        Task.objects.create(
             title="Someone Else's Task",
             start_date=today,
             end_date=today + timedelta(days=7),
