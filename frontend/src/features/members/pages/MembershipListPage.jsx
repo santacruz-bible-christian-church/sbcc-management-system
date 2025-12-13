@@ -127,11 +127,16 @@ export const MembershipListPage = () => {
             if (formModalState.member) {
                 // Update existing member
                 await updateMember(formModalState.member.id, formData);
+                showSuccess('Member updated successfully');
             } else {
                 // Create new member
                 await createMember(formData);
+                showSuccess('Member created successfully');
             }
+            
             closeFormModal();
+            await refreshMembers(); 
+            
         } catch (err) {
             console.error('=== ERROR DETAILS ===');
             console.error('Status:', err.response?.status);
@@ -169,7 +174,7 @@ export const MembershipListPage = () => {
         } finally {
             setFormLoading(false);
         }
-    }, [formModalState.member, createMember, updateMember, closeFormModal]);
+    }, [formModalState.member, createMember, updateMember, closeFormModal, refreshMembers]); // ← Add refreshMembers to dependencies
 
     // Details Modal handlers
     const handleViewDetails = useCallback((member) => {
