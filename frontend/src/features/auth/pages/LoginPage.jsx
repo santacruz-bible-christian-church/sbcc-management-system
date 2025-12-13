@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { LoginForm } from '../components/LoginForm';
 import ChurchImage from '../../../assets/ChurchImage.jpeg';
 import SBCCLogo from '../../../assets/SBCCLogoHD.svg';
@@ -21,13 +21,13 @@ export const LoginPage = () => {
           className="w-full h-full object-cover scale-110"
         />
         {/* Translucent Yellow Overlay with Radial Gradient */}
-        <div 
+        <div
           className="absolute inset-0"
           style={{
             background: 'radial-gradient(circle, rgba(253, 181, 74, 0.4) 0%, rgba(253, 181, 74, 0.7) 100%)'
           }}
         ></div>
-        
+
         {/* SBCC Logo with Drop Shadow */}
         <div className="absolute inset-0 flex items-center justify-center">
           <img
@@ -47,9 +47,9 @@ export const LoginPage = () => {
           {/* Logo and Title */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <img 
-                src={SBCCLogo} 
-                alt="SBCC Logo" 
+              <img
+                src={SBCCLogo}
+                alt="SBCC Logo"
                 className="w-10 h-10 object-contain"
               />
               <h1 className="text-4xl font-bold text-[#FDB54A]">
@@ -64,12 +64,12 @@ export const LoginPage = () => {
 
             {/* Forgot Password Link */}
             <div className="mt-6 text-center">
-              <a
-                href="#"
+              <Link
+                to="/forgot-password"
                 className="text-sm text-[#FDB54A] hover:text-[#e5a43b] transition-colors"
               >
                 Forgot Password?
-              </a>
+              </Link>
             </div>
           </div>
         </div>

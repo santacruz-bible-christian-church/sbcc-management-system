@@ -41,4 +41,26 @@ export const authApi = {
     });
     return response.data;
   },
+
+  // Forgot password - request reset email
+  async forgotPassword(email) {
+    const response = await apiClient.post('/auth/forgot-password/', { email });
+    return response.data;
+  },
+
+  // Verify reset token is valid
+  async verifyResetToken(token) {
+    const response = await apiClient.post('/auth/verify-reset-token/', { token });
+    return response.data;
+  },
+
+  // Reset password with token
+  async resetPassword(token, newPassword, newPassword2) {
+    const response = await apiClient.post('/auth/reset-password/', {
+      token,
+      new_password: newPassword,
+      new_password2: newPassword2,
+    });
+    return response.data;
+  },
 };
