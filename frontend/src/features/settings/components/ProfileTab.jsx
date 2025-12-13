@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { HiEye, HiEyeOff, HiExclamationCircle, HiCheckCircle } from 'react-icons/hi';
 import { authApi } from '../../../api/auth.api';
+import { useAuthStore } from '../../../store/auth.store';
 
 export const ProfileTab = ({ user, saving, onProfileUpdate }) => {
+  const updateUser = useAuthStore((state) => state.updateUser);
+
   // Profile form
   const [profileData, setProfileData] = useState({
     first_name: user?.first_name || '',
@@ -61,6 +64,8 @@ export const ProfileTab = ({ user, saving, onProfileUpdate }) => {
     setProfileSaving(true);
     try {
       await authApi.updateProfile(profileData);
+      // Refresh user data in auth store so sidebar and other components update
+      await updateUser();
       setProfileSuccess('Profile updated successfully');
       if (onProfileUpdate) onProfileUpdate();
     } catch (err) {

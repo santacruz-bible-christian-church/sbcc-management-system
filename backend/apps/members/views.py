@@ -58,8 +58,13 @@ class MemberViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         data = request.data.copy()
 
-        # Restrict changing status to staff only
-        if "status" in data and not request.user.is_staff:
+        # Restrict changing status to admin/super_admin only
+        is_admin_or_above = (
+            request.user.is_staff
+            or request.user.is_superuser
+            or request.user.role in ["super_admin", "admin"]
+        )
+        if "status" in data and not is_admin_or_above:
             data.pop("status")
 
         serializer = self.get_serializer(instance, data=data, partial=partial)
