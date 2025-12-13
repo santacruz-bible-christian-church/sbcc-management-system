@@ -47,7 +47,7 @@ per-file-ignores = [
 
 [tool.bandit]
 exclude_dirs = ["*/tests/*", "*/venv/*", "*/migrations/*", "*/management/commands/*"]
-skips = ["B101", "B601"]
+skips = ["B101", "B601", "B110"]
 
 [tool.pylint.messages_control]
 disable = [

@@ -1,15 +1,25 @@
 from django.contrib.auth import get_user_model
-from rest_framework import generics, permissions, status
+from django.db import models
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from .permissions import IsSuperAdmin
 from .serializers import (
     ChangePasswordSerializer,
     CustomTokenObtainPairSerializer,
+    ForgotPasswordSerializer,
     RegisterSerializer,
+    ResetPasswordSerializer,
+    UserCreateSerializer,
     UserSerializer,
+    UserUpdateSerializer,
+    VerifyResetTokenSerializer,
 )
 
 User = get_user_model()
@@ -107,3 +117,164 @@ class RefreshTokenView(TokenRefreshView):
     """
 
     pass
+
+
+# ============ Password Reset Views ============
+
+
+class ForgotPasswordView(generics.GenericAPIView):
+    """
+    POST /api/auth/forgot-password/
+    Request a password reset email
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = ForgotPasswordSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            serializer.save()
+        except Exception:
+            # Don't expose email sending errors
+            pass
+
+        # Always return success (don't reveal if email exists)
+        return Response(
+            {
+                "message": "If an account with that email exists, a password reset link has been sent."
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class VerifyResetTokenView(generics.GenericAPIView):
+    """
+    POST /api/auth/verify-reset-token/
+    Verify if a reset token is valid
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = VerifyResetTokenSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        return Response({"valid": True, "message": "Token is valid"}, status=status.HTTP_200_OK)
+
+
+class ResetPasswordView(generics.GenericAPIView):
+    """
+    POST /api/auth/reset-password/
+    Reset password using token
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = ResetPasswordSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            {"message": "Password has been reset successfully. You can now login."},
+            status=status.HTTP_200_OK,
+        )
+
+
+# ============ User Management Views (Super Admin) ============
+
+
+class UserManagementViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing users (Super Admin only)
+
+    GET /api/auth/users/ - List all users
+    POST /api/auth/users/ - Create a new user
+    GET /api/auth/users/{id}/ - Get user details
+    PUT /api/auth/users/{id}/ - Update user
+    DELETE /api/auth/users/{id}/ - Delete user
+    POST /api/auth/users/{id}/set_password/ - Set user password
+    POST /api/auth/users/{id}/toggle_active/ - Toggle user active status
+    """
+
+    queryset = User.objects.all().order_by("-date_joined")
+    permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["role", "is_active"]
+    search_fields = ["username", "email", "first_name", "last_name"]
+    ordering_fields = ["date_joined", "username", "email", "role"]
+    ordering = ["-date_joined"]
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return UserCreateSerializer
+        elif self.action in ["update", "partial_update"]:
+            return UserUpdateSerializer
+        return UserSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        """Prevent deleting yourself or the last super admin"""
+        user = self.get_object()
+
+        # Prevent self-deletion
+        if user == request.user:
+            return Response(
+                {"error": "You cannot delete your own account."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Prevent deleting last super admin
+        if user.role == "super_admin" or user.is_superuser:
+            super_admin_count = User.objects.filter(
+                models.Q(role="super_admin") | models.Q(is_superuser=True)
+            ).count()
+            if super_admin_count <= 1:
+                return Response(
+                    {"error": "Cannot delete the last super admin account."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        return super().destroy(request, *args, **kwargs)
+
+    @action(detail=True, methods=["post"])
+    def set_password(self, request, pk=None):
+        """
+        POST /api/auth/users/{id}/set_password/
+        Set a new password for a user (Super Admin only)
+        """
+        user = self.get_object()
+        password = request.data.get("password")
+
+        if not password:
+            return Response({"error": "Password is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(password)
+        user.save()
+
+        return Response({"message": f"Password updated for {user.username}."})
+
+    @action(detail=True, methods=["post"])
+    def toggle_active(self, request, pk=None):
+        """
+        POST /api/auth/users/{id}/toggle_active/
+        Toggle user active status
+        """
+        user = self.get_object()
+
+        # Prevent deactivating yourself
+        if user == request.user:
+            return Response(
+                {"error": "You cannot deactivate your own account."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.is_active = not user.is_active
+        user.save()
+
+        status_text = "activated" if user.is_active else "deactivated"
+        return Response({"message": f"User {user.username} has been {status_text}."})
