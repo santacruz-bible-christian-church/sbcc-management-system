@@ -8,6 +8,13 @@ import {
   HiOutlineUser,
   HiOutlineOfficeBuilding,
   HiOutlineDocumentDownload,
+  HiOutlineLocationMarker,
+  HiOutlineBriefcase,
+  HiOutlineHeart,
+  HiOutlineAcademicCap,
+  HiOutlineSparkles,
+  HiOutlineUserGroup,
+  HiOutlineChartBar,
 } from 'react-icons/hi';
 import { membersApi } from '../../../api/members.api';
 import { MemberAttendanceHistory } from './MemberAttendanceHistory';
@@ -36,6 +43,11 @@ const calculateAge = (dateOfBirth) => {
   return age;
 };
 
+const formatMaritalStatus = (status) => {
+  if (!status) return 'N/A';
+  return status.charAt(0).toUpperCase() + status.slice(1);
+};
+
 // Reusable info display component
 const InfoItem = ({ icon: Icon, iconBg, label, value }) => (
   <div className="flex items-center gap-3">
@@ -49,13 +61,46 @@ const InfoItem = ({ icon: Icon, iconBg, label, value }) => (
   </div>
 );
 
+// Simple info row without icon
+const InfoRow = ({ label, value }) => (
+  <div className="flex justify-between py-2 border-b border-gray-100 last:border-b-0">
+    <span className="text-sm text-gray-500">{label}</span>
+    <span className="text-sm font-medium text-gray-900">{value || 'N/A'}</span>
+  </div>
+);
+
 // Section wrapper
-const Section = ({ title, children }) => (
+const Section = ({ title, children, collapsed = false }) => (
   <div className="mb-6">
     <h4 className="text-lg font-semibold text-gray-900 mb-4">{title}</h4>
     {children}
   </div>
 );
+
+// Collapsible Section
+const CollapsibleSection = ({ title, children, defaultOpen = false }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+      >
+        <h4 className="text-base font-semibold text-gray-900">{title}</h4>
+        <svg
+          className={`w-5 h-5 text-gray-500 transform transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isOpen && <div className="p-4">{children}</div>}
+    </div>
+  );
+};
 
 export const MemberDetailsModal = ({ open, onClose, member }) => {
   const [exporting, setExporting] = useState(false);
@@ -86,6 +131,18 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
       setExporting(false);
     }
   };
+
+  // Check if member has educational info
+  const hasEducation = member.elementary_school || member.secondary_school ||
+                       member.vocational_school || member.college;
+
+  // Check if member has spiritual info
+  const hasSpiritualInfo = member.accepted_jesus !== null || member.spiritual_birthday ||
+                           member.salvation_testimony || member.willing_to_be_baptized !== null;
+
+  // Check if member has church background
+  const hasChurchBackground = member.previous_church || member.how_introduced ||
+                              member.began_attending_since;
 
   return (
     <>
@@ -156,10 +213,15 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
                   value={member.phone}
                 />
               </div>
-              {member.address && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">Address</p>
-                  <p className="text-sm text-gray-900">{member.address}</p>
+              {member.complete_address && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-green-100 text-green-600">
+                    <HiOutlineLocationMarker className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Address</p>
+                    <p className="text-sm text-gray-900">{member.complete_address}</p>
+                  </div>
                 </div>
               )}
             </Section>
@@ -179,6 +241,26 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
                   label="Date of Birth"
                   value={`${formatDate(member.date_of_birth)}${age ? ` (${age} years old)` : ''}`}
                 />
+                <InfoItem
+                  icon={HiOutlineBriefcase}
+                  iconBg="bg-indigo-100 text-indigo-600"
+                  label="Occupation"
+                  value={member.occupation}
+                />
+                <InfoItem
+                  icon={HiOutlineHeart}
+                  iconBg="bg-pink-100 text-pink-600"
+                  label="Marital Status"
+                  value={formatMaritalStatus(member.marital_status)}
+                />
+                {member.wedding_anniversary && (
+                  <InfoItem
+                    icon={HiOutlineHeart}
+                    iconBg="bg-red-100 text-red-600"
+                    label="Wedding Anniversary"
+                    value={formatDate(member.wedding_anniversary)}
+                  />
+                )}
                 {member.baptism_date && (
                   <InfoItem
                     icon={HiOutlineCalendar}
@@ -213,6 +295,148 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
                 </div>
               </div>
             </Section>
+
+            {/* Attendance Statistics */}
+            <Section title="Attendance Statistics">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <HiOutlineChartBar className="w-5 h-5 text-green-600" />
+                    <p className="text-xs text-green-700 font-medium">Attendance Rate</p>
+                  </div>
+                  <p className="text-2xl font-bold text-green-700">
+                    {member.attendance_rate ? `${parseFloat(member.attendance_rate).toFixed(1)}%` : '0%'}
+                  </p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <HiOutlineCalendar className="w-5 h-5 text-blue-600" />
+                    <p className="text-xs text-blue-700 font-medium">Last Attended</p>
+                  </div>
+                  <p className="text-sm font-bold text-blue-700">
+                    {member.last_attended ? formatDate(member.last_attended) : 'Never'}
+                  </p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <HiOutlineUser className="w-5 h-5 text-orange-600" />
+                    <p className="text-xs text-orange-700 font-medium">Consecutive Absences</p>
+                  </div>
+                  <p className="text-2xl font-bold text-orange-700">
+                    {member.consecutive_absences || 0}
+                  </p>
+                </div>
+              </div>
+            </Section>
+
+            {/* Educational Background - Collapsible */}
+            {hasEducation && (
+              <CollapsibleSection title="Educational Background">
+                <div className="space-y-2">
+                  {member.elementary_school && (
+                    <InfoRow
+                      label="Elementary School"
+                      value={`${member.elementary_school}${member.elementary_year_graduated ? ` (${member.elementary_year_graduated})` : ''}`}
+                    />
+                  )}
+                  {member.secondary_school && (
+                    <InfoRow
+                      label="Secondary School"
+                      value={`${member.secondary_school}${member.secondary_year_graduated ? ` (${member.secondary_year_graduated})` : ''}`}
+                    />
+                  )}
+                  {member.vocational_school && (
+                    <InfoRow
+                      label="Vocational School"
+                      value={`${member.vocational_school}${member.vocational_year_graduated ? ` (${member.vocational_year_graduated})` : ''}`}
+                    />
+                  )}
+                  {member.college && (
+                    <InfoRow
+                      label="College"
+                      value={`${member.college}${member.college_year_graduated ? ` (${member.college_year_graduated})` : ''}`}
+                    />
+                  )}
+                </div>
+              </CollapsibleSection>
+            )}
+
+            {/* Spiritual Information - Collapsible */}
+            {hasSpiritualInfo && (
+              <CollapsibleSection title="Spiritual Information">
+                <div className="space-y-3">
+                  {member.accepted_jesus !== null && (
+                    <div className="flex items-center gap-2">
+                      <span className={`w-3 h-3 rounded-full ${member.accepted_jesus ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                      <span className="text-sm text-gray-700">
+                        {member.accepted_jesus ? 'Has accepted Jesus Christ' : 'Has not yet accepted Jesus Christ'}
+                      </span>
+                    </div>
+                  )}
+                  {member.spiritual_birthday && (
+                    <InfoRow label="Spiritual Birthday" value={formatDate(member.spiritual_birthday)} />
+                  )}
+                  {member.willing_to_be_baptized !== null && (
+                    <div className="flex items-center gap-2">
+                      <span className={`w-3 h-3 rounded-full ${member.willing_to_be_baptized ? 'bg-blue-500' : 'bg-gray-300'}`}></span>
+                      <span className="text-sm text-gray-700">
+                        {member.willing_to_be_baptized ? 'Willing to be baptized' : 'Not yet willing to be baptized'}
+                      </span>
+                    </div>
+                  )}
+                  {member.salvation_testimony && (
+                    <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                      <p className="text-xs text-gray-500 mb-2">Salvation Testimony</p>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{member.salvation_testimony}</p>
+                    </div>
+                  )}
+                </div>
+              </CollapsibleSection>
+            )}
+
+            {/* Church Background - Collapsible */}
+            {hasChurchBackground && (
+              <CollapsibleSection title="Church Background">
+                <div className="space-y-2">
+                  {member.previous_church && (
+                    <InfoRow label="Previous Church" value={member.previous_church} />
+                  )}
+                  {member.began_attending_since && (
+                    <InfoRow label="Began Attending Since" value={formatDate(member.began_attending_since)} />
+                  )}
+                  {member.how_introduced && (
+                    <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                      <p className="text-xs text-gray-500 mb-2">How They Were Introduced</p>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{member.how_introduced}</p>
+                    </div>
+                  )}
+                </div>
+              </CollapsibleSection>
+            )}
+
+            {/* Family Members - Collapsible */}
+            {member.family_members && member.family_members.length > 0 && (
+              <CollapsibleSection title="Family Members">
+                <div className="divide-y divide-gray-100">
+                  {member.family_members.map((family, index) => (
+                    <div key={family.id || index} className="py-3 first:pt-0 last:pb-0">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-full bg-purple-100">
+                          <HiOutlineUserGroup className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{family.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {family.relationship}
+                            {family.birthdate && ` • Born ${formatDate(family.birthdate)}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleSection>
+            )}
 
             {/* Attendance History */}
             <MemberAttendanceHistory memberId={member.id} />

@@ -3,7 +3,7 @@ import { ListHeaders } from '../components/ListHeaders';
 import { ListCards } from '../components/ListCards';
 import { useMembers } from '../hooks/useMembers';
 import { useAuth } from '../../auth/hooks/useAuth';
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useMemo } from 'react';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 import ArchiveIllustration from '../../../assets/Archive-Illustration.svg';
@@ -13,13 +13,11 @@ import { MemberFormModal } from '../components/MemberFormModal';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
 import { showError, showSuccess, showWarning } from '../../../utils/toast';
 import { generateMembershipFormPDF } from '../../../utils/memberFormPDF';
+import { HiOutlineArchive, HiOutlineTrash, HiX, HiCheckCircle } from 'react-icons/hi';
 
-const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
+const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
 
 export const MembershipListPage = () => {
-
-
-
     const [searchTerm, setSearchTerm] = useState('');
     const { user } = useAuth();
     const canManage = MANAGER_ROLES.includes(user?.role);
@@ -54,27 +52,135 @@ export const MembershipListPage = () => {
     const [importing, setImporting] = useState(false);
     const [csvImportOpen, setCsvImportOpen] = useState(false);
 
+    // Multi-select state
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [bulkActionLoading, setBulkActionLoading] = useState(false);
+    const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+    const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false);
 
-        // Delete handlers
-        const openDeleteModal = useCallback((member) => {
-            setDeleteState({ open: true, member });
-        }, []);
+    // Calculate if all current page members are selected
+    const allSelected = useMemo(() => {
+        if (members.length === 0) return false;
+        return members.every((member) => selectedIds.includes(member.id));
+    }, [members, selectedIds]);
 
-        const closeDeleteModal = useCallback(() => {
-            setDeleteState({ open: false, member: null });
-        }, []);
-
-        const handleDeleteConfirm = useCallback(async () => {
-            if (!deleteState.member) return;
-
-            try {
-                await deleteMember(deleteState.member.id);
-                closeDeleteModal();
-            } catch (err) {
-                console.error('Delete member error:', err);
+    // Toggle selection mode
+    const toggleSelectionMode = useCallback(() => {
+        setSelectionMode((prev) => {
+            if (prev) {
+                // Exiting selection mode, clear selections
+                setSelectedIds([]);
             }
-        }, [deleteState.member, deleteMember, closeDeleteModal]);
+            return !prev;
+        });
+    }, []);
 
+    // Handle individual selection
+    const handleSelect = useCallback((memberId, isSelected) => {
+        setSelectedIds((prev) => {
+            if (isSelected) {
+                return [...prev, memberId];
+            } else {
+                return prev.filter((id) => id !== memberId);
+            }
+        });
+    }, []);
+
+    // Handle select all on current page
+    const handleSelectAll = useCallback((selectAll) => {
+        if (selectAll) {
+            const currentPageIds = members.map((m) => m.id);
+            setSelectedIds((prev) => {
+                const newIds = currentPageIds.filter((id) => !prev.includes(id));
+                return [...prev, ...newIds];
+            });
+        } else {
+            const currentPageIds = members.map((m) => m.id);
+            setSelectedIds((prev) => prev.filter((id) => !currentPageIds.includes(id)));
+        }
+    }, [members]);
+
+    // Clear selection
+    const clearSelection = useCallback(() => {
+        setSelectedIds([]);
+    }, []);
+
+    // Bulk archive handler
+    const handleBulkArchive = useCallback(async () => {
+        if (selectedIds.length === 0) return;
+
+        setBulkActionLoading(true);
+        try {
+            await membersApi.bulkArchive(selectedIds);
+            showSuccess(`Successfully archived ${selectedIds.length} members`);
+            setSelectedIds([]);
+            setBulkArchiveOpen(false);
+            await refreshMembers(pagination.currentPage);
+        } catch (err) {
+            console.error('Bulk archive error:', err);
+            showError(err.response?.data?.detail || 'Failed to archive members');
+        } finally {
+            setBulkActionLoading(false);
+        }
+    }, [selectedIds, refreshMembers, pagination.currentPage]);
+
+    // Bulk delete handler
+    const handleBulkDelete = useCallback(async () => {
+        if (selectedIds.length === 0) return;
+
+        setBulkActionLoading(true);
+        try {
+            // Delete each member individually
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const id of selectedIds) {
+                try {
+                    await deleteMember(id);
+                    successCount++;
+                } catch (err) {
+                    failCount++;
+                    console.error(`Failed to delete member ${id}:`, err);
+                }
+            }
+
+            if (failCount > 0) {
+                showWarning(`Deleted ${successCount} members, ${failCount} failed`);
+            } else {
+                showSuccess(`Successfully deleted ${successCount} members`);
+            }
+
+            setSelectedIds([]);
+            setBulkDeleteOpen(false);
+            await refreshMembers(pagination.currentPage);
+        } catch (err) {
+            console.error('Bulk delete error:', err);
+            showError('Failed to delete members');
+        } finally {
+            setBulkActionLoading(false);
+        }
+    }, [selectedIds, deleteMember, refreshMembers, pagination.currentPage]);
+
+    // Delete handlers
+    const openDeleteModal = useCallback((member) => {
+        setDeleteState({ open: true, member });
+    }, []);
+
+    const closeDeleteModal = useCallback(() => {
+        setDeleteState({ open: false, member: null });
+    }, []);
+
+    const handleDeleteConfirm = useCallback(async () => {
+        if (!deleteState.member) return;
+
+        try {
+            await deleteMember(deleteState.member.id);
+            closeDeleteModal();
+        } catch (err) {
+            console.error('Delete member error:', err);
+        }
+    }, [deleteState.member, deleteMember, closeDeleteModal]);
 
     // Archive handlers
     const openArchiveModal = useCallback((member) => {
@@ -109,8 +215,6 @@ export const MembershipListPage = () => {
         }
     }, [refreshMembers, pagination.currentPage]);
 
-
-
     // Form Modal handlers
     const handleCreateMember = useCallback(() => {
         setFormModalState({ open: true, member: null });
@@ -136,10 +240,10 @@ export const MembershipListPage = () => {
                 await createMember(formData);
                 showSuccess('Member created successfully');
             }
-            
+
             closeFormModal();
-            await refreshMembers(); 
-            
+            await refreshMembers();
+
         } catch (err) {
             console.error('=== ERROR DETAILS ===');
             console.error('Status:', err.response?.status);
@@ -177,7 +281,7 @@ export const MembershipListPage = () => {
         } finally {
             setFormLoading(false);
         }
-    }, [formModalState.member, createMember, updateMember, closeFormModal, refreshMembers]); // ← Add refreshMembers to dependencies
+    }, [formModalState.member, createMember, updateMember, closeFormModal, refreshMembers]);
 
     // Details Modal handlers
     const handleViewDetails = useCallback((member) => {
@@ -188,14 +292,12 @@ export const MembershipListPage = () => {
         setDetailsModalState({ open: false, member: null });
     }, []);
 
-
-
     // CSV Import with Auto PDF Generation
     const handleCSVImport = useCallback(async (file) => {
         setImporting(true);
         try {
             const response = await membersApi.importCSV(file);
-            
+
             // ✅ Show import success message
             if (response.errors && response.errors.length > 0) {
                 showWarning(`Imported ${response.members_created} members with ${response.errors.length} errors`);
@@ -203,11 +305,11 @@ export const MembershipListPage = () => {
             } else {
                 showSuccess(`Successfully imported ${response.members_created} members!`);
             }
-            
+
             // ✅ Auto-generate PDFs for all imported members
             if (response.members && response.members.length > 0) {
                 showSuccess(`Generating ${response.members.length} membership form PDFs...`);
-                
+
                 // Generate PDFs with delay to avoid overwhelming browser
                 response.members.forEach((member, index) => {
                     setTimeout(() => {
@@ -219,17 +321,17 @@ export const MembershipListPage = () => {
                         }
                     }, index * 500); // 500ms delay between each PDF
                 });
-                
+
                 // Show completion message after all PDFs are generated
                 setTimeout(() => {
                   showSuccess(`✅ All ${response.members.length} membership forms generated!`);
                 }, response.members.length * 500 + 1000);
               }
-            
+
             // ✅ Close modal and refresh list
             setCsvImportOpen(false);
             await refreshMembers(pagination.currentPage);
-            
+
         } catch (err) {
             console.error('CSV import error:', err);
             showError(err.response?.data?.detail || 'Failed to import CSV');
@@ -240,9 +342,59 @@ export const MembershipListPage = () => {
 
     return (
         <div className='ml-12 mt-12 mr-10'>
-            <h1 className='text-[30px] text-[#383838] leading-none font-bold mb-5'>
-                Member List
-            </h1>
+            <div className="flex items-center justify-between mb-5">
+                <h1 className='text-[30px] text-[#383838] leading-none font-bold'>
+                    Member List
+                </h1>
+                {/* Selection Mode Toggle */}
+                {canManage && (
+                    <button
+                        onClick={toggleSelectionMode}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                            selectionMode
+                                ? 'bg-[#FDB54A] text-white'
+                                : 'border border-[#FDB54A] text-[#FDB54A] hover:bg-[#FDB54A] hover:text-white'
+                        }`}
+                    >
+                        <HiCheckCircle className="w-5 h-5" />
+                        {selectionMode ? 'Exit Selection' : 'Select Multiple'}
+                    </button>
+                )}
+            </div>
+
+            {/* Bulk Actions Toolbar */}
+            {selectionMode && selectedIds.length > 0 && (
+                <div className="mb-4 p-4 bg-[#FFF8E7] border border-[#FDB54A] rounded-xl flex items-center justify-between animate-fade-in">
+                    <div className="flex items-center gap-3">
+                        <span className="text-[#383838] font-medium">
+                            {selectedIds.length} member{selectedIds.length > 1 ? 's' : ''} selected
+                        </span>
+                        <button
+                            onClick={clearSelection}
+                            className="text-sm text-gray-500 hover:text-gray-700 underline"
+                        >
+                            Clear selection
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setBulkArchiveOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-[#FF9800] text-white rounded-lg hover:bg-[#e68900] transition-colors"
+                        >
+                            <HiOutlineArchive className="w-5 h-5" />
+                            Archive Selected
+                        </button>
+                        <button
+                            onClick={() => setBulkDeleteOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-[#E55050] text-white rounded-lg hover:bg-[#d13e3e] transition-colors"
+                        >
+                            <HiOutlineTrash className="w-5 h-5" />
+                            Delete Selected
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="space-y-4">
                 <MemberListNavBar
                     filters={filters}
@@ -254,7 +406,11 @@ export const MembershipListPage = () => {
                     onCreateClick={handleCreateMember}
                 />
 
-                <ListHeaders />
+                <ListHeaders
+                    showCheckbox={selectionMode}
+                    allSelected={allSelected}
+                    onSelectAll={handleSelectAll}
+                />
 
                 <ListCards
                     members={members}
@@ -266,13 +422,13 @@ export const MembershipListPage = () => {
                     onViewDetails={handleViewDetails}
                     pagination={pagination}
                     onPageChange={goToPage}
+                    showCheckbox={selectionMode}
+                    selectedIds={selectedIds}
+                    onSelect={handleSelect}
                 />
             </div>
 
             {/* Delete Confirmation Modal */}
-            {/* NOTE: Updated to use same two-column confirmation modal with illustration
-                (Trash-WarmTone.svg) — matches Attendance delete modal. Illustration
-                is passed via the `illustration` prop so it remains configurable. */}
             <ConfirmationModal
                 open={deleteState.open}
                 title="Delete Member?"
@@ -286,9 +442,6 @@ export const MembershipListPage = () => {
             />
 
             {/* Archive Confirmation Modal */}
-            {/* Archive Confirmation Modal - styled to match design screenshot
-                Uses the Archive illustration and a compact two-column layout.
-                Title and confirm button text adjusted to match the visual example. */}
             <ConfirmationModal
                 open={archiveState.open}
                 title="Are you sure?"
@@ -299,6 +452,32 @@ export const MembershipListPage = () => {
                 onConfirm={handleArchiveConfirm}
                 onCancel={closeArchiveModal}
                 loading={loading}
+            />
+
+            {/* Bulk Archive Confirmation Modal */}
+            <ConfirmationModal
+                open={bulkArchiveOpen}
+                title="Archive Selected Members?"
+                message={`Are you sure you want to archive ${selectedIds.length} member${selectedIds.length > 1 ? 's' : ''}? You can restore them later.`}
+                illustration={ArchiveIllustration}
+                confirmText="Archive All"
+                confirmVariant="danger"
+                onConfirm={handleBulkArchive}
+                onCancel={() => setBulkArchiveOpen(false)}
+                loading={bulkActionLoading}
+            />
+
+            {/* Bulk Delete Confirmation Modal */}
+            <ConfirmationModal
+                open={bulkDeleteOpen}
+                title="Delete Selected Members?"
+                message={`Are you sure you want to permanently delete ${selectedIds.length} member${selectedIds.length > 1 ? 's' : ''}? This action cannot be undone.`}
+                illustration={TrashIllustration}
+                confirmText="Delete All"
+                confirmVariant="danger"
+                onConfirm={handleBulkDelete}
+                onCancel={() => setBulkDeleteOpen(false)}
+                loading={bulkActionLoading}
             />
 
             <MemberFormModal
@@ -316,7 +495,6 @@ export const MembershipListPage = () => {
                 onClose={closeDetailsModal}
                 member={detailsModalState.member}
             />
-
         </div>
     )
 }

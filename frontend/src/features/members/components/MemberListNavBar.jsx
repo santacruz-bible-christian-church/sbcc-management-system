@@ -9,7 +9,7 @@ import { useMinistries } from '../../ministries/hooks/useMinistries';
 import { showSuccess, showError, showWarning } from '../../../utils/toast';
 import { generateMembershipFormPDF } from '../../../utils/memberFormPDF';
 
-const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
+const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
 
 export const MemberListNavBar = ({
     pagination,
@@ -38,7 +38,7 @@ export const MemberListNavBar = ({
         setImporting(true);
         try {
             const response = await membersApi.importCSV(file);
-            
+
             // ✅ Show import success message
             if (response.errors && response.errors.length > 0) {
                 showWarning(`Imported ${response.members_created} members with ${response.errors.length} errors`);
@@ -46,11 +46,11 @@ export const MemberListNavBar = ({
             } else {
                 showSuccess(`Successfully imported ${response.members_created} members!`);
             }
-            
+
             // ✅ Auto-generate PDFs for all imported members
             if (response.members && response.members.length > 0) {
                 showSuccess(`Generating ${response.members.length} membership form PDFs...`);
-                
+
                 // Generate PDFs with delay to avoid overwhelming browser
                 response.members.forEach((member, index) => {
                     setTimeout(() => {
@@ -62,17 +62,17 @@ export const MemberListNavBar = ({
                         }
                     }, index * 500); // 500ms delay between each PDF
                 });
-                
+
                 // Show completion message after all PDFs are generated
                 setTimeout(() => {
                     showSuccess(`✅ All ${response.members.length} membership forms generated!`);
                 }, response.members.length * 500 + 1000);
             }
-            
+
             // ✅ Close modal and refresh list
             setCsvModalOpen(false);
             await refreshMembers(pagination.currentPage);
-            
+
         } catch (err) {
             console.error('CSV import error:', err);
             showError(err.response?.data?.detail || 'Failed to import CSV');

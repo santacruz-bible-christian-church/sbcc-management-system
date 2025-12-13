@@ -10,7 +10,6 @@ import { ContactTab } from '../components/ContactTab';
 import { ProfileTab } from '../components/ProfileTab';
 import { SettingsPreview } from '../components/SettingsPreview';
 import Snackbar from '../../../components/ui/Snackbar';
-import { Navigate } from 'react-router-dom';
 
 export const SettingsPage = () => {
   const { user } = useAuth();
@@ -18,11 +17,8 @@ export const SettingsPage = () => {
   const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
   const [activeTab, setActiveTab] = useState(0);
 
-  // Only admins and super_admins can access settings
-  const isAdminOrAbove = ['super_admin', 'admin'].includes(user?.role);
-  if (!isAdminOrAbove) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  // Check if user can modify system settings (branding, about, contact)
+  const canEditSystemSettings = ['super_admin', 'admin'].includes(user?.role);
 
   const handleSave = async (data, isImage = false) => {
     try {
@@ -55,10 +51,47 @@ export const SettingsPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading && canEditSystemSettings) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Spinner size="xl" />
+      </div>
+    );
+  }
+
+  // If user can only access profile, show simplified view
+  if (!canEditSystemSettings) {
+    return (
+      <div className="max-w-[95%] mx-auto p-4 md:p-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-[30px] text-[#383838] leading-none font-bold mb-2">
+            Profile Settings
+          </h1>
+          <p className="text-[15px] text-[#A0A0A0]">
+            Manage your account and credentials
+          </p>
+        </div>
+
+        {/* Profile Only */}
+        <div className="max-w-2xl">
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <ProfileTab
+              user={user}
+              saving={saving}
+            />
+          </div>
+        </div>
+
+        {/* Snackbar */}
+        {snackbar && (
+          <Snackbar
+            message={snackbar.message}
+            variant={snackbar.variant}
+            duration={snackbar.duration}
+            onClose={hideSnackbar}
+          />
+        )}
       </div>
     );
   }

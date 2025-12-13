@@ -299,19 +299,17 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                     </button>
                 )}
 
-                {/* Settings Button - Admin & Super Admin */}
-                {isAdminOrAbove && (
-                    <button
-                        onClick={() => navigate('/settings')}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors rounded-lg hover:bg-gray-50 text-gray-700 ${
-                            location.pathname === '/settings' ? 'bg-orange-50 text-[#FDB54A]' : ''
-                        } ${collapsed ? 'justify-center' : ''}`}
-                        title={collapsed ? 'Settings' : undefined}
-                    >
-                        <Settings size={18} className={`flex-shrink-0 ${location.pathname === '/settings' ? 'text-[#FDB54A]' : 'text-gray-600'}`} />
-                        {!collapsed && <span className="font-medium">Settings</span>}
-                    </button>
-                )}
+                {/* Settings Button - All authenticated users can access */}
+                <button
+                    onClick={() => navigate('/settings')}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors rounded-lg hover:bg-gray-50 text-gray-700 ${
+                        location.pathname === '/settings' ? 'bg-orange-50 text-[#FDB54A]' : ''
+                    } ${collapsed ? 'justify-center' : ''}`}
+                    title={collapsed ? 'Settings' : undefined}
+                >
+                    <Settings size={18} className={`flex-shrink-0 ${location.pathname === '/settings' ? 'text-[#FDB54A]' : 'text-gray-600'}`} />
+                    {!collapsed && <span className="font-medium">Settings</span>}
+                </button>
 
                 {/* Logout Button */}
                 <button
