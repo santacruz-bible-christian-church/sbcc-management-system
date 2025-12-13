@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { HiEye, HiEyeOff } from 'react-icons/hi';
+import { HiEye, HiEyeOff, HiExclamationCircle } from 'react-icons/hi';
 import { useAuth } from '../hooks/useAuth';
 
 export const LoginForm = ({ onSuccess }) => {
@@ -70,8 +70,12 @@ export const LoginForm = ({ onSuccess }) => {
     <form className="space-y-5" onSubmit={handleSubmit}>
       {/* Server Error */}
       {authError && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-          {authError}
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start gap-3">
+          <HiExclamationCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium">Login Failed</p>
+            <p className="text-red-600 mt-0.5">{authError}</p>
+          </div>
         </div>
       )}
 

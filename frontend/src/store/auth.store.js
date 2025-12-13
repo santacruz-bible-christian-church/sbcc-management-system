@@ -17,7 +17,7 @@ export const useAuthStore = create(
         set({ loading: true, error: null });
         try {
           const data = await authApi.login(username, password);
-          
+
           localStorage.setItem('access_token', data.access);
           localStorage.setItem('refresh_token', data.refresh);
           localStorage.setItem('user', JSON.stringify(data.user));
@@ -32,7 +32,30 @@ export const useAuthStore = create(
 
           return { success: true };
         } catch (error) {
-          const errorMessage = error.response?.data?.detail || 'Login failed';
+          let errorMessage = 'Login failed. Please try again.';
+
+          // Handle different error responses
+          if (error.response) {
+            const status = error.response.status;
+            const detail = error.response.data?.detail;
+
+            if (status === 401) {
+              errorMessage = 'Invalid username or password. Please check your credentials and try again.';
+            } else if (status === 400) {
+              errorMessage = detail || 'Please provide both username and password.';
+            } else if (status === 403) {
+              errorMessage = 'Your account has been deactivated. Please contact an administrator.';
+            } else if (status === 429) {
+              errorMessage = 'Too many login attempts. Please wait a few minutes and try again.';
+            } else if (detail) {
+              // Use API-provided message if available
+              errorMessage = detail;
+            }
+          } else if (error.request) {
+            // Network error - no response received
+            errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+          }
+
           set({ loading: false, error: errorMessage });
           return { success: false, error: errorMessage };
         }
@@ -77,7 +100,7 @@ export const useAuthStore = create(
       initialize: () => {
         const token = localStorage.getItem('access_token');
         const userStr = localStorage.getItem('user');
-        
+
         if (token && userStr) {
           set({
             user: JSON.parse(userStr),
