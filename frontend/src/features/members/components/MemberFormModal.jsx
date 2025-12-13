@@ -68,11 +68,11 @@ export const MemberFormModal = ({
     college: "",
     college_year_graduated: "",
     family_members: [],
-    accepted_jesus: false,
+    accepted_jesus: null,
     salvation_testimony: "",
     spiritual_birthday: "",
     baptism_date: "",
-    willing_to_be_baptized: false,
+    willing_to_be_baptized: null,
     ministry: "",
     previous_church: "",
     how_introduced: "",
@@ -106,11 +106,11 @@ export const MemberFormModal = ({
           college: member.college || "",
           college_year_graduated: member.college_year_graduated || "",
           family_members: member.family_members || [],
-          accepted_jesus: member.accepted_jesus || false,
+          accepted_jesus: member.accepted_jesus ?? null,  
           salvation_testimony: member.salvation_testimony || "",
           spiritual_birthday: member.spiritual_birthday || "",
           baptism_date: member.baptism_date || "",
-          willing_to_be_baptized: member.willing_to_be_baptized || false,
+          willing_to_be_baptized: member.willing_to_be_baptized ?? null, 
           ministry: member.ministry?.id || member.ministry || "",
           previous_church: member.previous_church || "",
           how_introduced: member.how_introduced || "",
@@ -138,11 +138,11 @@ export const MemberFormModal = ({
           college: "",
           college_year_graduated: "",
           family_members: [],
-          accepted_jesus: false,
+          accepted_jesus: null,
           salvation_testimony: "",
           spiritual_birthday: "",
           baptism_date: "",
-          willing_to_be_baptized: false,
+          willing_to_be_baptized: null,
           ministry: "",
           previous_church: "",
           how_introduced: "",
@@ -245,6 +245,19 @@ export const MemberFormModal = ({
       } else if (typeof sanitized[field] === 'string') {
         const parsed = parseInt(sanitized[field], 10);
         sanitized[field] = isNaN(parsed) ? null : parsed;
+      }
+    });
+
+   
+    const booleanFields = ['accepted_jesus', 'willing_to_be_baptized'];
+    
+    booleanFields.forEach(field => {
+      if (sanitized[field] === null || sanitized[field] === undefined || sanitized[field] === '') {
+  
+        sanitized[field] = null;
+      } else {
+     
+        sanitized[field] = Boolean(sanitized[field]);
       }
     });
 
@@ -386,11 +399,11 @@ export const MemberFormModal = ({
       college: "",
       college_year_graduated: "",
       family_members: [],
-      accepted_jesus: false,
+      accepted_jesus: null,
       salvation_testimony: "",
       spiritual_birthday: "",
       baptism_date: "",
-      willing_to_be_baptized: false,
+      willing_to_be_baptized: null,
       ministry: "",
       previous_church: "",
       how_introduced: "",
@@ -403,40 +416,49 @@ export const MemberFormModal = ({
     onClose();
   }, [onClose]);
 
-  const handleSubmit = useCallback(
-    async () => {
-      if (!validateStep(currentStep)) {
-        return;
-      }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const sanitizedData = sanitizeFormData(formData);
+    
+    // ✅ Debug: Check boolean values
+    console.log('Boolean field values:', {
+      accepted_jesus: sanitizedData.accepted_jesus,
+      willing_to_be_baptized: sanitizedData.willing_to_be_baptized,
+      accepted_jesus_type: typeof sanitizedData.accepted_jesus,
+      willing_type: typeof sanitizedData.willing_to_be_baptized,
+    });
+    
+    if (!validateStep(currentStep)) {
+      return;
+    }
 
-      // Mark current step as completed
-      setCompletedSteps((prev) => new Set([...prev, currentStep]));
+    // Mark current step as completed
+    setCompletedSteps((prev) => new Set([...prev, currentStep]));
 
-      // If not on last step, move to next
-      if (currentStep < STEPS.length - 1) {
-        setCurrentStep((prev) => prev + 1);
-        return;
-      }
+    // If not on last step, move to next
+    if (currentStep < STEPS.length - 1) {
+      setCurrentStep((prev) => prev + 1);
+      return;
+    }
 
-      // On last step, sanitize and submit the form
-      try {
-        const sanitizedData = sanitizeFormData(formData);
-        await onSubmit(sanitizedData);
-        
-        // Auto-generate PDF for new members (not when editing)
-        if (!isEdit) {
-          generateMembershipFormPDF(formData);
-        }
-        
-        // Close modal on success
-        handleCancel();
-      } catch (error) {
-        // Error is handled by parent
-        console.error('Form submission error:', error);
+    // On last step, sanitize and submit the form
+    try {
+      const sanitizedData = sanitizeFormData(formData);
+      await onSubmit(sanitizedData);
+      
+      // Auto-generate PDF for new members (not when editing)
+      if (!isEdit) {
+        generateMembershipFormPDF(formData);
       }
-    },
-    [currentStep, formData, onSubmit, validateStep, sanitizeFormData, handleCancel, isEdit]
-  );
+      
+      // Close modal on success
+      handleCancel();
+    } catch (error) {
+      // Error is handled by parent
+      console.error('Form submission error:', error);
+    }
+  };
 
   const handleExportPDF = useCallback(() => {
     generateMembershipFormPDF(formData);

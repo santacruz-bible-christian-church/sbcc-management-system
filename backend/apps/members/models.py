@@ -59,10 +59,10 @@ class Member(models.Model):
     college_year_graduated = models.IntegerField(blank=True, null=True)
 
     # Spiritual Information
-    accepted_jesus = models.BooleanField(default=False)
+    accepted_jesus = models.BooleanField(null=True, blank=True, default=None)
     salvation_testimony = models.TextField(blank=True, null=True)
     spiritual_birthday = models.DateField(blank=True, null=True)
-    willing_to_be_baptized = models.BooleanField(default=False)
+    willing_to_be_baptized = models.BooleanField(null=True, blank=True, default=None)
 
     # Church Background
     previous_church = models.CharField(max_length=200, blank=True, null=True)

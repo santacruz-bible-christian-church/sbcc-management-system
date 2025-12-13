@@ -1,6 +1,9 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+// ✅ Import your church logo (place PNG in src/assets/)
+import churchLogo from '../assets/SBCCLogoHD.png';
+
 export const generateMembershipFormPDF = (formData) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -10,19 +13,15 @@ export const generateMembershipFormPDF = (formData) => {
 
   // Helper function to add checkboxes
   const addCheckbox = (x, y, checked = false) => {
-  // Draw the checkbox border
-  doc.rect(x, y, 3, 3);
-  
-  if (checked) {
-    // Draw an X instead of checkmark for better compatibility
-    doc.setLineWidth(0.5);
-    doc.line(x + 0.5, y + 0.5, x + 2.5, y + 2.5);  // Diagonal \
-    doc.line(x + 2.5, y + 0.5, x + 0.5, y + 2.5);  // Diagonal /
-    doc.setLineWidth(0.2); // Reset line width
-  }
-};
+    doc.rect(x, y, 3, 3);
+    if (checked) {
+      doc.setLineWidth(0.5);
+      doc.line(x + 0.5, y + 0.5, x + 2.5, y + 2.5);
+      doc.line(x + 2.5, y + 0.5, x + 0.5, y + 2.5);
+      doc.setLineWidth(0.2);
+    }
+  };
 
-  // Helper to check if we need a new page
   const checkNewPage = () => {
     if (yPos > pageHeight - 30) {
       doc.addPage();
@@ -32,25 +31,50 @@ export const generateMembershipFormPDF = (formData) => {
     return false;
   };
 
-  // === HEADER WITH LOGO ===
-  const logoX = pageWidth - margin - 35;
-  doc.rect(logoX, yPos, 30, 35);
+  // === HEADER WITH LOGO ON LEFT ===
+  const logoX = margin;
+  const logoY = yPos;
+  const logoWidth = 25;  // Smaller to match template
+  const logoHeight = 25;
+
+  // ✅ Add PNG logo image on the LEFT
+  try {
+    doc.addImage(churchLogo, 'PNG', logoX, logoY, logoWidth, logoHeight, undefined, 'FAST');
+  } catch (error) {
+    // Fallback: Draw circle placeholder if logo fails to load
+    console.warn('Logo failed to load, using placeholder');
+    doc.circle(logoX + logoWidth / 2, logoY + logoHeight / 2, logoWidth / 2);
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'bold');
+    doc.text('SBCC', logoX + logoWidth / 2, logoY + logoHeight / 2 + 2, { align: 'center' });
+  }
+
+  // Picture box on the right (matching template)
+  const pictureBoxX = pageWidth - margin - 30;
+  const pictureBoxY = yPos;
+  const pictureBoxWidth = 30;
+  const pictureBoxHeight = 30;
+  
+  doc.rect(pictureBoxX, pictureBoxY, pictureBoxWidth, pictureBoxHeight);
   doc.setFontSize(8);
   doc.setFont(undefined, 'normal');
-  doc.text('Picture', logoX + 15, yPos + 18, { align: 'center' });
+  doc.text('Picture', pictureBoxX + pictureBoxWidth / 2, pictureBoxY + pictureBoxHeight / 2, { align: 'center' });
 
-  // Church name and address (centered)
-  doc.setFontSize(10);
+  // ✅ Church name and address - CENTERED IN THE MIDDLE OF THE PAGE
+  // Calculate true center (ignoring logo and picture box)
+  const pageCenterX = pageWidth / 2;
+
+  doc.setFontSize(11);
   doc.setFont(undefined, 'bold');
-  doc.text('PASIG BIBLE CHRISTIAN MISSION INC.', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 5;
+  doc.text('PASIG BIBLE CHRISTIAN MISSION INC.', pageCenterX, yPos + 6, { align: 'center' });
   
   doc.setFontSize(9);
   doc.setFont(undefined, 'normal');
-  doc.text('No. 43 B-Tatco St., Bagong Ilog, Pasig City', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 4;
-  doc.text('Tel No. 671-0486', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 10;
+  doc.text('No. 43 B-Tatco Street, Bagong Ilog, Pasig City', pageCenterX, yPos + 11, { align: 'center' });
+  doc.text('Tel No. 671-0486', pageCenterX, yPos + 15, { align: 'center' });
+
+  // Move position down after header
+  yPos += 32;
 
   // === TITLE ===
   doc.setFontSize(14);
@@ -62,17 +86,17 @@ export const generateMembershipFormPDF = (formData) => {
   doc.line(pageWidth / 2 - titleWidth / 2, yPos, pageWidth / 2 + titleWidth / 2, yPos);
   yPos += 8;
 
-  doc.setFontSize(9);
-  doc.setFont(undefined, 'normal');
-  doc.text('ID No: ___________', pageWidth - margin - 35, yPos);
-  yPos += 5;
-
   // === INTRODUCTION TEXT ===
   doc.setFontSize(8);
   doc.setFont(undefined, 'italic');
   const intro = 'Fill out and return the following information:';
   doc.text(intro, margin, yPos);
-  yPos += 5;
+  yPos += 6;
+
+  // ID No. on the right
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'normal');
+  doc.text('ID No. ___________', pageWidth - margin - 35, yPos - 6);
 
   const declaration = 'I have received Jesus Christ as my personal Savior and Lord, and desire to become an active member and support the ministries of Santa Cruz Bible Christian Church. Therefore, I hereby apply for membership.';
   const splitDeclaration = doc.splitTextToSize(declaration, pageWidth - 2 * margin);
@@ -335,7 +359,7 @@ export const generateMembershipFormPDF = (formData) => {
   addCheckbox(pageWidth - margin - 35, yPos - 2.5, formData.willing_to_be_baptized === true);
   doc.text('Yes', pageWidth - margin - 31, yPos);
   
-  addCheckbox(pageWidth - margin - 18, yPos - 2.5, formData.willing_to_be_baptized === false || formData.willing_to_be_baptized === null);
+  addCheckbox(pageWidth - margin - 18, yPos - 2.5, formData.willing_to_be_baptized === false);
   doc.text('No', pageWidth - margin - 14, yPos);
   yPos += 6;
 
