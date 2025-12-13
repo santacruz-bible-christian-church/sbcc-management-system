@@ -6,30 +6,25 @@ import {
   HiOutlineTrash,
   HiUserGroup,
 } from 'react-icons/hi';
-import { Button, PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
-import { EVENT_TYPE_METADATA, STATUS_METADATA } from '../utils/constants';
+import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
+import { STATUS_METADATA, EVENT_TYPE_METADATA } from '../utils/constants';
 import {
   formatCapacity,
   formatDateRange,
   getEventTypeLabel,
   withAlpha,
 } from '../utils/format';
-import { SBCC_COLORS } from '../../../store/theme.store';
+import { format } from 'date-fns';
 
-const statusStyle = (status) => {
-  const meta = STATUS_METADATA[status] ?? STATUS_METADATA.draft;
-  return {
-    backgroundColor: withAlpha(meta.tint, 0.2),
-    color: meta.text,
-  };
-};
-
-const eventTypeStyle = (eventType) => {
-  const meta = EVENT_TYPE_METADATA[eventType] ?? { tint: SBCC_COLORS.primary };
-  return {
-    backgroundColor: withAlpha(meta.tint, 0.18),
-    color: meta.tint,
-  };
+// Status-based colors (matching calendar)
+const getStatusColor = (status) => {
+  switch(status) {
+    case 'draft': return 'bg-gray-100 text-gray-600 border-gray-200';
+    case 'published': return 'bg-blue-50 text-blue-600 border-blue-100';
+    case 'completed': return 'bg-green-50 text-green-600 border-green-100';
+    case 'cancelled': return 'bg-red-50 text-red-600 border-red-100';
+    default: return 'bg-gray-100 text-gray-600 border-gray-200';
+  }
 };
 
 export const EventsBoard = ({
@@ -39,6 +34,7 @@ export const EventsBoard = ({
   onCreate,
   onEdit,
   onDelete,
+  onViewDetails,
 }) => {
   if (loading) {
     return null;
@@ -46,12 +42,12 @@ export const EventsBoard = ({
 
   if (events.length === 0) {
     return (
-      <div className="events-empty-state">
-        <h2>No events found</h2>
-        <p>Try adjusting your filters or create a new event to get started.</p>
+      <div className="text-center py-16 bg-gray-50 rounded-2xl border border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-700 mb-2">No events found</h2>
+        <p className="text-sm text-gray-500 mb-6">Try adjusting your filters or create a new event.</p>
         {canManage && (
           <PrimaryButton icon={HiOutlinePlusCircle} onClick={onCreate}>
-            Create first event
+            Create Event
           </PrimaryButton>
         )}
       </div>
@@ -59,71 +55,78 @@ export const EventsBoard = ({
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {events.map((event) => {
+        const startDate = event.start_date ? new Date(event.start_date) : new Date(event.date);
+        const statusMeta = STATUS_METADATA[event.status] ?? STATUS_METADATA.draft;
+
         return (
-          <article key={event.id ?? event.title} className="events-card">
-            <header className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <span className="events-status-badge" style={statusStyle(event.status)}>
-                  {STATUS_METADATA[event.status]?.label ?? STATUS_METADATA.draft.label}
+          <article
+            key={event.id ?? event.title}
+            className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-gray-200 transition-all cursor-pointer"
+            onClick={() => onViewDetails && onViewDetails(event)}
+          >
+            {/* Content */}
+            <div className="p-4">
+              {/* Status & Type Badges */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className={`px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded border ${getStatusColor(event.status)}`}>
+                  {statusMeta.label}
                 </span>
-                <h3 className="events-card-title">{event.title}</h3>
-                {event.description && (
-                  <p className="events-card-description">{event.description}</p>
+                <span className="px-2 py-0.5 text-[10px] font-semibold text-gray-500 bg-gray-50 rounded">
+                  {getEventTypeLabel(event.event_type)}
+                </span>
+              </div>
+
+              {/* Title */}
+              <h3 className="text-sm font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-sbcc-orange transition-colors">
+                {event.title}
+              </h3>
+
+              {/* Details */}
+              <div className="space-y-1.5">
+                <div className="flex items-center text-xs text-gray-500">
+                  <HiCalendar className="flex-shrink-0 mr-2 h-3.5 w-3.5 text-gray-400" />
+                  <span>{format(startDate, 'MMM d, yyyy')} at {format(startDate, 'h:mm a')}</span>
+                </div>
+                <div className="flex items-center text-xs text-gray-500">
+                  <HiLocationMarker className="flex-shrink-0 mr-2 h-3.5 w-3.5 text-gray-400" />
+                  <span className="truncate">{event.location || 'TBA'}</span>
+                </div>
+                {event.max_attendees && (
+                  <div className="flex items-center text-xs text-gray-500">
+                    <HiUserGroup className="flex-shrink-0 mr-2 h-3.5 w-3.5 text-gray-400" />
+                    <span>{formatCapacity(event)}</span>
+                  </div>
                 )}
               </div>
-              <span className="events-type-chip" style={eventTypeStyle(event.event_type)}>
-                {getEventTypeLabel(event.event_type)}
-              </span>
-            </header>
 
-            <dl className="events-meta-grid">
-              <div>
-                <dt className="flex items-center gap-2 uppercase text-[11px] tracking-[0.12em] text-sbcc-gray">
-                  <HiCalendar className="h-4 w-4 text-sbcc-dark-orange" />
-                  Schedule
-                </dt>
-                <dd>{formatDateRange(event.date, event.end_date)}</dd>
-              </div>
-              <div>
-                <dt className="flex items-center gap-2 uppercase text-[11px] tracking-[0.12em] text-sbcc-gray">
-                  <HiLocationMarker className="h-4 w-4 text-sbcc-dark-orange" />
-                  Location
-                </dt>
-                <dd>{event.location || 'To be announced'}</dd>
-              </div>
-              {event.max_attendees && (
-                <div>
-                  <dt className="flex items-center gap-2 uppercase text-[11px] tracking-[0.12em] text-sbcc-gray">
-                    <HiUserGroup className="h-4 w-4 text-sbcc-dark-orange" />
-                    Capacity
-                  </dt>
-                  <dd>{event.max_attendees} attendees</dd>
-                </div>
+              {/* Description Preview */}
+              {event.description && (
+                <p className="mt-3 text-xs text-gray-400 line-clamp-2">
+                  {event.description}
+                </p>
               )}
-            </dl>
+            </div>
 
+            {/* Action Footer - Management Only */}
             {canManage && (
-              <footer className="events-card-actions">
-                <div className="events-card-actions__right">
-                  <SecondaryButton
-                    size="sm"
-                    icon={HiOutlinePencil}
-                    onClick={() => onEdit(event)}
-                  >
-                    Edit
-                  </SecondaryButton>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    icon={HiOutlineTrash}
-                    onClick={() => onDelete(event)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </footer>
+              <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onEdit(event); }}
+                  className="p-1.5 text-gray-400 hover:text-sbcc-orange hover:bg-orange-50 rounded transition-colors"
+                  title="Edit"
+                >
+                  <HiOutlinePencil className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDelete(event); }}
+                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                  title="Delete"
+                >
+                  <HiOutlineTrash className="w-4 h-4" />
+                </button>
+              </div>
             )}
           </article>
         );

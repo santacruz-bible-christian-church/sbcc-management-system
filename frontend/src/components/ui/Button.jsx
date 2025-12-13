@@ -65,10 +65,10 @@ export const PrimaryButton = ({
       onClick={onClick}
       disabled={disabled || loading}
       className={`
-        inline-flex items-center gap-2 px-4 py-2.5
-        bg-sbcc-gradient text-white font-medium rounded-lg
+        inline-flex items-center gap-1.5 px-3 py-1.5 text-sm
+        bg-sbcc-gradient text-white font-medium rounded-md
         hover:opacity-90 active:scale-95
-        transition-all duration-200 shadow-md
+        transition-all duration-200 shadow-sm
         disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
         ${className}
       `}
@@ -84,7 +84,7 @@ export const PrimaryButton = ({
         </>
       ) : (
         <>
-          {Icon && <Icon className="h-5 w-5" />}
+          {Icon && <Icon className="h-4 w-4" />}
           {children}
         </>
       )}
@@ -106,9 +106,9 @@ export const SecondaryButton = ({
       onClick={onClick}
       disabled={disabled || loading}
       className={`
-        inline-flex items-center gap-2 px-4 py-2.5
-        bg-white text-sbcc-dark font-medium rounded-lg
-        border-2 border-sbcc-gray/20
+        inline-flex items-center gap-1.5 px-3 py-1.5 text-sm
+        bg-white text-sbcc-dark font-medium rounded-md
+        border border-gray-200
         hover:bg-sbcc-light-orange hover:border-sbcc-orange
         active:scale-95 transition-all duration-200
         disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
@@ -126,7 +126,7 @@ export const SecondaryButton = ({
         </>
       ) : (
         <>
-          {Icon && <Icon className="h-5 w-5" />}
+          {Icon && <Icon className="h-4 w-4" />}
           {children}
         </>
       )}
