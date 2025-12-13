@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
-import { HiX, HiChevronLeft, HiChevronRight, HiCheck } from "react-icons/hi";
+import { HiX, HiChevronLeft, HiChevronRight, HiCheck, HiDownload } from "react-icons/hi";
 import PersonalInfoStep from "./steps/PersonalInfoStep";
 import EducationalBackgroundStep from "./steps/EducationalBackgroundStep";
 import FamilyBackgroundStep from "./steps/FamilyBackgroundStep";
 import SpiritualInfoStep from "./steps/SpiritualInfoStep";
 import ChurchBackgroundStep from "./steps/ChurchBackgroundStep";
+import { generateMembershipFormPDF } from "../../../utils/memberFormPDF";
 
 const STEPS = [
   {
@@ -328,6 +329,11 @@ export const MemberFormModal = ({
         const sanitizedData = sanitizeFormData(formData);
         await onSubmit(sanitizedData);
         
+        // Auto-generate PDF for new members (not when editing)
+        if (!isEdit) {
+          generateMembershipFormPDF(formData);
+        }
+        
         // Close modal on success
         handleCancel();
       } catch (error) {
@@ -335,8 +341,12 @@ export const MemberFormModal = ({
         console.error('Form submission error:', error);
       }
     },
-    [currentStep, formData, onSubmit, validateStep, sanitizeFormData, handleCancel]
+    [currentStep, formData, onSubmit, validateStep, sanitizeFormData, handleCancel, isEdit]
   );
+
+  const handleExportPDF = useCallback(() => {
+    generateMembershipFormPDF(formData);
+  }, [formData]);
 
   if (!open) return null;
 
@@ -367,13 +377,25 @@ export const MemberFormModal = ({
                   {STEPS[currentStep].title}
                 </p>
               </div>
-              <button
-                onClick={handleCancel}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
-                disabled={loading}
-              >
-                <HiX className="w-6 h-6" />
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Export PDF Button */}
+                <button
+                  onClick={handleExportPDF}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  title="Download Membership Form as PDF"
+                >
+                  <HiDownload className="w-5 h-5" />
+                  <span className="hidden sm:inline">Export PDF</span>
+                </button>
+                
+                <button
+                  onClick={handleCancel}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+                  disabled={loading}
+                >
+                  <HiX className="w-6 h-6" />
+                </button>
+              </div>
             </div>
 
             {/* Progress Bar */}
