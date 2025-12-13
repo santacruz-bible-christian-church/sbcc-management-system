@@ -13,7 +13,7 @@ import { MemberDetailsModal } from '../components/MemberDetailsModal';
 import { membersApi } from '../../../api/members.api';
 import { showError, showSuccess } from '../../../utils/toast';
 
-const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
+const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
 
 export const MembershipListPage = () => {
   const { user } = useAuth();

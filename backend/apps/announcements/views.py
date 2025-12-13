@@ -4,6 +4,8 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.authentication.permissions import IsAdminOrSuperAdmin
+
 from .models import Announcement
 from .serializers import AnnouncementSerializer
 from .services import send_announcement_email
@@ -20,9 +22,9 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
-        """Only admins can create, update, or delete announcements."""
+        """Only admins/super_admins can create, update, or delete announcements."""
         if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [permissions.IsAdminUser()]
+            return [IsAdminOrSuperAdmin()]
         return super().get_permissions()
 
     def perform_create(self, serializer):
@@ -55,7 +57,7 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=["post"], permission_classes=[IsAdminOrSuperAdmin])
     def send_now(self, request, pk=None):
         """
         Send announcement email to target audience (Feature #2)

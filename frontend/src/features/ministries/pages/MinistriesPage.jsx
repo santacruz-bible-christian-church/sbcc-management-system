@@ -9,7 +9,7 @@ import { ConfirmationModal } from '../../../components/ui/Modal';
 import { useNavigate } from 'react-router-dom';
 import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 
-const MANAGER_ROLES = ['admin', 'pastor', 'staff'];
+const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
 
 export const MinistriesPage = () => {
   const { user } = useAuth();

@@ -1,14 +1,15 @@
 import { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { HiOutlineUpload, HiOutlineDocumentText, HiX, HiOutlineDownload, HiCheckCircle } from 'react-icons/hi';
-import { showWarning } from '../../../utils/toast';
+import { showWarning, showSuccess, showError } from '../../../utils/toast';
+import { generateMembershipFormPDF } from '../../../utils/memberFormPDF';
 
-// Updated Sample CSV template with all new fields
+
 const SAMPLE_CSV_CONTENT = `first_name,last_name,email,phone,gender,date_of_birth,complete_address,occupation,marital_status,wedding_anniversary,elementary_school,elementary_year_graduated,secondary_school,secondary_year_graduated,vocational_school,vocational_year_graduated,college,college_year_graduated,accepted_jesus,salvation_testimony,spiritual_birthday,baptism_date,willing_to_be_baptized,previous_church,how_introduced,began_attending_since,is_active
-Juan,Dela Cruz,juan.delacruz@example.com,0917-123-4567,male,1990-05-15,"123 Main St. Quezon City",Software Engineer,married,2015-06-20,ABC Elementary,2002,XYZ High School,2008,,"",University of the Philippines,2014,true,"Accepted Christ at a youth camp in 2005",2005-07-15,2010-12-25,false,First Baptist Church Manila,Invited by a friend,2018-01-10,true
-Maria,Santos,maria.santos@example.com,0918-234-5678,female,1985-03-20,"456 Church Ave. Manila",Teacher,single,,"",,"DEF High School",2003,"Tech Institute",2005,"",2009,true,"Found Jesus through Bible study",2008-03-15,2008-06-10,false,"","Found online",2015-05-20,true
-Pedro,Garcia,pedro.garcia@example.com,0919-345-6789,male,1995-11-08,"789 Faith Rd. Makati",Business Owner,divorced,,"GHI Elementary",2007,"JKL High School",2013,"","","Ateneo de Manila",2017,true,"Testimony here...",2012-08-20,"",true,"","Passing by the church",2019-03-15,true
-Ana,Reyes,ana.reyes@example.com,0920-456-7890,female,2000-07-22,"321 Hope St. Pasig",Student,single,,"","MNO High School",2018,"",,"","University of Santo Tomas - Currently Enrolled",2022,false,"","","",false,"","Invited by family member",2020-01-15,true`;
+Juan,Dela Cruz,juan.delacruz@example.com,0917-123-4567,male,1990-05-15,123 Main St. Quezon City,Software Engineer,married,2015-06-20,ABC Elementary,2002,XYZ High School,2008,,,University of the Philippines,2014,true,Accepted Christ at a youth camp in 2005,2005-07-15,2010-12-25,false,First Baptist Church Manila,Invited by a friend,2018-01-10,true
+Maria,Santos,maria.santos@example.com,0918-234-5678,female,1985-03-20,456 Church Ave. Manila,Teacher,single,,DEF High School,2003,Tech Institute,2005,,,2009,true,Found Jesus through Bible study,2008-03-15,2008-06-10,false,,Found online,2015-05-20,true
+Pedro,Garcia,pedro.garcia@example.com,0919-345-6789,male,1995-11-08,789 Faith Rd. Makati,Business Owner,divorced,,GHI Elementary,2007,JKL High School,2013,,,Ateneo de Manila,2017,,,2012-08-20,,,Passing by the church,2019-03-15,true
+Ana,Reyes,ana.reyes@example.com,0920-456-7890,female,2000-07-22,321 Hope St. Pasig,Student,single,,,,MNO High School,2018,,,University of Santo Tomas,2022,false,,,,,Invited by family member,2020-01-15,true`;
 
 const downloadSampleCSV = () => {
   const blob = new Blob([SAMPLE_CSV_CONTENT], { type: 'text/csv;charset=utf-8;' });
@@ -26,6 +27,8 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
   const [file, setFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [generatePDFs, setGeneratePDFs] = useState(true); // ✅ Auto-generate PDFs option
+  const [pdfProgress, setPdfProgress] = useState({ current: 0, total: 0, generating: false });
   const fileInputRef = useRef(null);
 
   const handleDrag = (e) => {
@@ -70,12 +73,55 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
       showWarning('Please select a file');
       return;
     }
-    await onImport(file);
-    setFile(null);
+
+    try {
+      setPdfProgress({ current: 0, total: 0, generating: false });
+      
+      // ✅ Import the CSV
+      const result = await onImport(file);
+      
+      // ✅ Auto-generate PDFs if enabled and members were imported
+      if (generatePDFs && result?.members && Array.isArray(result.members) && result.members.length > 0) {
+        setPdfProgress({ current: 0, total: result.members.length, generating: true });
+        
+        showSuccess(`Imported ${result.members.length} members. Generating PDFs...`);
+        
+        // Generate PDFs for each imported member
+        for (let i = 0; i < result.members.length; i++) {
+          const member = result.members[i];
+          
+          // Delay to avoid overwhelming browser
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          try {
+            generateMembershipFormPDF(member);
+            setPdfProgress(prev => ({ ...prev, current: i + 1 }));
+            console.log(`✅ Generated PDF ${i + 1}/${result.members.length}: ${member.first_name} ${member.last_name}`);
+          } catch (error) {
+            console.error(`❌ Failed to generate PDF for ${member.first_name} ${member.last_name}:`, error);
+          }
+        }
+        
+        setPdfProgress({ current: 0, total: 0, generating: false });
+        showSuccess(`✅ Generated ${result.members.length} membership form PDFs!`);
+      }
+      
+      // Reset form
+      setFile(null);
+      setGeneratePDFs(true);
+      onClose();
+      
+    } catch (error) {
+      console.error('Import error:', error);
+      showError('Failed to import members');
+      setPdfProgress({ current: 0, total: 0, generating: false });
+    }
   };
 
   const handleCancel = () => {
     setFile(null);
+    setGeneratePDFs(true);
+    setPdfProgress({ current: 0, total: 0, generating: false });
     onClose();
   };
 
@@ -105,7 +151,7 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
             <button
               onClick={handleCancel}
               className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
-              disabled={loading}
+              disabled={loading || pdfProgress.generating}
             >
               <HiX className="w-5 h-5" />
             </button>
@@ -132,40 +178,33 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
                     accept=".csv"
                     onChange={handleChange}
                     className="hidden"
-                    disabled={loading}
+                    disabled={loading || pdfProgress.generating}
                   />
 
                   <div
-                    onClick={() => !loading && fileInputRef.current?.click()}
-                    className={`border-2  border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
-                      loading ? 'opacity-50 cursor-not-allowed' : ''
-                    } ${
+                    onClick={() => !loading && !pdfProgress.generating && fileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
                       dragActive
-                        ? 'border-[#FDB54A] bg-orange-50'
-                        : file
-                        ? 'border-green-300 bg-green-50'
-                        : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-                    }`}
+                        ? 'border-[#FDB54A] bg-[#FFF8E7]'
+                        : 'border-gray-300 hover:border-[#FDB54A]'
+                    } ${loading || pdfProgress.generating ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {file ? (
-                      <div className="space-y-3">
-                        <HiCheckCircle className="w-12 h-12 mx-auto text-green-600" />
-                        <div>
+                      <div className="flex items-center justify-center gap-3">
+                        <HiOutlineDocumentText className="w-8 h-8 text-[#FDB54A]" />
+                        <div className="text-left">
                           <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {(file.size / 1024).toFixed(2)} KB
-                          </p>
+                          <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>
                         </div>
-                        {!loading && (
+                        {!loading && !pdfProgress.generating && (
                           <button
-                            type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               setFile(null);
                             }}
-                            className="text-sm text-gray-600 hover:text-gray-800 underline transition-colors"
+                            className="ml-auto text-red-600 hover:text-red-800 text-sm font-medium"
                           >
-                            Remove file
+                            Remove
                           </button>
                         )}
                       </div>
@@ -184,32 +223,47 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
                 </form>
               </div>
 
-              {/* Required Fields Notice */}
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Required Fields</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
-                    <span>First Name</span>
+              {/* ✅ Auto-generate PDFs Option */}
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={generatePDFs}
+                    onChange={(e) => setGeneratePDFs(e.target.checked)}
+                    disabled={loading || pdfProgress.generating}
+                    className="mt-1 h-4 w-4 text-[#FDB54A] focus:ring-[#FDB54A] border-gray-300 rounded disabled:opacity-50"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      Auto-generate Membership Form PDFs
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Automatically create printable PDFs for all imported members
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
-                    <span>Last Name</span>
+                </label>
+              </div>
+
+              {/* ✅ PDF Generation Progress */}
+              {pdfProgress.generating && (
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <div className="flex items-center gap-3 mb-2">
+                    <svg className="animate-spin h-5 w-5 text-green-600" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <p className="text-sm font-medium text-green-900">
+                      Generating PDFs... {pdfProgress.current} of {pdfProgress.total}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
-                    <span>Email Address</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
-                    <span>Phone Number</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
-                    <span>Date of Birth</span>
+                  <div className="w-full bg-green-200 rounded-full h-2">
+                    <div
+                      className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${(pdfProgress.current / pdfProgress.total) * 100}%` }}
+                    />
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Expandable Details */}
               <div>
@@ -336,9 +390,10 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
                   type="button"
                   onClick={downloadSampleCSV}
                   className="inline-flex items-center gap-2 text-sm text-[#FDB54A] hover:text-[#e5a43b] font-medium transition-colors"
+                  disabled={loading || pdfProgress.generating}
                 >
                   <HiOutlineDownload className="w-4 h-4" />
-                  Download CSV Template
+                  Download Sample CSV Template
                 </button>
               </div>
             </div>
@@ -348,28 +403,28 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
           <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
             <button
               onClick={handleCancel}
-              disabled={loading}
+              disabled={loading || pdfProgress.generating}
               className="px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!file || loading}
+              disabled={!file || loading || pdfProgress.generating}
               className="px-5 py-2 text-sm font-medium bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
-              {loading ? (
+              {loading || pdfProgress.generating ? (
                 <>
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Importing...
+                  {pdfProgress.generating ? `Generating PDFs...` : 'Importing...'}
                 </>
               ) : (
                 <>
-                  <HiOutlineUpload className="w-4 h-4" />
-                  Import Members
+                  <HiOutlineUpload className="w-5 h-5" />
+                  Import {generatePDFs ? '& Generate PDFs' : 'Members'}
                 </>
               )}
             </button>

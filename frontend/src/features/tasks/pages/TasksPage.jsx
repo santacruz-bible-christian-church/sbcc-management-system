@@ -16,7 +16,7 @@ import { ConfirmationModal } from '../../../components/ui/Modal';
 import Snackbar from '../../../components/ui/Snackbar';
 import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 
-const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
+const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
 
 export const TasksPage = () => {
   const { user } = useAuth();

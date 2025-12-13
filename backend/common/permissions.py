@@ -4,40 +4,51 @@ from rest_framework import permissions
 
 
 class IsAdmin(permissions.BasePermission):
-    """Allow access only to admin users."""
-
-    def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated and request.user.role == "admin"
-
-
-class IsAdminOrReadOnly(permissions.BasePermission):
-    """
-    Allow read for all authenticated users
-    Write only for admins
-    """
-
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return request.user and request.user.is_authenticated
-        return request.user and request.user.role == "admin"
-
-
-class IsMinistryLeaderOrAdmin(permissions.BasePermission):
-    """Check if user is ministry leader or admin"""
+    """Allow access only to admin or super_admin users."""
 
     def has_permission(self, request, view):
         return (
             request.user
             and request.user.is_authenticated
-            and request.user.role in ["admin", "ministry_leader"]
+            and (request.user.is_superuser or request.user.role in ["super_admin", "admin"])
+        )
+
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    """
+    Allow read for all authenticated users
+    Write only for admins/super_admins
+    """
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user and request.user.is_authenticated
+        return (
+            request.user
+            and request.user.is_authenticated
+            and (request.user.is_superuser or request.user.role in ["super_admin", "admin"])
+        )
+
+
+class IsMinistryLeaderOrAdmin(permissions.BasePermission):
+    """Check if user is ministry leader, admin, or super_admin"""
+
+    def has_permission(self, request, view):
+        return (
+            request.user
+            and request.user.is_authenticated
+            and (
+                request.user.is_superuser
+                or request.user.role in ["super_admin", "admin", "ministry_leader"]
+            )
         )
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
-    """Check if user is the owner of the object or an admin"""
+    """Check if user is the owner of the object or an admin/super_admin"""
 
     def has_object_permission(self, request, view, obj):
-        if request.user.role == "admin":
+        if request.user.is_superuser or request.user.role in ["super_admin", "admin"]:
             return True
 
         # Check if object has 'created_by' or 'submitted_by' field
@@ -53,7 +64,7 @@ class CanAccessMinistry(permissions.BasePermission):
     """Check if user has access to the ministry"""
 
     def has_object_permission(self, request, view, obj):
-        if request.user.role in ["admin", "pastor"]:
+        if request.user.is_superuser or request.user.role in ["super_admin", "admin", "pastor"]:
             return True
 
         if request.user.role == "ministry_leader":
