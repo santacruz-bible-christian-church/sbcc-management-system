@@ -48,7 +48,7 @@ def create_user(db):
         username="testuser",
         email="test@example.com",
         password=TEST_PASSWORD,
-        role="member",
+        role="admin",
         **kwargs,
     ):
         return User.objects.create_user(
@@ -60,7 +60,7 @@ def create_user(db):
 
 @pytest.fixture
 def user(create_user):
-    """Create a regular member user."""
+    """Create a regular admin user."""
     return create_user()
 
 
@@ -71,6 +71,21 @@ def admin_user(create_user):
         username="admin",
         email="admin@example.com",
         role="admin",
+        first_name="Admin",
+        last_name="User",
+        is_staff=True,
+    )
+
+
+@pytest.fixture
+def super_admin_user(create_user):
+    """Create a super admin user."""
+    return create_user(
+        username="superadmin",
+        email="superadmin@example.com",
+        role="super_admin",
+        first_name="Super",
+        last_name="Admin",
         is_staff=True,
         is_superuser=True,
     )
@@ -88,6 +103,14 @@ def auth_client(api_client, user):
 def admin_client(api_client, admin_user):
     """Return an authenticated API client for admin user."""
     refresh = RefreshToken.for_user(admin_user)
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+    return api_client
+
+
+@pytest.fixture
+def super_admin_client(api_client, super_admin_user):
+    """Return an authenticated API client for super admin user."""
+    refresh = RefreshToken.for_user(super_admin_user)
     api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
     return api_client
 

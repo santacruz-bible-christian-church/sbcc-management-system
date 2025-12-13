@@ -62,10 +62,12 @@ class TestPermissions:
         assert "Youth Ministry Task" in titles
         assert "Music Ministry Task" not in titles
 
-    def test_member_sees_only_assigned_tasks(self, auth_client, user, task, admin_user):
-        """Test regular members see only assigned tasks."""
+    def test_admin_sees_all_tasks_including_others(self, admin_client, task, admin_user):
+        """Test admin users see all tasks including those assigned to other users."""
         today = timezone.now().date()
-        other_user = User.objects.create_user(username="other", password="pass")
+        other_user = User.objects.create_user(
+            username="other", password="pass", role="ministry_leader"
+        )
         Task.objects.create(
             title="Someone Else's Task",
             start_date=today,
@@ -74,7 +76,8 @@ class TestPermissions:
             assigned_to=other_user,
         )
 
-        response = auth_client.get(reverse("task-list"))
+        response = admin_client.get(reverse("task-list"))
         titles = [t["title"] for t in response.data["results"]]
+        # Admin can see all tasks
         assert "Prepare Sunday Service Materials" in titles
-        assert "Someone Else's Task" not in titles
+        assert "Someone Else's Task" in titles
