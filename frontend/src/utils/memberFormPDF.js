@@ -10,13 +10,17 @@ export const generateMembershipFormPDF = (formData) => {
 
   // Helper function to add checkboxes
   const addCheckbox = (x, y, checked = false) => {
-    doc.rect(x, y, 3, 3);
-    if (checked) {
-      doc.setFontSize(8);
-      doc.text('✓', x + 0.3, y + 2.3);
-      doc.setFontSize(9);
-    }
-  };
+  // Draw the checkbox border
+  doc.rect(x, y, 3, 3);
+  
+  if (checked) {
+    // Draw an X instead of checkmark for better compatibility
+    doc.setLineWidth(0.5);
+    doc.line(x + 0.5, y + 0.5, x + 2.5, y + 2.5);  // Diagonal \
+    doc.line(x + 2.5, y + 0.5, x + 0.5, y + 2.5);  // Diagonal /
+    doc.setLineWidth(0.2); // Reset line width
+  }
+};
 
   // Helper to check if we need a new page
   const checkNewPage = () => {
@@ -279,7 +283,7 @@ export const generateMembershipFormPDF = (formData) => {
   doc.text('Yes', pageWidth - margin - 31, yPos);
   
   addCheckbox(pageWidth - margin - 18, yPos - 2.5, formData.accepted_jesus === false);
-  doc.text('No', pageWidth - margin - 14, yPos);
+  doc.text('Not yet', pageWidth - margin - 14, yPos);
   yPos += 5;
 
   // Testimony

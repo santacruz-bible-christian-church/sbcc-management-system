@@ -248,6 +248,100 @@ export const MemberFormModal = ({
       }
     });
 
+    // ✅ Sanitize and validate family members
+    if (sanitized.family_members && Array.isArray(sanitized.family_members)) {
+      sanitized.family_members = sanitized.family_members
+        .map(member => {
+          // Ensure member is an object
+          if (typeof member !== 'object' || member === null) {
+            console.warn('Invalid family member data:', member);
+            return null;
+          }
+
+          // Clean and validate each field
+          const cleanMember = {
+            name: (member.name || '').toString().trim(),
+            relationship: (member.relationship || '').toString().trim(),
+            birthdate: member.birthdate || null,
+          };
+
+          // Validate birthdate format if provided
+          if (cleanMember.birthdate && cleanMember.birthdate !== '') {
+            const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+            if (!datePattern.test(cleanMember.birthdate)) {
+              console.warn('Invalid birthdate format:', cleanMember.birthdate);
+              cleanMember.birthdate = null;
+            }
+          } else {
+            cleanMember.birthdate = null;
+          }
+
+          return cleanMember;
+        })
+        .filter(member => {
+          // Remove invalid entries
+          if (!member) return false;
+          // Remove entries with no name
+          if (!member.name) return false;
+          // Remove entries with no relationship
+          if (!member.relationship) return false;
+          return true;
+        });
+    } else {
+      sanitized.family_members = [];
+    }
+
+    // Validate required fields (final check before submission)
+    const requiredFields = {
+      first_name: 'First name',
+      last_name: 'Last name',
+      email: 'Email',
+      phone: 'Phone number',
+      date_of_birth: 'Date of birth',
+    };
+
+    Object.entries(requiredFields).forEach(([field, label]) => {
+      if (!sanitized[field] || sanitized[field].toString().trim() === '') {
+        console.error(`Validation Error: ${label} is required`);
+      }
+    });
+
+    // Validate email format
+    if (sanitized.email) {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(sanitized.email)) {
+        console.error('Validation Error: Invalid email format');
+      }
+    }
+
+    // Validate phone format (Philippine format)
+    if (sanitized.phone) {
+      const phonePattern = /^(\+63|0)?\d{3}-?\d{3}-?\d{4}$/;
+      if (!phonePattern.test(sanitized.phone.replace(/\s/g, ''))) {
+        console.warn('Phone number format may be invalid:', sanitized.phone);
+      }
+    }
+
+    // Validate date of birth (not in the future)
+    if (sanitized.date_of_birth) {
+      const dob = new Date(sanitized.date_of_birth);
+      const today = new Date();
+      if (dob > today) {
+        console.error('Validation Error: Date of birth cannot be in the future');
+      }
+    }
+
+    // Validate marital status - wedding anniversary required if married
+    if (sanitized.marital_status === 'married' && !sanitized.wedding_anniversary) {
+      console.warn('Wedding anniversary recommended for married status');
+    }
+
+    // Log sanitized data for debugging
+    console.log('Sanitized form data:', {
+      ...sanitized,
+      family_members_count: sanitized.family_members.length,
+    });
+
     return sanitized;
   }, []);
 
