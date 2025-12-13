@@ -38,7 +38,11 @@ class MinistryViewSet(viewsets.ModelViewSet):
 
         # Optional: Add role-based check
         user = request.user
-        if not (user.is_staff or user.role in ["admin", "pastor", "ministry_leader"]):
+        if not (
+            user.is_staff
+            or user.is_superuser
+            or user.role in ["super_admin", "admin", "pastor", "ministry_leader"]
+        ):
             return Response(
                 {"detail": "You do not have permission to rotate shifts."},
                 status=status.HTTP_403_FORBIDDEN,

@@ -14,6 +14,7 @@ from .serializers import (
     ChangePasswordSerializer,
     CustomTokenObtainPairSerializer,
     ForgotPasswordSerializer,
+    ProfileUpdateSerializer,
     RegisterSerializer,
     ResetPasswordSerializer,
     UserCreateSerializer,
@@ -90,7 +91,11 @@ class CurrentUserView(generics.RetrieveUpdateAPIView):
     """
 
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = UserSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return ProfileUpdateSerializer
+        return UserSerializer
 
     def get_object(self):
         return self.request.user

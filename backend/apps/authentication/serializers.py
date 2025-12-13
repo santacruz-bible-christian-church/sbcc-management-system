@@ -28,6 +28,26 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "date_joined", "last_login"]
 
 
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for users updating their own profile (limited fields)"""
+
+    class Meta:
+        model = User
+        fields = [
+            "first_name",
+            "last_name",
+            "email",
+            "phone",
+        ]
+
+    def validate_email(self, value):
+        """Check if email already exists for another user"""
+        instance = self.instance
+        if User.objects.filter(email=value).exclude(pk=instance.pk).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+
 class UserCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating users (Super Admin only)"""
 

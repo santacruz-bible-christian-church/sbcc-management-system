@@ -7,7 +7,6 @@ const ROLES = [
   { value: 'admin', label: 'Admin' },
   { value: 'pastor', label: 'Pastor' },
   { value: 'ministry_leader', label: 'Ministry Leader' },
-  { value: 'volunteer', label: 'Volunteer' },
 ];
 
 export const UserFormModal = ({ isOpen, onClose, onSubmit, user = null, isSubmitting = false }) => {
@@ -19,7 +18,7 @@ export const UserFormModal = ({ isOpen, onClose, onSubmit, user = null, isSubmit
     first_name: '',
     last_name: '',
     phone: '',
-    role: 'volunteer',
+    role: 'ministry_leader',
     password: '',
     is_active: true,
   });
@@ -35,7 +34,7 @@ export const UserFormModal = ({ isOpen, onClose, onSubmit, user = null, isSubmit
         first_name: user.first_name || '',
         last_name: user.last_name || '',
         phone: user.phone || '',
-        role: user.role || 'volunteer',
+        role: user.role || 'ministry_leader',
         password: '',
         is_active: user.is_active ?? true,
       });
@@ -46,7 +45,7 @@ export const UserFormModal = ({ isOpen, onClose, onSubmit, user = null, isSubmit
         first_name: '',
         last_name: '',
         phone: '',
-        role: 'volunteer',
+        role: 'ministry_leader',
         password: '',
         is_active: true,
       });

@@ -26,10 +26,25 @@ export const useUsers = (params = {}) => {
       toast.success('User created successfully');
     },
     onError: (error) => {
-      const message = error.response?.data?.email?.[0]
-        || error.response?.data?.username?.[0]
-        || error.response?.data?.detail
-        || 'Failed to create user';
+      console.error('Create user error:', error.response?.data);
+      const data = error.response?.data;
+      // Try to extract the first error message from any field
+      let message = 'Failed to create user';
+      if (data) {
+        if (data.password) {
+          message = Array.isArray(data.password) ? data.password[0] : data.password;
+        } else if (data.email) {
+          message = Array.isArray(data.email) ? data.email[0] : data.email;
+        } else if (data.username) {
+          message = Array.isArray(data.username) ? data.username[0] : data.username;
+        } else if (data.role) {
+          message = Array.isArray(data.role) ? data.role[0] : data.role;
+        } else if (data.non_field_errors) {
+          message = Array.isArray(data.non_field_errors) ? data.non_field_errors[0] : data.non_field_errors;
+        } else if (data.detail) {
+          message = data.detail;
+        }
+      }
       toast.error(message);
     },
   });
