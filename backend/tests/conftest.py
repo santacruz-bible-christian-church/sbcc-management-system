@@ -48,7 +48,7 @@ def create_user(db):
         username="testuser",
         email="test@example.com",
         password=TEST_PASSWORD,
-        role="admin",  # Changed default from "member" to "admin"
+        role="admin",
         **kwargs,
     ):
         return User.objects.create_user(

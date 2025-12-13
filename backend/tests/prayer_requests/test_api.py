@@ -125,12 +125,14 @@ class TestPrayerRequestAssignment:
         assert prayer_request.assigned_to == pastor_user
         assert prayer_request.status == "assigned"
 
-    def test_cannot_assign_to_regular_member(self, admin_client, prayer_request, user):
-        """Test that cannot assign to a regular member."""
+    def test_cannot_assign_to_ministry_leader(
+        self, admin_client, prayer_request, ministry_leader_user
+    ):
+        """Test that cannot assign to a ministry leader (only pastor/elder/admin)."""
         url = reverse("prayer-request-assign", kwargs={"pk": prayer_request.pk})
         response = admin_client.post(
             url,
-            {"assigned_to": user.id},
+            {"assigned_to": ministry_leader_user.id},
             format="json",
         )
 
@@ -274,13 +276,15 @@ class TestFollowUpViewSet:
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["results"]) == 1
 
-    def test_list_follow_ups_as_member_excludes_private(self, auth_client, follow_up):
-        """Test that regular users don't see private follow-ups."""
+    def test_list_follow_ups_as_ministry_leader_excludes_private(
+        self, ministry_leader_client, follow_up
+    ):
+        """Test that ministry leaders don't see private follow-ups."""
         url = reverse("prayer-follow-up-list")
-        response = auth_client.get(url)
+        response = ministry_leader_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        # Private follow-ups should be excluded
+        # Private follow-ups should be excluded for non-pastor/elder/admin users
         assert len(response.data["results"]) == 0
 
     def test_create_follow_up(self, pastor_client, prayer_request):
