@@ -11,7 +11,8 @@ import { membersApi } from '../../../api/members.api';
 import { MemberDetailsModal } from '../components/MemberDetailsModal';
 import { MemberFormModal } from '../components/MemberFormModal';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
-import { showError, showSuccess } from '../../../utils/toast';
+import { showError, showSuccess, showWarning } from '../../../utils/toast';
+import { generateMembershipFormPDF } from '../../../utils/memberFormPDF';
 
 const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
 
@@ -50,6 +51,8 @@ export const MembershipListPage = () => {
     const [formModalState, setFormModalState] = useState({ open: false, member: null });
     const [detailsModalState, setDetailsModalState] = useState({ open: false, member: null });
     const [formLoading, setFormLoading] = useState(false);
+    const [importing, setImporting] = useState(false);
+    const [csvImportOpen, setCsvImportOpen] = useState(false);
 
 
         // Delete handlers
@@ -187,7 +190,53 @@ export const MembershipListPage = () => {
 
 
 
-
+    // CSV Import with Auto PDF Generation
+    const handleCSVImport = useCallback(async (file) => {
+        setImporting(true);
+        try {
+            const response = await membersApi.importCSV(file);
+            
+            // ✅ Show import success message
+            if (response.errors && response.errors.length > 0) {
+                showWarning(`Imported ${response.members_created} members with ${response.errors.length} errors`);
+                console.error('Import errors:', response.errors);
+            } else {
+                showSuccess(`Successfully imported ${response.members_created} members!`);
+            }
+            
+            // ✅ Auto-generate PDFs for all imported members
+            if (response.members && response.members.length > 0) {
+                showSuccess(`Generating ${response.members.length} membership form PDFs...`);
+                
+                // Generate PDFs with delay to avoid overwhelming browser
+                response.members.forEach((member, index) => {
+                    setTimeout(() => {
+                        try {
+                          generateMembershipFormPDF(member);
+                          console.log(`✅ Generated PDF for: ${member.first_name} ${member.last_name}`);
+                        } catch (error) {
+                          console.error(`❌ Failed to generate PDF for ${member.first_name} ${member.last_name}:`, error);
+                        }
+                    }, index * 500); // 500ms delay between each PDF
+                });
+                
+                // Show completion message after all PDFs are generated
+                setTimeout(() => {
+                  showSuccess(`✅ All ${response.members.length} membership forms generated!`);
+                }, response.members.length * 500 + 1000);
+              }
+            
+            // ✅ Close modal and refresh list
+            setCsvImportOpen(false);
+            await refreshMembers(pagination.currentPage);
+            
+        } catch (err) {
+            console.error('CSV import error:', err);
+            showError(err.response?.data?.detail || 'Failed to import CSV');
+        } finally {
+            setImporting(false);
+        }
+    }, [refreshMembers, pagination.currentPage]);
 
     return (
         <div className='ml-12 mt-12 mr-10'>

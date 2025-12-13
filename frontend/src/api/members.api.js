@@ -53,7 +53,7 @@ export const membersApi = {
   importCSV: async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await apiClient.post('/members/import_csv/', formData, {
+    const response = await apiClient.post('/members/import-csv/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

@@ -6,7 +6,8 @@ import { HiOutlinePlus, HiOutlineUpload } from 'react-icons/hi';
 import CSVImportModal from './CSVImportModal';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
-import { showSuccess, showError } from '../../../utils/toast';
+import { showSuccess, showError, showWarning } from '../../../utils/toast';
+import { generateMembershipFormPDF } from '../../../utils/memberFormPDF';
 
 const MANAGER_ROLES = ['admin', 'pastor', 'ministry_leader'];
 
@@ -20,7 +21,7 @@ export const MemberListNavBar = ({
     onCreateClick  // ← New prop from parent
 }) => {
     const [isGenderOpen, setGenderIsOpen] = useState(false)
-    const [MinistryIsOpen, setMinistryIsOpen] = useState(false)
+    const [isMinistryOpen, setIsMinistryOpen] = useState(false)
     const [isStatusOpen, setIsStatusOpen] = useState(false)
     const [importing, setImporting] = useState(false);
     const [csvModalOpen, setCsvModalOpen] = useState(false);
@@ -36,10 +37,42 @@ export const MemberListNavBar = ({
     const handleCSVImport = async (file) => {
         setImporting(true);
         try {
-            await membersApi.importCSV(file);
-            await refreshMembers(pagination.currentPage);
-            showSuccess('Members imported successfully!');
+            const response = await membersApi.importCSV(file);
+            
+            // ✅ Show import success message
+            if (response.errors && response.errors.length > 0) {
+                showWarning(`Imported ${response.members_created} members with ${response.errors.length} errors`);
+                console.error('Import errors:', response.errors);
+            } else {
+                showSuccess(`Successfully imported ${response.members_created} members!`);
+            }
+            
+            // ✅ Auto-generate PDFs for all imported members
+            if (response.members && response.members.length > 0) {
+                showSuccess(`Generating ${response.members.length} membership form PDFs...`);
+                
+                // Generate PDFs with delay to avoid overwhelming browser
+                response.members.forEach((member, index) => {
+                    setTimeout(() => {
+                        try {
+                            generateMembershipFormPDF(member);
+                            console.log(`✅ Generated PDF for: ${member.first_name} ${member.last_name}`);
+                        } catch (error) {
+                            console.error(`❌ Failed to generate PDF for ${member.first_name} ${member.last_name}:`, error);
+                        }
+                    }, index * 500); // 500ms delay between each PDF
+                });
+                
+                // Show completion message after all PDFs are generated
+                setTimeout(() => {
+                    showSuccess(`✅ All ${response.members.length} membership forms generated!`);
+                }, response.members.length * 500 + 1000);
+            }
+            
+            // ✅ Close modal and refresh list
             setCsvModalOpen(false);
+            await refreshMembers(pagination.currentPage);
+            
         } catch (err) {
             console.error('CSV import error:', err);
             showError(err.response?.data?.detail || 'Failed to import CSV');
@@ -55,7 +88,7 @@ export const MemberListNavBar = ({
         setSelectedMinistryName('');
         setIsStatusOpen(false);
         setGenderIsOpen(false);
-        setMinistryIsOpen(false);
+        setIsMinistryOpen(false);
     }
 
     const handleSelectGender = (value) => {
@@ -66,7 +99,7 @@ export const MemberListNavBar = ({
     const handleSelectMinistry = (id, name) => {
         setFilters(prev => ({ ...prev, ministry: id }));
         setSelectedMinistryName(name);
-        setMinistryIsOpen(false);
+        setIsMinistryOpen(false);
     };
 
     const handleSelectStatus = (value) => {
@@ -87,7 +120,7 @@ export const MemberListNavBar = ({
                 setIsStatusOpen(false)
             }
             if (MinistryDropdownRef.current && !MinistryDropdownRef.current.contains(event.target)) {
-                setMinistryIsOpen(false);
+                setIsMinistryOpen(false);
             }
         };
 
@@ -288,12 +321,12 @@ export const MemberListNavBar = ({
                         id="ministryDropdownButton"
                         className="w-[90%] text-[#A0A0A0] border rounded-full bg-white text-sm m-2 pl-3 pr-3 text-center flex justify-between items-center"
                         type="button"
-                        onClick={() => setMinistryIsOpen(!MinistryIsOpen)}
+                        onClick={() => setIsMinistryOpen(!isMinistryOpen)}
                     >
                         <span className="truncate overflow-hidden text-ellipsis w-[50px]">
                             {selectedMinistryName || 'Ministry'}
                         </span>
-                        <svg className={`w-2.5 h-2.5 ms-3 transition-transform duration-200 ${MinistryIsOpen ? 'rotate-180' : ''}`}
+                        <svg className={`w-2.5 h-2.5 ms-3 transition-transform duration-200 ${isMinistryOpen ? 'rotate-180' : ''}`}
                             aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 10 6"
@@ -308,7 +341,7 @@ export const MemberListNavBar = ({
                         </svg>
                     </button>
 
-                    {MinistryIsOpen && (
+                    {isMinistryOpen && (
                         <div className="absolute z-10 mt-1 bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-[140px]">
                             <ul className="py-2 text-sm text-gray-700 divide-y divide-gray-100">
                                 <li>
