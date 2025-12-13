@@ -15,6 +15,9 @@ import { SettingsPage } from '../features/settings/pages/SettingsPage';
 import PrayerRequestsPage from '../features/prayer-requests/pages/PrayerRequestsPage';
 import { FileManagementPage } from '../features/file-management/pages/FileManagementPage';
 import { TasksPage } from '../features/tasks/pages/TasksPage';
+import HelpCenter from '../features/help/pages/HelpCenter';
+import GuidesDirectory from '../features/help/components/GuidesDirectory';
+import FAQsDirectory from '../features/help/components/FAQsDirectory';
 
 export const routes = [
   {
@@ -106,14 +109,6 @@ export const routes = [
     ),
   },
   {
-    path: '/support/contact',
-    element: (
-      <ProtectedWithLayout>
-        <ComingSoon title="Contact Support" />
-      </ProtectedWithLayout>
-    ),
-  },
-  {
     path: '/docs',
     element: (
       <ProtectedWithLayout>
@@ -125,7 +120,23 @@ export const routes = [
     path: '/help',
     element: (
       <ProtectedWithLayout>
-        <ComingSoon title="Help Center" />
+        <HelpCenter />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: '/help/guides',
+    element: (
+      <ProtectedWithLayout>
+        <GuidesDirectory />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: '/help/faqs',
+    element: (
+      <ProtectedWithLayout>
+        <FAQsDirectory />
       </ProtectedWithLayout>
     ),
   },
