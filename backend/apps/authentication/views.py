@@ -80,10 +80,13 @@ class LogoutView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CurrentUserView(generics.RetrieveAPIView):
+class CurrentUserView(generics.RetrieveUpdateAPIView):
     """
     GET /api/auth/me/
     Get current authenticated user details
+
+    PATCH /api/auth/me/
+    Update current user profile (first_name, last_name, email, phone)
     """
 
     permission_classes = [permissions.IsAuthenticated]

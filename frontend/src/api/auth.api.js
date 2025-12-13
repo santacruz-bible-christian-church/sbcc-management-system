@@ -24,6 +24,12 @@ export const authApi = {
     return response.data;
   },
 
+  // Update current user profile
+  async updateProfile(data) {
+    const response = await apiClient.patch('/auth/me/', data);
+    return response.data;
+  },
+
   // Refresh token
   async refreshToken(refreshToken) {
     const response = await apiClient.post('/auth/refresh/', {
