@@ -259,18 +259,13 @@ SIMPLE_JWT = {
 }
 
 # Email Configuration
-# Uses Brevo (Sendinblue) SMTP for production (works on Railway)
+# Uses Brevo HTTP API for production (bypasses SMTP port blocking on Railway)
 # Falls back to Gmail SMTP for local development
 BREVO_API_KEY = config("BREVO_API_KEY", default="")
 
 if BREVO_API_KEY:
-    # Production: Use Brevo SMTP (works without custom domain)
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = "smtp-relay.brevo.com"
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = config("BREVO_SMTP_USER", default="")
-    EMAIL_HOST_PASSWORD = BREVO_API_KEY
+    # Production: Use Brevo HTTP API (works on Railway, bypasses SMTP blocking)
+    EMAIL_BACKEND = "sbcc.brevo_backend.BrevoEmailBackend"
 else:
     # Development: Use custom SMTP backend (Gmail)
     EMAIL_BACKEND = "sbcc.email_backend.CustomEmailBackend"
