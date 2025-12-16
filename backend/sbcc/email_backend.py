@@ -16,8 +16,11 @@ class CustomEmailBackend(EmailBackend):
         if self.connection:
             return False
 
+        # Use a shorter timeout (10s) to prevent worker timeouts
+        timeout = self.timeout if self.timeout else 10
+
         try:
-            self.connection = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
+            self.connection = smtplib.SMTP(self.host, self.port, timeout=timeout)
 
             # Create SSL context that skips certificate verification
             context = ssl.create_default_context()

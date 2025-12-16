@@ -29,6 +29,7 @@ def rotate_and_assign(
     summary = {
         "created": 0,
         "emailed": 0,
+        "skipped_no_email": 0,
         "skipped_no_members": [],
         "skipped_no_available": [],
         "errors": [],
@@ -176,16 +177,46 @@ def rotate_and_assign(
                                 )
 
                                 # Send notification if requested
-                                if notify and candidate.member.email:
-                                    try:
-                                        _send_assignment_notification(assignment, shift, candidate)
-                                        summary["emailed"] += 1
-                                        print("    📧 Email sent")
-                                    except Exception as email_err:
-                                        print("    ⚠️ Email failed: " + str(email_err))
-                                        summary["errors"].append(
-                                            f"Email to {candidate.member.email}: {str(email_err)}"
-                                        )
+                                if notify:
+                                    if candidate.member.email:
+                                        try:
+                                            email_sent = _send_assignment_notification(
+                                                assignment, shift, candidate
+                                            )
+                                            if email_sent:
+                                                summary["emailed"] += 1
+                                                print("    📧 Email sent")
+                                            else:
+                                                summary["skipped_no_email"] += 1
+                                                print("    ⚠️ Email skipped (no address)")
+                                        except TimeoutError as timeout_err:
+                                            print(
+                                                "    ⚠️ Email timeout - SMTP connection slow/blocked"
+                                            )
+                                            summary["errors"].append(
+                                                f"Email to {candidate.member.email}: Connection timeout (SMTP may be blocked)"
+                                            )
+                                        except Exception as email_err:
+                                            error_msg = str(email_err)
+                                            # Check for common timeout patterns
+                                            if (
+                                                "timed out" in error_msg.lower()
+                                                or "timeout" in error_msg.lower()
+                                            ):
+                                                print(
+                                                    "    ⚠️ Email timeout - SMTP connection slow/blocked"
+                                                )
+                                                summary["errors"].append(
+                                                    f"Email to {candidate.member.email}: Connection timeout (SMTP may be blocked)"
+                                                )
+                                            else:
+                                                print("    ⚠️ Email failed: " + error_msg)
+                                                summary["errors"].append(
+                                                    f"Email to {candidate.member.email}: {error_msg}"
+                                                )
+                                    else:
+                                        summary["skipped_no_email"] += 1
+                                        print(f"    ⚠️ No email for {candidate.member.full_name}")
 
                                 summary["created"] += 1
                                 created_for_ministry += 1
@@ -221,13 +252,19 @@ def rotate_and_assign(
 
 
 def _send_assignment_notification(assignment, shift, ministry_member):
-    """Send email notification to assigned volunteer."""
-    try:
-        member = assignment.member
+    """
+    Send email notification to assigned volunteer.
 
-        if not member.email:
-            print(f"Member {member.full_name} has no email, skipping notification")
-            return
+    Returns:
+        bool: True if email was sent, False if skipped (no email)
+    """
+    member = assignment.member
+
+    if not member.email:
+        print(f"Member {member.full_name} has no email, skipping notification")
+        return False
+
+    try:
 
         # Format time
         try:
@@ -274,6 +311,7 @@ SBCC Management System
         )
 
         print(f"Email sent successfully to {member.email}")
+        return True
 
     except Exception as e:
         print(f"Failed to send email: {e}")
