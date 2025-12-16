@@ -189,7 +189,7 @@ def rotate_and_assign(
                                             else:
                                                 summary["skipped_no_email"] += 1
                                                 print("    ⚠️ Email skipped (no address)")
-                                        except TimeoutError as timeout_err:
+                                        except TimeoutError:
                                             print(
                                                 "    ⚠️ Email timeout - SMTP connection slow/blocked"
                                             )
