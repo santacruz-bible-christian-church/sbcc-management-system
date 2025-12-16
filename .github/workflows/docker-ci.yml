@@ -2,7 +2,7 @@ name: Docker Build CI
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - "backend/Dockerfile"
       - "frontend/Dockerfile"
@@ -10,7 +10,7 @@ on:
       - ".dockerignore"
       - ".github/workflows/docker-ci.yml"
   pull_request:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - "backend/Dockerfile"
       - "frontend/Dockerfile"

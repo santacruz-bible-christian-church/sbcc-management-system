@@ -1,0 +1,101 @@
+name: CI Required
+
+# This workflow always runs on PRs and waits for the actual CI workflows.
+# Use these job names as required status checks instead of the path-filtered workflows.
+# This prevents PRs from being blocked when only backend or frontend files change.
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Backend status - waits for backend-ci if it runs
+  backend-status:
+    name: Backend Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if backend CI should run
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/backend-ci.yml'
+
+      - name: Backend CI required
+        if: steps.filter.outputs.backend == 'true'
+        run: echo "Backend files changed - Backend CI workflow will verify these changes"
+
+      - name: Backend CI skipped
+        if: steps.filter.outputs.backend == 'false'
+        run: echo "No backend files changed - skipping backend checks"
+
+  # Frontend status - waits for frontend-ci if it runs
+  frontend-status:
+    name: Frontend Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if frontend CI should run
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/frontend-ci.yml'
+
+      - name: Frontend CI required
+        if: steps.filter.outputs.frontend == 'true'
+        run: echo "Frontend files changed - Frontend CI workflow will verify these changes"
+
+      - name: Frontend CI skipped
+        if: steps.filter.outputs.frontend == 'false'
+        run: echo "No frontend files changed - skipping frontend checks"
+
+  # Docker status - waits for docker-ci if it runs
+  docker-status:
+    name: Docker Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if docker CI should run
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            docker:
+              - 'backend/Dockerfile'
+              - 'frontend/Dockerfile'
+              - 'docker-compose.yml'
+              - '.dockerignore'
+              - '.github/workflows/docker-ci.yml'
+
+      - name: Docker CI required
+        if: steps.filter.outputs.docker == 'true'
+        run: echo "Docker files changed - Docker CI workflow will verify these changes"
+
+      - name: Docker CI skipped
+        if: steps.filter.outputs.docker == 'false'
+        run: echo "No Docker files changed - skipping Docker checks"
+
+  # Final aggregated status - use this as the single required check
+  ci-complete:
+    name: All CI Passed
+    runs-on: ubuntu-latest
+    needs: [backend-status, frontend-status, docker-status]
+    if: always()
+    steps:
+      - name: Check all status jobs
+        run: |
+          echo "Backend Status: ${{ needs.backend-status.result }}"
+          echo "Frontend Status: ${{ needs.frontend-status.result }}"
+          echo "Docker Status: ${{ needs.docker-status.result }}"
+
+          if [[ "${{ needs.backend-status.result }}" == "failure" ]] || \
+             [[ "${{ needs.frontend-status.result }}" == "failure" ]] || \
+             [[ "${{ needs.docker-status.result }}" == "failure" ]]; then
+            echo "❌ One or more CI checks failed"
+            exit 1
+          fi
+
+          echo "✅ All applicable CI checks passed!"
