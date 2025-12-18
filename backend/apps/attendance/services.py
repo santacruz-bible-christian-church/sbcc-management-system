@@ -9,13 +9,14 @@ from apps.members.models import Member
 from .models import Attendance
 
 
-def check_frequent_absences(threshold=3, days=30):
+def check_frequent_absences(threshold=3, days=30, notify=False):
     """
-    Check for members with frequent absences and notify admins.
+    Check for members with frequent absences and optionally notify admins.
 
     Args:
         threshold: Number of consecutive absences to trigger notification
         days: Look back period in days
+        notify: If True, send email notification to admins
 
     Returns:
         List of members with frequent absences
@@ -55,8 +56,8 @@ def check_frequent_absences(threshold=3, days=30):
                 }
             )
 
-    # Notify admins if there are problem members
-    if problem_members:
+    # Only notify admins if explicitly requested
+    if notify and problem_members:
         _notify_admins_about_absences(problem_members, threshold, days)
 
     return problem_members
