@@ -34,6 +34,9 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv(
 if not ALLOWED_HOSTS:
     ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
+# Frontend URL for password reset emails and other links
+FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:5173")
+
 
 # Application definition
 
