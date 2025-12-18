@@ -152,12 +152,14 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
     def check_absences(self, request):
         """
         Check for members with frequent absences
-        GET /api/attendance/sheets/check_absences/?threshold=3&days=30
+        GET /api/attendance/sheets/check_absences/?threshold=3&days=30&notify=false
         """
         threshold = int(request.query_params.get("threshold", 3))
         days = int(request.query_params.get("days", 30))
+        # Only send email if explicitly requested (default: false)
+        notify = request.query_params.get("notify", "false").lower() == "true"
 
-        problem_members = check_frequent_absences(threshold=threshold, days=days)
+        problem_members = check_frequent_absences(threshold=threshold, days=days, notify=notify)
 
         return Response({"threshold": threshold, "days": days, "problem_members": problem_members})
 
