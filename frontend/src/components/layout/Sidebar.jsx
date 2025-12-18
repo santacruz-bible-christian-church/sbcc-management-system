@@ -215,7 +215,8 @@ export default function SCBCSidebar({ collapsed = false, onToggle }) {
                                 aria-labelledby="membership"
                                 className={`${membershipOpen ? 'block' : 'hidden'} mt-1 space-y-1`}
                             >
-                                <SubLink id="membership-list" path="/members">Members List</SubLink>
+                            <SubLink id="membership-list" path="/members">Members List</SubLink>
+                                <SubLink id="membership-visitors" path="/visitors">Visitors</SubLink>
                                 <SubLink id="membership-attendance" path="/attendance">Attendance</SubLink>
                                 <SubLink id="membership-ministries" path="/ministries">Ministries</SubLink>
                             </div>

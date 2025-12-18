@@ -22,6 +22,7 @@ import GuidesDirectory from '../features/help/components/GuidesDirectory';
 import FAQsDirectory from '../features/help/components/FAQsDirectory';
 import { UserManagementPage } from '../features/user-management/pages/UserManagementPage';
 import { UnauthorizedPage } from '../components/ui/UnauthorizedPage';
+import { VisitorsPage } from '../features/visitors/pages/VisitorsPage';
 
 export const routes = [
   {
@@ -185,6 +186,14 @@ export const routes = [
     element: (
       <ProtectedWithLayout>
         <TasksPage />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: '/visitors',
+    element: (
+      <ProtectedWithLayout>
+        <VisitorsPage />
       </ProtectedWithLayout>
     ),
   },
