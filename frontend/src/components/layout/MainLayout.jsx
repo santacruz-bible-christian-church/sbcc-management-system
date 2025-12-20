@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import SCBCSidebar from './Sidebar';
+import Navbar from './Navbar';
 
 /**
  * MainLayout - Shared layout for all authenticated pages
- * Provides consistent sidebar navigation and content structure with toggle functionality
+ * Provides consistent sidebar navigation, top navbar, and content structure
  */
 export const MainLayout = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -17,9 +18,15 @@ export const MainLayout = ({ children }) => {
       {/* Sidebar Navigation */}
       <SCBCSidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
 
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto bg-gradient-to-br from-sbcc-cream via-white to-sbcc-light-orange">
-        {children}
+      {/* Main Content Area with Navbar */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Navbar */}
+        <Navbar />
+
+        {/* Page Content */}
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-sbcc-cream via-white to-sbcc-light-orange">
+          {children}
+        </main>
       </div>
     </div>
   );
