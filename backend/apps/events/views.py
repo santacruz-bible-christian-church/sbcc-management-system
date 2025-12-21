@@ -1,5 +1,7 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
 from apps.members.models import Member
@@ -12,6 +14,11 @@ class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.select_related("organizer", "ministry").all()
     serializer_class = EventSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    search_fields = ["title", "description", "location"]
+    filterset_fields = ["status", "event_type", "ministry"]
+    ordering_fields = ["date", "end_date", "created_at", "title"]
+    ordering = ["-date"]
 
     @action(detail=True, methods=["post"])
     def register(self, request, pk=None):
