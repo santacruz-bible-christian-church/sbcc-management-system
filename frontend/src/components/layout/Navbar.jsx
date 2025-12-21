@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  HelpCircle,
-  Settings,
   LogOut,
   ChevronDown,
   Shield,
   User,
+  Bell,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
+import { useAbsentMembers } from '../../features/dashboard/hooks/useAbsentMembers';
 
 // Route to page title mapping
 const PAGE_TITLES = {
@@ -37,6 +38,11 @@ export function Navbar() {
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Get absent members for notification badge
+  const { absentMembers } = useAbsentMembers(3, 30);
+  const absentCount = absentMembers?.length || 0;
+  const criticalCount = absentMembers?.filter(m => m.consecutive_absences >= 5).length || 0;
 
   // Get page title from route
   const getPageTitle = () => {
@@ -105,26 +111,22 @@ export function Navbar() {
 
       {/* Right Section */}
       <div className="flex items-center gap-2">
-        {/* Help Link */}
+        {/* Absent Members Notification */}
         <button
-          onClick={() => navigate('/help')}
-          className={`p-2 hover:bg-gray-100 rounded-lg transition-colors ${
-            location.pathname.startsWith('/help') ? 'bg-orange-50 text-[#FDB54A]' : 'text-gray-600'
+          onClick={() => navigate('/attendance')}
+          className={`relative p-2 hover:bg-gray-100 rounded-lg transition-colors ${
+            location.pathname === '/attendance' ? 'bg-orange-50 text-[#FDB54A]' : 'text-gray-600'
           }`}
-          title="Help Center"
+          title={absentCount > 0 ? `${absentCount} members need follow-up` : 'No attendance alerts'}
         >
-          <HelpCircle size={20} />
-        </button>
-
-        {/* Settings Link */}
-        <button
-          onClick={() => navigate('/settings')}
-          className={`p-2 hover:bg-gray-100 rounded-lg transition-colors ${
-            location.pathname === '/settings' ? 'bg-orange-50 text-[#FDB54A]' : 'text-gray-600'
-          }`}
-          title="Settings"
-        >
-          <Settings size={20} />
+          <Bell size={20} />
+          {absentCount > 0 && (
+            <span className={`absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white rounded-full px-1 ${
+              criticalCount > 0 ? 'bg-red-500 animate-pulse' : 'bg-orange-500'
+            }`}>
+              {absentCount > 99 ? '99+' : absentCount}
+            </span>
+          )}
         </button>
 
         {/* User Dropdown */}
@@ -184,8 +186,8 @@ export function Navbar() {
                   onClick={() => handleNavigation('/settings')}
                   className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  <User size={18} />
-                  <span>Profile Settings</span>
+                  <Settings size={18} />
+                  <span>Settings</span>
                 </button>
 
                 {/* Divider */}
