@@ -7,10 +7,14 @@ import {
   summarizeEvents,
 } from '../utils/format';
 
+const DEFAULT_PAGE_SIZE = 12;
+
 const initialQuery = {
   filters: { ...DEFAULT_FILTERS },
   search: '',
   ordering: DEFAULT_ORDERING,
+  page: 1,
+  pageSize: DEFAULT_PAGE_SIZE,
 };
 
 export const useEvents = () => {
@@ -18,6 +22,13 @@ export const useEvents = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [query, setQuery] = useState(initialQuery);
+  const [pagination, setPagination] = useState({
+    count: 0,
+    currentPage: 1,
+    totalPages: 1,
+    hasNext: false,
+    hasPrevious: false,
+  });
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
@@ -27,11 +38,14 @@ export const useEvents = () => {
         filters: cleanFilters(query.filters),
         search: query.search || undefined,
         ordering: query.ordering,
-        page: 1,
-        pageSize: 100,
+        page: query.page,
+        pageSize: query.pageSize,
       });
 
+      // Handle both paginated and non-paginated responses
       const results = Array.isArray(data) ? data : data.results ?? [];
+      const count = data.count ?? results.length;
+      const totalPages = Math.ceil(count / query.pageSize) || 1;
 
       const normalizedEvents = results.map(event => ({
         ...event,
@@ -40,6 +54,13 @@ export const useEvents = () => {
       }));
 
       setEvents(normalizedEvents);
+      setPagination({
+        count,
+        currentPage: query.page,
+        totalPages,
+        hasNext: !!data.next || query.page < totalPages,
+        hasPrevious: !!data.previous || query.page > 1,
+      });
     } catch (err) {
       console.error('Failed to fetch events:', err);
       setError(err.response?.data?.detail || 'Unable to load events.');
@@ -59,6 +80,7 @@ export const useEvents = () => {
     setQuery((prev) => ({
       ...prev,
       filters: typeof updater === 'function' ? updater(prev.filters) : updater,
+      page: 1, // Reset to first page when filters change
     }));
   };
 
@@ -66,6 +88,7 @@ export const useEvents = () => {
     setQuery((prev) => ({
       ...prev,
       search: searchValue,
+      page: 1, // Reset to first page when search changes
     }));
   };
 
@@ -73,6 +96,15 @@ export const useEvents = () => {
     setQuery((prev) => ({
       ...prev,
       ordering,
+      page: 1, // Reset to first page when ordering changes
+    }));
+  };
+
+  const goToPage = (page) => {
+    if (page < 1 || page > pagination.totalPages) return;
+    setQuery((prev) => ({
+      ...prev,
+      page,
     }));
   };
 
@@ -81,6 +113,8 @@ export const useEvents = () => {
       filters: { ...DEFAULT_FILTERS },
       search: '',
       ordering: DEFAULT_ORDERING,
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
     });
   };
 
@@ -114,11 +148,13 @@ export const useEvents = () => {
     filters: query.filters,
     search: query.search,
     ordering: query.ordering,
+    pagination,
     summary,
     completionRate,
     setFilters,
     setSearch,
     setOrdering,
+    goToPage,
     resetQuery,
     refresh: fetchEvents,
     createEvent,

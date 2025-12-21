@@ -44,11 +44,13 @@ export const EventsPage = () => {
     filters,
     search,
     ordering,
+    pagination,
     summary,
     completionRate,
     setFilters,
     setSearch,
     setOrdering,
+    goToPage,
     resetQuery,
     createEvent,
     updateEvent,
@@ -277,22 +279,16 @@ export const EventsPage = () => {
   return (
     <div className="max-w-[1600px] mx-auto p-4 md:p-6">
       <div className="space-y-6">
-        {/* Page Header - Matches reference: "Pages" small, "Calendar" large */}
-        <header className="flex justify-between items-start">
-          <div>
-            <p className="text-sm text-gray-500">Pages</p>
-            <h1 className="text-2xl md:text-3xl font-bold text-sbcc-dark">
-              {showCalendar ? 'Calendar' : 'Events Board'}
-            </h1>
+        {/* Unified Toolbar */}
+        <div className="flex items-center justify-between gap-4 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm flex-wrap">
+          {/* Left: Stats (Board View only) or empty space */}
+          <div className="flex items-center">
+            {!showCalendar && <EventsSummaryCards summary={summary} />}
           </div>
-          <div className="flex items-center gap-2">
-            <SecondaryButton
-              icon={showCalendar ? HiViewList : HiOutlineCalendar}
-              onClick={() => setShowCalendar((prev) => !prev)}
-            >
-              {showCalendar ? 'Board View' : 'Calendar'}
-            </SecondaryButton>
 
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2">
+            {/* Board View specific actions */}
             {!showCalendar && (
               <>
                 <SecondaryButton
@@ -309,20 +305,30 @@ export const EventsPage = () => {
                 >
                   {filtersOpen ? 'Hide Filters' : 'Filter'}
                 </SecondaryButton>
+                {canManageEvents && (
+                  <PrimaryButton
+                    icon={HiOutlinePlusCircle}
+                    onClick={openCreateModal}
+                    disabled={isLoading}
+                  >
+                    New Event
+                  </PrimaryButton>
+                )}
+
+                {/* Divider */}
+                <div className="w-px h-6 bg-gray-200 mx-1" />
               </>
             )}
 
-            {canManageEvents && !showCalendar && (
-              <PrimaryButton
-                icon={HiOutlinePlusCircle}
-                onClick={openCreateModal}
-                disabled={isLoading}
-              >
-                New Event
-              </PrimaryButton>
-            )}
+            {/* View Toggle - Always visible */}
+            <SecondaryButton
+              icon={showCalendar ? HiViewList : HiOutlineCalendar}
+              onClick={() => setShowCalendar((prev) => !prev)}
+            >
+              {showCalendar ? 'Board View' : 'Calendar'}
+            </SecondaryButton>
           </div>
-        </header>
+        </div>
 
         {/* Split Layout for Calendar View */}
         {showCalendar ? (
@@ -352,19 +358,14 @@ export const EventsPage = () => {
                         search={searchDraft}
                         onSearchChange={setSearchDraft}
                         onSearchSubmit={handleSearchSubmit}
-                        onEventClick={openDetailsModal} // Changed to open details modal
+                        onEventClick={openDetailsModal}
                         onViewAll={() => setShowCalendar(false)}
                     />
                 </div>
             </div>
         ) : (
-            /* OLD VIEW - Kept for detailed management - Updated with new Board */
+            /* Board View - Compact and clean */
             <>
-                <EventsSummaryCards
-                summary={summary}
-                completionRate={completionRate}
-                />
-
                 <EventsFilters
                 id="events-filters"
                 open={filtersOpen}
@@ -399,6 +400,60 @@ export const EventsPage = () => {
                         />
                     )}
                 </section>
+
+                {/* Pagination Controls */}
+                {pagination.totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-6">
+                    <button
+                      onClick={() => goToPage(pagination.currentPage - 1)}
+                      disabled={!pagination.hasPrevious || loading}
+                      className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Previous
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => {
+                        let page;
+                        if (pagination.totalPages <= 5) {
+                          page = i + 1;
+                        } else if (pagination.currentPage <= 3) {
+                          page = i + 1;
+                        } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                          page = pagination.totalPages - 4 + i;
+                        } else {
+                          page = pagination.currentPage - 2 + i;
+                        }
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => goToPage(page)}
+                            disabled={loading}
+                            className={`w-9 h-9 text-sm font-medium rounded-lg transition-colors ${
+                              page === pagination.currentPage
+                                ? 'bg-[#FDB54A] text-white'
+                                : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => goToPage(pagination.currentPage + 1)}
+                      disabled={!pagination.hasNext || loading}
+                      className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Next
+                    </button>
+
+                    <span className="ml-4 text-sm text-gray-500">
+                      Page {pagination.currentPage} of {pagination.totalPages} ({pagination.count} events)
+                    </span>
+                  </div>
+                )}
             </>
         )}
 
