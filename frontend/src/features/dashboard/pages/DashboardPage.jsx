@@ -1,13 +1,11 @@
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { useDashboardActivities } from '../hooks/useDashboardActivities';
-import { DashboardHeader } from '../components/DashboardHeader';
 import { WelcomeCard } from '../components/WelcomeCard';
 import { SBCCInfoCard } from '../components/SBCCInfoCard';
 import { StatsGrid } from '../components/StatsGrid';
 import { RecentActivities } from '../components/RecentActivities';
 import { TaskWidgets } from '../components/TaskWidgets';
-import { AbsentMemberAlerts } from '../components/AbsentMemberAlerts';
 import TotalMembersStatsCard from '../components/TotalMembersStatsCard';
 import MinistryPieChart from '../components/MinistryPieChart';
 
@@ -44,9 +42,7 @@ export const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sbcc-cream via-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <DashboardHeader refreshing={refreshing} onRefresh={refresh} />
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Bento Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <WelcomeCard user={user} />
@@ -68,9 +64,6 @@ export const DashboardPage = () => {
 
           {/* Task Widgets - Full Width */}
           <TaskWidgets />
-
-          {/* Absent Member Alerts - Full Width */}
-          <AbsentMemberAlerts />
         </div>
       </div>
     </div>
