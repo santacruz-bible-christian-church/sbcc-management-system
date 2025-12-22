@@ -40,11 +40,11 @@ export const MemberFormModal = ({
   open,
   onClose,
   onSubmit,
-  member = null,
   loading,
   ministries,
 }) => {
-  const isEdit = !!member;
+  // This modal is now only used for creating new members
+  // Edit functionality is handled by MemberEditModal
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState(new Set());
 
@@ -82,79 +82,45 @@ export const MemberFormModal = ({
 
   const [errors, setErrors] = useState({});
 
-  // Initialize form data when member changes or modal opens
+  // Reset form when modal opens
   useEffect(() => {
     if (open) {
-      if (member) {
-        setFormData({
-          first_name: member.first_name || "",
-          last_name: member.last_name || "",
-          email: member.email || "",
-          phone: member.phone || "",
-          date_of_birth: member.date_of_birth || "",
-          gender: member.gender || "",
-          complete_address: member.complete_address || "",
-          occupation: member.occupation || "",
-          marital_status: member.marital_status || "",
-          wedding_anniversary: member.wedding_anniversary || "",
-          elementary_school: member.elementary_school || "",
-          elementary_year_graduated: member.elementary_year_graduated || "",
-          secondary_school: member.secondary_school || "",
-          secondary_year_graduated: member.secondary_year_graduated || "",
-          vocational_school: member.vocational_school || "",
-          vocational_year_graduated: member.vocational_year_graduated || "",
-          college: member.college || "",
-          college_year_graduated: member.college_year_graduated || "",
-          family_members: member.family_members || [],
-          accepted_jesus: member.accepted_jesus ?? null,  
-          salvation_testimony: member.salvation_testimony || "",
-          spiritual_birthday: member.spiritual_birthday || "",
-          baptism_date: member.baptism_date || "",
-          willing_to_be_baptized: member.willing_to_be_baptized ?? null, 
-          ministry: member.ministry?.id || member.ministry || "",
-          previous_church: member.previous_church || "",
-          how_introduced: member.how_introduced || "",
-          began_attending_since: member.began_attending_since || "",
-          is_active: member.is_active !== undefined ? member.is_active : true,
-        });
-      } else {
-        setFormData({
-          first_name: "",
-          last_name: "",
-          email: "",
-          phone: "",
-          date_of_birth: "",
-          gender: "",
-          complete_address: "",
-          occupation: "",
-          marital_status: "",
-          wedding_anniversary: "",
-          elementary_school: "",
-          elementary_year_graduated: "",
-          secondary_school: "",
-          secondary_year_graduated: "",
-          vocational_school: "",
-          vocational_year_graduated: "",
-          college: "",
-          college_year_graduated: "",
-          family_members: [],
-          accepted_jesus: null,
-          salvation_testimony: "",
-          spiritual_birthday: "",
-          baptism_date: "",
-          willing_to_be_baptized: null,
-          ministry: "",
-          previous_church: "",
-          how_introduced: "",
-          began_attending_since: "",
-          is_active: true,
-        });
-      }
+      setFormData({
+        first_name: "",
+        last_name: "",
+        email: "",
+        phone: "",
+        date_of_birth: "",
+        gender: "",
+        complete_address: "",
+        occupation: "",
+        marital_status: "",
+        wedding_anniversary: "",
+        elementary_school: "",
+        elementary_year_graduated: "",
+        secondary_school: "",
+        secondary_year_graduated: "",
+        vocational_school: "",
+        vocational_year_graduated: "",
+        college: "",
+        college_year_graduated: "",
+        family_members: [],
+        accepted_jesus: null,
+        salvation_testimony: "",
+        spiritual_birthday: "",
+        baptism_date: "",
+        willing_to_be_baptized: null,
+        ministry: "",
+        previous_church: "",
+        how_introduced: "",
+        began_attending_since: "",
+        is_active: true,
+      });
       setErrors({});
       setCurrentStep(0);
       setCompletedSteps(new Set());
     }
-  }, [member, open]);
+  }, [open]);
 
   const updateFormData = useCallback((stepData) => {
     setFormData((prev) => ({ ...prev, ...stepData }));
@@ -248,15 +214,15 @@ export const MemberFormModal = ({
       }
     });
 
-   
+
     const booleanFields = ['accepted_jesus', 'willing_to_be_baptized'];
-    
+
     booleanFields.forEach(field => {
       if (sanitized[field] === null || sanitized[field] === undefined || sanitized[field] === '') {
-  
+
         sanitized[field] = null;
       } else {
-     
+
         sanitized[field] = Boolean(sanitized[field]);
       }
     });
@@ -358,19 +324,13 @@ export const MemberFormModal = ({
     return sanitized;
   }, []);
 
-  const handleNext = useCallback(() => {
-    if (validateStep(currentStep)) {
-      setCompletedSteps((prev) => new Set([...prev, currentStep]));
-      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
-    }
-  }, [currentStep, validateStep]);
-
   const handlePrevious = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   }, []);
 
   const handleStepClick = useCallback(
     (stepIndex) => {
+      // Only allow clicking on completed or current steps
       if (stepIndex < currentStep || completedSteps.has(stepIndex)) {
         setCurrentStep(stepIndex);
       }
@@ -416,19 +376,10 @@ export const MemberFormModal = ({
     onClose();
   }, [onClose]);
 
-  const handleSubmit = async (e) => {
+  // Handle "Next" button in create mode
+  const handleNextStep = async (e) => {
     e.preventDefault();
-    
-    const sanitizedData = sanitizeFormData(formData);
-    
-    // ✅ Debug: Check boolean values
-    console.log('Boolean field values:', {
-      accepted_jesus: sanitizedData.accepted_jesus,
-      willing_to_be_baptized: sanitizedData.willing_to_be_baptized,
-      accepted_jesus_type: typeof sanitizedData.accepted_jesus,
-      willing_type: typeof sanitizedData.willing_to_be_baptized,
-    });
-    
+
     if (!validateStep(currentStep)) {
       return;
     }
@@ -436,22 +387,30 @@ export const MemberFormModal = ({
     // Mark current step as completed
     setCompletedSteps((prev) => new Set([...prev, currentStep]));
 
-    // If not on last step, move to next
+    // Move to next step
     if (currentStep < STEPS.length - 1) {
       setCurrentStep((prev) => prev + 1);
+    }
+  };
+
+  // Handle save/submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate current step (Personal Info always required)
+    if (!validateStep(0)) {
+      setCurrentStep(0); // Go to personal info step if validation fails
       return;
     }
 
-    // On last step, sanitize and submit the form
+    const sanitizedData = sanitizeFormData(formData);
+
     try {
-      const sanitizedData = sanitizeFormData(formData);
       await onSubmit(sanitizedData);
-      
-      // Auto-generate PDF for new members (not when editing)
-      if (!isEdit) {
-        generateMembershipFormPDF(formData);
-      }
-      
+
+      // Auto-generate PDF for new members
+      generateMembershipFormPDF(formData);
+
       // Close modal on success
       handleCancel();
     } catch (error) {
@@ -486,7 +445,7 @@ export const MemberFormModal = ({
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
-                  {isEdit ? "Edit Member" : "Add New Member"}
+                  Add New Member
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
                   Step {currentStep + 1} of {STEPS.length}:{" "}
@@ -503,7 +462,7 @@ export const MemberFormModal = ({
                   <HiDownload className="w-5 h-5" />
                   <span className="hidden sm:inline">Export PDF</span>
                 </button>
-                
+
                 <button
                   onClick={handleCancel}
                   className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
@@ -600,6 +559,7 @@ export const MemberFormModal = ({
                 Cancel
               </button>
 
+              {/* Show Next on non-last steps, Create Member on last step */}
               {isLastStep ? (
                 <button
                   onClick={handleSubmit}
@@ -609,33 +569,21 @@ export const MemberFormModal = ({
                   {loading ? (
                     <>
                       <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      {isEdit ? "Updating..." : "Creating..."}
+                      Creating...
                     </>
                   ) : (
                     <>
                       <HiCheck className="w-5 h-5" />
-                      {isEdit ? "Update Member" : "Create Member"}
+                      Create Member
                     </>
                   )}
                 </button>
               ) : (
                 <button
-                  onClick={handleNext}
+                  onClick={handleNextStep}
                   disabled={loading}
                   className="px-5 py-2 text-sm font-medium bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                 >
@@ -655,7 +603,6 @@ MemberFormModal.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
-  member: PropTypes.object,
   loading: PropTypes.bool,
   ministries: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
