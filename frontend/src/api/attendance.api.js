@@ -72,6 +72,12 @@ export const attendanceApi = {
     });
     return response.data;
   },
+
+  // Get attendance stats
+  getStats: async () => {
+    const response = await apiClient.get('/attendance/sheets/stats/');
+    return response.data;
+  },
 };
 
 export default attendanceApi;

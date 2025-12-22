@@ -4,7 +4,6 @@ import { ChevronLeft } from 'lucide-react';
 import { Spinner } from 'flowbite-react';
 import { attendanceApi } from '../../../api/attendance.api';
 import {
-  AttendanceStatsCard,
   AttendanceFilterBar,
   AttendanceMemberList,
 } from '../components';
@@ -293,57 +292,54 @@ export default function AttendanceTracker() {
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <div>
-            <h1 className="text-3xl font-semibold text-gray-800">Attendance Tracker</h1>
-          </div>
+          {/* Back navigation */}
+          <Link
+            to="/attendance"
+            className="inline-flex items-center text-sm text-[#FDB54A] font-medium hover:underline mb-4"
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Back to Attendance Sheets
+          </Link>
 
-          {/* Breadcrumb / back link */}
-          <div className="mt-3">
-            <Link
-              to="/attendance"
-              className="flex items-center text-sm text-[#FDB54A] font-medium hover:underline"
-            >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              <span>
-                {sheet?.event_title || 'Event'} | {formatDate(sheet?.date)}
-              </span>
-            </Link>
-          </div>
-
-          {/* Stats Summary */}
+          {/* Event info + Stats combined */}
           {sheet && (
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <AttendanceStatsCard
-                label="Total Members"
-                value={sheet.total_expected || 0}
-                variant="default"
-              />
-              <AttendanceStatsCard
-                label="Present"
-                value={sheet.total_attended || 0}
-                variant="success"
-              />
-              <AttendanceStatsCard
-                label="Attendance Rate"
-                value={sheet.attendance_rate ? `${sheet.attendance_rate.toFixed(0)}%` : '0%'}
-                variant="accent"
-              />
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-800">
+                      {sheet.event_title || 'Event'}
+                    </h2>
+                    <p className="text-sm text-gray-500">{formatDate(sheet.date)}</p>
+                  </div>
+                  <button
+                    onClick={toggleMultiSelectMode}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isMultiSelectMode
+                        ? 'bg-[#FDB54A] text-white hover:bg-[#e5a43d]'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {isMultiSelectMode ? '✓ Multi-Select' : 'Select'}
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 divide-x divide-gray-100">
+                <div className="px-5 py-3 text-center">
+                  <p className="text-2xl font-bold text-gray-900">{sheet.total_expected || 0}</p>
+                  <p className="text-xs text-gray-500 mt-1">Total Members</p>
+                </div>
+                <div className="px-5 py-3 text-center">
+                  <p className="text-2xl font-bold text-emerald-600">{sheet.total_attended || 0}</p>
+                  <p className="text-xs text-gray-500 mt-1">Present</p>
+                </div>
+                <div className="px-5 py-3 text-center">
+                  <p className="text-2xl font-bold text-[#FDB54A]">{sheet.attendance_rate ? `${sheet.attendance_rate.toFixed(0)}%` : '0%'}</p>
+                  <p className="text-xs text-gray-500 mt-1">Attendance Rate</p>
+                </div>
+              </div>
             </div>
           )}
-
-          {/* Multi-Select Toggle Button */}
-          <div className="mt-4">
-            <button
-              onClick={toggleMultiSelectMode}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                isMultiSelectMode
-                  ? 'bg-sbcc-primary text-white hover:bg-[#e5a43d]'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              {isMultiSelectMode ? '✓ Multi-Select Mode' : 'Enable Multi-Select'}
-            </button>
-          </div>
 
           {/* Bulk Actions Bar */}
           {isMultiSelectMode && selectedRecords.size > 0 && (
@@ -427,24 +423,32 @@ export default function AttendanceTracker() {
           )}
         </div>
 
-        {/* Member List */}
-        <AttendanceMemberList
-          members={pageItems}
-          page={page}
-          pageCount={pageCount}
-          totalCount={filtered.length}
-          pageSize={pageSize}
-          onPageChange={setPage}
-          onToggleAttendance={handleToggleAttendance}
-          saving={saving}
-          // Multi-select props
-          isMultiSelectMode={isMultiSelectMode}
-          selectedRecords={selectedRecords}
-          onToggleSelection={toggleRecordSelection}
-          isAllPageSelected={isAllPageSelected}
-          isSomePageSelected={isSomePageSelected}
-          onToggleAllPage={toggleAllPageSelection}
-        />
+        {/* Member List with saving overlay */}
+        <div className={`relative ${saving ? 'opacity-60 pointer-events-none' : ''}`}>
+          {saving && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-3 shadow-lg">
+                <p className="text-sm font-medium text-gray-700">Saving changes...</p>
+              </div>
+            </div>
+          )}
+          <AttendanceMemberList
+            members={pageItems}
+            page={page}
+            pageCount={pageCount}
+            totalCount={filtered.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onToggleAttendance={handleToggleAttendance}
+            saving={saving}
+            isMultiSelectMode={isMultiSelectMode}
+            selectedRecords={selectedRecords}
+            onToggleSelection={toggleRecordSelection}
+            isAllPageSelected={isAllPageSelected}
+            isSomePageSelected={isSomePageSelected}
+            onToggleAllPage={toggleAllPageSelection}
+          />
+        </div>
       </div>
     </main>
   );

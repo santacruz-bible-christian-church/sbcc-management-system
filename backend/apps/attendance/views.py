@@ -149,6 +149,39 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
         return response
 
     @action(detail=False, methods=["get"])
+    def stats(self, request):
+        """
+        Get attendance sheet statistics
+        GET /api/attendance/sheets/stats/
+
+        Returns: { total_sheets, this_month, total_records, average_attendance_rate }
+        """
+        from datetime import date
+
+        today = date.today()
+        first_of_month = today.replace(day=1)
+
+        total_sheets = AttendanceSheet.objects.count()
+        this_month = AttendanceSheet.objects.filter(date__gte=first_of_month).count()
+        total_records = Attendance.objects.count()
+
+        # Calculate average attendance rate manually
+        # Sum of (attended / total) for each sheet, then divide by number of sheets
+        total_attended = Attendance.objects.filter(attended=True).count()
+        avg_rate = 0
+        if total_records > 0:
+            avg_rate = (total_attended / total_records) * 100
+
+        return Response(
+            {
+                "total_sheets": total_sheets,
+                "this_month": this_month,
+                "total_records": total_records,
+                "average_attendance_rate": round(avg_rate, 1),
+            }
+        )
+
+    @action(detail=False, methods=["get"])
     def check_absences(self, request):
         """
         Check for members with frequent absences
