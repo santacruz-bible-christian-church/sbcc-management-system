@@ -39,12 +39,12 @@ VITE_API_TIMEOUT=10000
 
 ## Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
+| Command           | Description              |
+| ----------------- | ------------------------ |
+| `npm run dev`     | Start development server |
+| `npm run build`   | Build for production     |
 | `npm run preview` | Preview production build |
-| `npm run lint` | Run ESLint |
+| `npm run lint`    | Run ESLint               |
 
 ## Project Structure
 
@@ -63,13 +63,13 @@ frontend/src/
 
 ## Tech Stack
 
-| Category | Technologies |
-|----------|-------------|
-| Framework | React 19.1.1, Vite 7.1.7 |
-| Styling | Tailwind CSS 3.4.18, Flowbite React |
-| State | Zustand, TanStack Query |
-| Forms | React Hook Form, Zod |
-| HTTP | Axios |
+| Category  | Technologies                        |
+| --------- | ----------------------------------- |
+| Framework | React 19.1.1, Vite 7.1.7            |
+| Styling   | Tailwind CSS 3.4.18, Flowbite React |
+| State     | Zustand, TanStack Query             |
+| Forms     | React Hook Form, Zod                |
+| HTTP      | Axios                               |
 
 ## Troubleshooting
 
@@ -115,4 +115,4 @@ npm install
 
 ---
 
-**Last Updated:** December 5, 2025
+**Last Updated:** December 22, 2025

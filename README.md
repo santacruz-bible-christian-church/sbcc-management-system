@@ -13,32 +13,35 @@ SBCC Management System streamlines church operations including membership manage
 
 **Course:** CMSC 309 - Software Engineering I
 **Client:** Santa Cruz Bible Christian Church
-**Status:** Active Development
+**Status:** Production
 
 ## Features
 
-| Module | Status | Description |
-|--------|--------|-------------|
-| Authentication | ✅ Complete | JWT-based auth with role management |
-| Members | ✅ Complete | Member profiles, birthdays, anniversaries |
-| Ministries | ✅ Complete | Ministry management, volunteer scheduling |
-| Events | ✅ Complete | Event calendar with registration |
-| Attendance | ✅ Complete | Digital tracking with reports |
-| Inventory | ✅ Complete | Equipment and resource tracking |
-| Dashboard | ✅ Complete | Analytics and reporting |
-| Prayer Requests | 🚧 In Progress | Digital submission and tracking |
-| Meeting Minutes | 🚧 In Progress | Document management |
-| Announcements | 🚧 In Progress | Church-wide communication |
-| Tasks | 🚧 In Progress | Task assignment system |
+| Module          | Status      | Description                               |
+| --------------- | ----------- | ----------------------------------------- |
+| Authentication  | ✅ Complete | JWT-based auth with role management       |
+| Members         | ✅ Complete | Member profiles, birthdays, anniversaries |
+| Ministries      | ✅ Complete | Ministry management, volunteer scheduling |
+| Events          | ✅ Complete | Event calendar with registration          |
+| Attendance      | ✅ Complete | Digital tracking with reports             |
+| Inventory       | ✅ Complete | Equipment and resource tracking           |
+| Dashboard       | ✅ Complete | Analytics and reporting                   |
+| Prayer Requests | ✅ Complete | Digital submission and tracking           |
+| Meeting Minutes | ✅ Complete | Document management with versioning       |
+| Announcements   | ✅ Complete | Church-wide communication                 |
+| Tasks           | ✅ Complete | Task assignment with timeline tracking    |
+| Visitors        | ✅ Complete | Visitor tracking and conversion           |
+| Settings        | ✅ Complete | System configuration and branding         |
+| Public API      | ✅ Complete | Public endpoints for homepage integration |
 
 ## Tech Stack
 
-| Layer | Technologies |
-|-------|-------------|
+| Layer    | Technologies                                 |
+| -------- | -------------------------------------------- |
 | Frontend | React 19, Vite, Tailwind CSS, Flowbite React |
-| Backend | Django 5.1, Django REST Framework |
-| Database | PostgreSQL (Neon Serverless) |
-| Auth | JWT (SimpleJWT) |
+| Backend  | Django 5.1, Django REST Framework            |
+| Database | PostgreSQL (Neon Serverless)                 |
+| Auth     | JWT (SimpleJWT)                              |
 
 ## Quick Start
 
@@ -67,12 +70,12 @@ npm run dev
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Backend Setup](docs/BACKEND_SETUP.md) | Django installation, configuration, troubleshooting |
-| [Frontend Setup](docs/FRONTEND_SETUP.md) | React setup, API integration, styling |
-| [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md) | Git workflow, conventions, code review |
-| [Product Requirements](docs/SBCC_PRD.md) | Full project requirements and specifications |
+| Document                                             | Description                                         |
+| ---------------------------------------------------- | --------------------------------------------------- |
+| [Backend Setup](docs/BACKEND_SETUP.md)               | Django installation, configuration, troubleshooting |
+| [Frontend Setup](docs/FRONTEND_SETUP.md)             | React setup, API integration, styling               |
+| [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md) | Git workflow, conventions, code review              |
+| [Product Requirements](docs/SBCC_PRD.md)             | Full project requirements and specifications        |
 
 ## Project Structure
 
@@ -92,26 +95,33 @@ sbcc-management-system/
 
 ## API Reference
 
-| Endpoint | Description |
-|----------|-------------|
-| `/api/auth/` | Authentication (login, register, token) |
-| `/api/members/` | Member CRUD operations |
-| `/api/ministries/` | Ministry and volunteer management |
-| `/api/events/` | Event and registration management |
-| `/api/attendance/` | Attendance tracking and reports |
-| `/api/inventory/` | Inventory management |
-| `/api/dashboard/` | Statistics and activities |
+| Endpoint                | Description                             |
+| ----------------------- | --------------------------------------- |
+| `/api/auth/`            | Authentication (login, register, token) |
+| `/api/members/`         | Member CRUD operations                  |
+| `/api/ministries/`      | Ministry and volunteer management       |
+| `/api/events/`          | Event and registration management       |
+| `/api/attendance/`      | Attendance tracking and reports         |
+| `/api/inventory/`       | Inventory management                    |
+| `/api/dashboard/`       | Statistics and activities               |
+| `/api/announcements/`   | Church announcements                    |
+| `/api/prayer-requests/` | Prayer request management               |
+| `/api/visitors/`        | Visitor tracking                        |
+| `/api/settings/`        | System configuration                    |
+| `/api/tasks/`           | Task management                         |
+| `/api/meeting-minutes/` | Meeting minutes and documents           |
+| `/api/public/*`         | Public APIs (no auth required)          |
 
 ## Team
 
 **Lead Developer:** Jeremy M. Garin ([@emperuna](https://github.com/emperuna))
 
-| Member | Member |
-|--------|--------|
-| Agojo, Nigel | Mendez, Jerick |
-| Alberto, Marc Justin | Mendoza, Nick Narry |
-| Aquino, Jose | Nazareno, Ross Cedric |
-| Eleazar, CJ | Taquilid, Ella Edz |
+| Member               | Member                |
+| -------------------- | --------------------- |
+| Agojo, Nigel         | Mendez, Jerick        |
+| Alberto, Marc Justin | Mendoza, Nick Narry   |
+| Aquino, Jose         | Nazareno, Ross Cedric |
+| Eleazar, CJ          | Taquilid, Ella Edz    |
 
 ## Contributing
 

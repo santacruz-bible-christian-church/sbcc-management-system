@@ -18,15 +18,15 @@ main                         # Production-ready code
 
 ### Branch Types
 
-| Prefix | Purpose | Example |
-|--------|---------|---------|
-| `feature/` | New features | `feature/prayer-requests` |
-| `fix/` | Bug fixes | `fix/attendance-calculation` |
-| `hotfix/` | Urgent production fixes | `hotfix/security-patch` |
-| `docs/` | Documentation | `docs/api-documentation` |
-| `design/` | UI/UX changes | `design/dashboard-layout` |
-| `refactor/` | Code improvements | `refactor/optimize-queries` |
-| `chore/` | Maintenance tasks | `chore/update-dependencies` |
+| Prefix      | Purpose                 | Example                      |
+| ----------- | ----------------------- | ---------------------------- |
+| `feature/`  | New features            | `feature/prayer-requests`    |
+| `fix/`      | Bug fixes               | `fix/attendance-calculation` |
+| `hotfix/`   | Urgent production fixes | `hotfix/security-patch`      |
+| `docs/`     | Documentation           | `docs/api-documentation`     |
+| `design/`   | UI/UX changes           | `design/dashboard-layout`    |
+| `refactor/` | Code improvements       | `refactor/optimize-queries`  |
+| `chore/`    | Maintenance tasks       | `chore/update-dependencies`  |
 
 ## Basic Workflow
 
@@ -73,19 +73,19 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### Types
 
-| Type | Description |
-|------|-------------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `docs` | Documentation |
-| `style` | Formatting |
+| Type       | Description      |
+| ---------- | ---------------- |
+| `feat`     | New feature      |
+| `fix`      | Bug fix          |
+| `docs`     | Documentation    |
+| `style`    | Formatting       |
 | `refactor` | Code refactoring |
-| `test` | Adding tests |
-| `chore` | Maintenance |
+| `test`     | Adding tests     |
+| `chore`    | Maintenance      |
 
 ### Scopes
 
-`authentication`, `members`, `ministries`, `events`, `attendance`, `inventory`, `dashboard`, `api`
+`authentication`, `members`, `ministries`, `events`, `attendance`, `inventory`, `dashboard`, `announcements`, `prayer-requests`, `visitors`, `tasks`, `meeting-minutes`, `settings`, `public`, `api`
 
 ### Examples
 
@@ -100,19 +100,23 @@ git commit -m "refactor(dashboard): extract statistics logic"
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Feature
 - [ ] Bug fix
 - [ ] Refactoring
 - [ ] Documentation
 
 ## Testing
+
 - [ ] Tests pass
 - [ ] Manual testing completed
 
 ## Breaking Changes
+
 None / Describe if any
 ```
 
@@ -183,4 +187,4 @@ python manage.py showmigrations          # Migration status
 
 ---
 
-**Last Updated:** December 5, 2025
+**Last Updated:** December 22, 2025

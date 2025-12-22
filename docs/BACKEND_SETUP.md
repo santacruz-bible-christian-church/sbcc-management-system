@@ -75,15 +75,15 @@ python -c 'from django.core.management.utils import get_random_secret_key; print
 
 ## Available Commands
 
-| Command | Description |
-|---------|-------------|
-| `python manage.py runserver` | Start development server |
-| `python manage.py migrate` | Apply database migrations |
-| `python manage.py makemigrations` | Create new migrations |
-| `python manage.py createsuperuser` | Create admin user |
-| `python manage.py test` | Run tests |
-| `python manage.py shell` | Django shell |
-| `python manage.py check` | Verify configuration |
+| Command                            | Description               |
+| ---------------------------------- | ------------------------- |
+| `python manage.py runserver`       | Start development server  |
+| `python manage.py migrate`         | Apply database migrations |
+| `python manage.py makemigrations`  | Create new migrations     |
+| `python manage.py createsuperuser` | Create admin user         |
+| `python manage.py test`            | Run tests                 |
+| `python manage.py shell`           | Django shell              |
+| `python manage.py check`           | Verify configuration      |
 
 ## Project Structure
 
@@ -95,7 +95,13 @@ backend/
 │   ├── ministries/       # Ministry management
 │   ├── events/           # Event management
 │   ├── attendance/       # Attendance tracking
-│   └── inventory/        # Inventory management
+│   ├── inventory/        # Inventory management
+│   ├── announcements/    # Church announcements
+│   ├── prayer_requests/  # Prayer requests
+│   ├── visitors/         # Visitor tracking
+│   ├── tasks/            # Task management
+│   ├── meeting_minutes/  # Meeting minutes
+│   └── settings/         # System settings
 ├── common/            # Shared utilities
 ├── core/              # Dashboard aggregation
 ├── sbcc/              # Django settings
@@ -104,12 +110,12 @@ backend/
 
 ## Tech Stack
 
-| Category | Technologies |
-|----------|-------------|
+| Category  | Technologies                        |
+| --------- | ----------------------------------- |
 | Framework | Django 5.1.4, Django REST Framework |
-| Auth | djangorestframework-simplejwt |
-| Database | PostgreSQL (Neon Serverless) |
-| PDF | reportlab |
+| Auth      | djangorestframework-simplejwt       |
+| Database  | PostgreSQL (Neon Serverless)        |
+| PDF       | reportlab                           |
 
 ## Troubleshooting
 
@@ -166,4 +172,4 @@ class MinistriesConfig(AppConfig):
 
 ---
 
-**Last Updated:** December 5, 2025
+**Last Updated:** December 22, 2025

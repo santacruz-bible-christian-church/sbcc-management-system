@@ -8,21 +8,21 @@ Guide for running SBCC Management System with Docker.
 
 ### When to Use Docker
 
-| Scenario | Recommendation |
-|----------|----------------|
-| Current local setup works fine | Keep using it |
-| Fresh machine / new developer | Use Docker |
-| Environment issues | Try Docker |
-| Testing production build | Use Docker |
+| Scenario                       | Recommendation |
+| ------------------------------ | -------------- |
+| Current local setup works fine | Keep using it  |
+| Fresh machine / new developer  | Use Docker     |
+| Environment issues             | Try Docker     |
+| Testing production build       | Use Docker     |
 
 ### Key Differences
 
-| Local Setup | Docker Setup |
-|-------------|--------------|
-| Run `python manage.py runserver` | Run `docker compose up` |
-| Run `npm run dev` | Included in `docker compose up` |
-| Activate venv manually | Not needed |
-| Install dependencies manually | Automatic |
+| Local Setup                      | Docker Setup                    |
+| -------------------------------- | ------------------------------- |
+| Run `python manage.py runserver` | Run `docker compose up`         |
+| Run `npm run dev`                | Included in `docker compose up` |
+| Activate venv manually           | Not needed                      |
+| Install dependencies manually    | Automatic                       |
 
 ### Switching Between Methods
 
@@ -45,6 +45,7 @@ cd frontend && npm run dev
 Docker runs applications in isolated containers. Instead of installing Python, Node.js, and databases manually, Docker handles everything automatically.
 
 **Benefits:**
+
 - Same environment for all developers
 - No "works on my machine" issues
 - One command to start everything
@@ -83,10 +84,10 @@ docker compose up --build
 
 ### 3. Access the Application
 
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost:5173 |
-| Backend API | http://localhost:8000/api/ |
+| Service     | URL                          |
+| ----------- | ---------------------------- |
+| Frontend    | http://localhost:5173        |
+| Backend API | http://localhost:8000/api/   |
 | Admin Panel | http://localhost:8000/admin/ |
 
 ### 4. Create Admin User (if needed)
@@ -132,21 +133,21 @@ docker compose up --build
 
 ## Command Comparison
 
-| Task | Local | Docker |
-|------|-------|--------|
-| Start backend | `python manage.py runserver` | `docker compose up` |
-| Start frontend | `npm run dev` | (included above) |
-| Run migrations | `python manage.py migrate` | `docker compose exec backend python manage.py migrate` |
+| Task             | Local                              | Docker                                                         |
+| ---------------- | ---------------------------------- | -------------------------------------------------------------- |
+| Start backend    | `python manage.py runserver`       | `docker compose up`                                            |
+| Start frontend   | `npm run dev`                      | (included above)                                               |
+| Run migrations   | `python manage.py migrate`         | `docker compose exec backend python manage.py migrate`         |
 | Create superuser | `python manage.py createsuperuser` | `docker compose exec backend python manage.py createsuperuser` |
-| Run tests | `python manage.py test` | `docker compose exec backend python manage.py test` |
-| Install deps | `pip install -r requirements.txt` | `docker compose up --build` |
+| Run tests        | `python manage.py test`            | `docker compose exec backend python manage.py test`            |
+| Install deps     | `pip install -r requirements.txt`  | `docker compose up --build`                                    |
 
 ## Services Overview
 
-| Service | Container | Port | Description |
-|---------|-----------|------|-------------|
-| backend | sbcc-backend | 8000 | Django REST API |
-| frontend | sbcc-frontend | 5173 | React + Vite |
+| Service  | Container     | Port | Description     |
+| -------- | ------------- | ---- | --------------- |
+| backend  | sbcc-backend  | 8000 | Django REST API |
+| frontend | sbcc-frontend | 5173 | React + Vite    |
 
 ## Troubleshooting
 
@@ -172,6 +173,7 @@ docker compose logs backend
 ```
 
 Common issues:
+
 - Missing `.env` file
 - Invalid `DATABASE_URL`
 
@@ -190,9 +192,10 @@ docker compose up --build
 ## Without Docker
 
 Prefer manual setup? See:
+
 - [Backend Setup Guide](BACKEND_SETUP.md)
 - [Frontend Setup Guide](FRONTEND_SETUP.md)
 
 ---
 
-**Last Updated:** December 5, 2025
+**Last Updated:** December 22, 2025
