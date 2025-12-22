@@ -85,6 +85,12 @@ export const membersApi = {
     });
     return response.data;
   },
+
+  // Get member stats (overall counts by status)
+  getStats: async () => {
+    const response = await apiClient.get('/members/stats/');
+    return response.data;
+  },
 };
 
 export default membersApi;

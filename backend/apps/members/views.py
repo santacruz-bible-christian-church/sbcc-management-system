@@ -174,6 +174,29 @@ class MemberViewSet(viewsets.ModelViewSet):
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
+    def stats(self, request):
+        """
+        Get member count statistics by status
+        GET /api/members/stats/
+
+        Returns: { total, active, inactive, archived }
+        """
+        from django.db.models import Count
+
+        counts = Member.objects.values("status").annotate(count=Count("id"))
+        stats = {
+            "total": Member.objects.count(),
+            "active": 0,
+            "inactive": 0,
+            "archived": 0,
+        }
+        for item in counts:
+            if item["status"] in stats:
+                stats[item["status"]] = item["count"]
+
+        return Response(stats)
+
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
     def demographics(self, request):
         """
         Get demographic statistics for all members

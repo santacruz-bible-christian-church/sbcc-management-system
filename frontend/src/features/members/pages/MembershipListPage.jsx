@@ -2,7 +2,7 @@ import { MemberToolbar } from '../components/MemberToolbar';
 import { MemberList } from '../components/MemberList';
 import { useMembers } from '../hooks/useMembers';
 import { useAuth } from '../../auth/hooks/useAuth';
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useEffect, useMemo } from 'react';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 import ArchiveIllustration from '../../../assets/Archive-Illustration.svg';
@@ -44,13 +44,22 @@ export const MembershipListPage = () => {
         setSearch(value);
     }, [setSearch]);
 
-    // Calculate stats from pagination data
-    const stats = useMemo(() => ({
-        total: pagination.count || 0,
-        active: members.filter(m => m.status === 'active').length,
-        inactive: members.filter(m => m.status === 'inactive').length,
-        archived: members.filter(m => m.status === 'archived').length,
-    }), [members, pagination.count]);
+    // Fetch overall stats from backend API
+    const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, archived: 0 });
+
+    const fetchStats = useCallback(async () => {
+        try {
+            const data = await membersApi.getStats();
+            setStats(data);
+        } catch (err) {
+            console.error('Failed to fetch stats:', err);
+        }
+    }, []);
+
+    // Fetch stats on mount and after any member changes
+    useEffect(() => {
+        fetchStats();
+    }, [fetchStats, members]);
 
     // Modal states
     const [deleteState, setDeleteState] = useState({ open: false, member: null });
