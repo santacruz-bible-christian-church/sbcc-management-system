@@ -86,11 +86,9 @@ export const membersApi = {
     return response.data;
   },
 
-  // Export single member profile as PDF
-  exportProfilePDF: async (id) => {
-    const response = await apiClient.get(`/members/${id}/export-profile-pdf/`, {
-      responseType: 'blob',
-    });
+  // Get member stats (overall counts by status)
+  getStats: async () => {
+    const response = await apiClient.get('/members/stats/');
     return response.data;
   },
 };

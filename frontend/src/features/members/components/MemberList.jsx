@@ -65,6 +65,29 @@ const getPageNumbers = (pagination) => {
     return pages;
 };
 
+// Column Headers
+const ListHeaders = ({ showCheckbox, allSelected, onSelectAll }) => (
+    <div className="pr-3 pl-3 flex justify-between font-[15px] font-bold text-[#A0A0A0]">
+        {showCheckbox && (
+            <div className="w-[5%] flex items-center justify-center">
+                <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={(e) => onSelectAll?.(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-[#FDB54A] focus:ring-[#FDB54A] cursor-pointer"
+                />
+            </div>
+        )}
+        <h1 className={showCheckbox ? "w-[15%]" : "w-[18%]"}>Name</h1>
+        <h1 className="hidden lg:flex justify-center w-[10%]">Gender</h1>
+        <h1 className="flex justify-center w-[15%] lg:w-[15%]">Contact No.</h1>
+        <h1 className="hidden lg:flex justify-center w-[15%]">Birthday</h1>
+        <h1 className="flex justify-center w-[20%]">Ministry</h1>
+        <h1 className="flex justify-center w-[18%]">Actions</h1>
+    </div>
+);
+
+// Action Button
 const ActionButton = ({ onClick, title, icon: Icon, colorClass, className = '' }) => (
     <button
         onClick={onClick}
@@ -75,6 +98,7 @@ const ActionButton = ({ onClick, title, icon: Icon, colorClass, className = '' }
     </button>
 );
 
+// Single Member Card/Row
 const MemberCard = ({
     member,
     canManage,
@@ -184,6 +208,7 @@ const MemberCard = ({
     );
 };
 
+// Pagination Controls
 const PaginationControls = ({ pagination, onPageChange }) => {
     const pageNumbers = useMemo(() => getPageNumbers(pagination), [pagination]);
 
@@ -244,6 +269,7 @@ const PaginationControls = ({ pagination, onPageChange }) => {
     );
 };
 
+// Results Info
 const ResultsInfo = ({ pagination }) => {
     const startIndex = (pagination.currentPage - 1) * 10 + 1;
     const endIndex = Math.min(pagination.currentPage * 10, pagination.count);
@@ -255,8 +281,10 @@ const ResultsInfo = ({ pagination }) => {
     );
 };
 
-export const ListCards = ({
+// Main MemberList Component
+export const MemberList = ({
     members,
+    loading,
     canManage,
     onEdit,
     onDelete,
@@ -267,10 +295,42 @@ export const ListCards = ({
     onPageChange,
     showCheckbox = false,
     selectedIds = [],
-    onSelect
+    allSelected = false,
+    onSelect,
+    onSelectAll
 }) => {
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20">
+                <div className="w-10 h-10 border-4 border-[#FDB54A] border-t-transparent rounded-full animate-spin" />
+                <p className="mt-3 text-gray-500">Loading members...</p>
+            </div>
+        );
+    }
+
+    if (!members || members.length === 0) {
+        return (
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </div>
+                <h2 className="text-lg font-semibold text-gray-700 mb-2">No members found</h2>
+                <p className="text-sm text-gray-500">Try adjusting your filters or add a new member.</p>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-3.5">
+            {/* Column Headers */}
+            <ListHeaders
+                showCheckbox={showCheckbox}
+                allSelected={allSelected}
+                onSelectAll={onSelectAll}
+            />
+
             {/* Member Cards */}
             {members.map((member) => (
                 <MemberCard
@@ -304,8 +364,9 @@ export const ListCards = ({
     );
 };
 
-ListCards.propTypes = {
+MemberList.propTypes = {
     members: PropTypes.array.isRequired,
+    loading: PropTypes.bool,
     canManage: PropTypes.bool,
     onEdit: PropTypes.func,
     onDelete: PropTypes.func,
@@ -316,5 +377,9 @@ ListCards.propTypes = {
     onPageChange: PropTypes.func,
     showCheckbox: PropTypes.bool,
     selectedIds: PropTypes.array,
+    allSelected: PropTypes.bool,
     onSelect: PropTypes.func,
+    onSelectAll: PropTypes.func,
 };
+
+export default MemberList;

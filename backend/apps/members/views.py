@@ -174,6 +174,29 @@ class MemberViewSet(viewsets.ModelViewSet):
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
+    def stats(self, request):
+        """
+        Get member count statistics by status
+        GET /api/members/stats/
+
+        Returns: { total, active, inactive, archived }
+        """
+        from django.db.models import Count
+
+        counts = Member.objects.values("status").annotate(count=Count("id"))
+        stats = {
+            "total": Member.objects.count(),
+            "active": 0,
+            "inactive": 0,
+            "archived": 0,
+        }
+        for item in counts:
+            if item["status"] in stats:
+                stats[item["status"]] = item["count"]
+
+        return Response(stats)
+
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
     def demographics(self, request):
         """
         Get demographic statistics for all members
@@ -407,186 +430,6 @@ class MemberViewSet(viewsets.ModelViewSet):
         response = HttpResponse(content_type="application/pdf")
         response["Content-Disposition"] = (
             f'attachment; filename="sbcc_members_{date.today().isoformat()}.pdf"'
-        )
-        response.write(pdf_value)
-        return response
-
-    @action(detail=True, methods=["get"], url_path="export-profile-pdf")
-    def export_profile_pdf(self, request, pk=None):
-        """
-        Export a single member's profile as PDF
-        GET /api/members/{id}/export-profile-pdf/
-        """
-        member = self.get_object()
-
-        buffer = BytesIO()
-        doc = SimpleDocTemplate(
-            buffer,
-            pagesize=A4,
-            leftMargin=2 * cm,
-            rightMargin=2 * cm,
-            topMargin=2 * cm,
-            bottomMargin=2 * cm,
-        )
-
-        styles = getSampleStyleSheet()
-        elements = []
-
-        # Title
-        title_style = ParagraphStyle(
-            "CustomTitle",
-            parent=styles["Title"],
-            fontSize=20,
-            spaceAfter=6,
-        )
-        elements.append(Paragraph("Member Profile", title_style))
-        elements.append(
-            Paragraph(f"Generated on {date.today().strftime('%B %d, %Y')}", styles["Normal"])
-        )
-        elements.append(Spacer(1, 0.5 * cm))
-
-        # Member name as header
-        name_style = ParagraphStyle(
-            "MemberName",
-            parent=styles["Heading1"],
-            fontSize=16,
-            textColor=colors.HexColor("#FDB54A"),
-        )
-        elements.append(Paragraph(member.full_name, name_style))
-        elements.append(Spacer(1, 0.3 * cm))
-
-        # Personal Information Table
-        personal_data = [
-            ["Personal Information", ""],
-            ["Email", member.email or "N/A"],
-            ["Phone", member.phone or "N/A"],
-            ["Gender", (member.gender or "N/A").title()],
-            [
-                "Date of Birth",
-                member.date_of_birth.strftime("%B %d, %Y") if member.date_of_birth else "N/A",
-            ],
-            [
-                "Baptism Date",
-                member.baptism_date.strftime("%B %d, %Y") if member.baptism_date else "N/A",
-            ],
-        ]
-
-        personal_table = Table(personal_data, colWidths=[5 * cm, 10 * cm])
-        personal_table.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#FDB54A")),
-                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                    ("SPAN", (0, 0), (-1, 0)),
-                    ("ALIGN", (0, 0), (-1, 0), "CENTER"),
-                    ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
-                    ("FONTNAME", (1, 1), (-1, -1), "Helvetica"),
-                    ("FONTSIZE", (0, 0), (-1, -1), 10),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-                    ("TOPPADDING", (0, 0), (-1, -1), 8),
-                    ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                    ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#FFF8E7")),
-                ]
-            )
-        )
-        elements.append(personal_table)
-        elements.append(Spacer(1, 0.5 * cm))
-
-        # Membership Information Table
-        membership_data = [
-            ["Membership Information", ""],
-            ["Status", (member.status or "active").title()],
-            ["Ministry", member.ministry.name if member.ministry else "Unassigned"],
-            [
-                "Member Since",
-                member.membership_date.strftime("%B %d, %Y") if member.membership_date else "N/A",
-            ],
-            ["Member ID", f"#{member.id}"],
-        ]
-
-        membership_table = Table(membership_data, colWidths=[5 * cm, 10 * cm])
-        membership_table.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#FDB54A")),
-                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                    ("SPAN", (0, 0), (-1, 0)),
-                    ("ALIGN", (0, 0), (-1, 0), "CENTER"),
-                    ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
-                    ("FONTNAME", (1, 1), (-1, -1), "Helvetica"),
-                    ("FONTSIZE", (0, 0), (-1, -1), 10),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-                    ("TOPPADDING", (0, 0), (-1, -1), 8),
-                    ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                    ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#FFF8E7")),
-                ]
-            )
-        )
-        elements.append(membership_table)
-        elements.append(Spacer(1, 0.5 * cm))
-
-        # Attendance Statistics Table
-        attendance_data = [
-            ["Attendance Statistics", ""],
-            [
-                "Attendance Rate",
-                f"{member.attendance_rate:.1f}%" if member.attendance_rate else "0%",
-            ],
-            [
-                "Last Attended",
-                member.last_attended.strftime("%B %d, %Y") if member.last_attended else "Never",
-            ],
-            ["Consecutive Absences", str(member.consecutive_absences)],
-        ]
-
-        attendance_table = Table(attendance_data, colWidths=[5 * cm, 10 * cm])
-        attendance_table.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#FDB54A")),
-                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                    ("SPAN", (0, 0), (-1, 0)),
-                    ("ALIGN", (0, 0), (-1, 0), "CENTER"),
-                    ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
-                    ("FONTNAME", (1, 1), (-1, -1), "Helvetica"),
-                    ("FONTSIZE", (0, 0), (-1, -1), 10),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-                    ("TOPPADDING", (0, 0), (-1, -1), 8),
-                    ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                    ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#FFF8E7")),
-                ]
-            )
-        )
-        elements.append(attendance_table)
-
-        # Footer
-        elements.append(Spacer(1, 1 * cm))
-        footer_style = ParagraphStyle(
-            "Footer",
-            parent=styles["Normal"],
-            fontSize=8,
-            textColor=colors.grey,
-        )
-        elements.append(
-            Paragraph(
-                "This document is confidential and intended for internal use only. | SBCC Management System",
-                footer_style,
-            )
-        )
-
-        doc.build(elements)
-
-        pdf_value = buffer.getvalue()
-        buffer.close()
-
-        # Clean filename
-        safe_name = member.full_name.replace(" ", "_").lower()
-        response = HttpResponse(content_type="application/pdf")
-        response["Content-Disposition"] = (
-            f'attachment; filename="member_profile_{safe_name}_{date.today().isoformat()}.pdf"'
         )
         response.write(pdf_value)
         return response
