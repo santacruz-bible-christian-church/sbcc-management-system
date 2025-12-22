@@ -85,14 +85,6 @@ export const membersApi = {
     });
     return response.data;
   },
-
-  // Export single member profile as PDF
-  exportProfilePDF: async (id) => {
-    const response = await apiClient.get(`/members/${id}/export-profile-pdf/`, {
-      responseType: 'blob',
-    });
-    return response.data;
-  },
 };
 
 export default membersApi;

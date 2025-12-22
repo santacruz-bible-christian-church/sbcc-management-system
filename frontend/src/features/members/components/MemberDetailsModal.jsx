@@ -16,10 +16,12 @@ import {
   HiOutlineUserGroup,
   HiOutlineChartBar,
 } from 'react-icons/hi';
-import { membersApi } from '../../../api/members.api';
+import { pdf } from '@react-pdf/renderer';
+import { saveAs } from 'file-saver';
+import MemberProfilePDF from './MemberProfilePDF';
 import { MemberAttendanceHistory } from './MemberAttendanceHistory';
 import { MemberCelebrationCard } from './MemberCelebrationCard';
-import { showError } from '../../../utils/toast';
+import { showError, showSuccess } from '../../../utils/toast';
 
 // Utility functions
 const formatDate = (dateString) => {
@@ -110,23 +112,22 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
   const age = calculateAge(member.date_of_birth);
 
   const handleExportProfile = async () => {
-    if (!member?.id) return;
+    if (!member) return;
 
     setExporting(true);
     try {
-      const blob = await membersApi.exportProfilePDF(member.id);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const safeName = member.full_name?.replace(/\s+/g, '_').toLowerCase() || 'member';
-      link.download = `member_profile_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      // Generate PDF using @react-pdf/renderer
+      const blob = await pdf(<MemberProfilePDF member={member} />).toBlob();
+      const safeName = (member.full_name || `${member.first_name}_${member.last_name}`)
+        .replace(/\s+/g, '_')
+        .toLowerCase();
+      const fileName = `member_profile_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+      saveAs(blob, fileName);
+      showSuccess('Profile PDF downloaded successfully');
     } catch (err) {
       console.error('Profile export error:', err);
-      showError('Failed to export profile. Please try again.');
+      showError('Failed to generate PDF. Please try again.');
     } finally {
       setExporting(false);
     }
