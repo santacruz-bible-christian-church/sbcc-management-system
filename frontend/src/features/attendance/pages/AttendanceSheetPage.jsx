@@ -1,21 +1,15 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
-import { Spinner } from 'flowbite-react';
 import { useAttendanceSheets } from '../hooks/useAttendanceSheets';
 import {
   AttendanceSheetInput,
-  AttendanceSheetList
+  AttendanceSheetList,
+  AttendanceSheetSkeleton,
+  AttendanceToolbar,
 } from '../components';
-import {
-  SearchBar,
-  Pagination,
-  EmptyState,
-  ConfirmationModal
-} from '../../../components/ui';
+import { Pagination, EmptyState, ConfirmationModal } from '../../../components/ui';
 import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
-
-const ACCENT = '#FDB54A';
+import { attendanceApi } from '../../../api/attendance.api';
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
@@ -33,9 +27,10 @@ export default function AttendanceSheetPage() {
     sheets,
     loading,
     error,
-    search,
     pagination,
     setSearch,
+    setFilters,
+    filters,
     goToPage,
     createSheet,
     deleteSheet,
@@ -43,13 +38,45 @@ export default function AttendanceSheetPage() {
   } = useAttendanceSheets();
 
   const [showModal, setShowModal] = useState(false);
-  const [searchDraft, setSearchDraft] = useState(search);
   const [deleteState, setDeleteState] = useState({ open: false, sheet: null });
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const handleSearchSubmit = useCallback((e) => {
-    e.preventDefault();
-    setSearch(searchDraft.trim());
-  }, [searchDraft, setSearch]);
+  // Stats state
+  const [stats, setStats] = useState({
+    total_sheets: 0,
+    this_month: 0,
+    total_records: 0,
+    average_attendance_rate: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  // Fetch stats
+  const fetchStats = useCallback(async () => {
+    try {
+      const data = await attendanceApi.getStats();
+      setStats(data);
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats, sheets]);
+
+  // Events for filter (could come from an events API)
+  const [events, setEvents] = useState([]);
+
+  const handleSearchChange = useCallback((value) => {
+    setSearchTerm(value);
+    setSearch(value);
+  }, [setSearch]);
+
+  const handleEventFilterChange = useCallback((value) => {
+    setFilters(prev => ({ ...prev, event: value }));
+  }, [setFilters]);
 
   const handleCreate = useCallback(async (data) => {
     try {
@@ -72,10 +99,11 @@ export default function AttendanceSheetPage() {
         notes: data.notes || '',
       });
       setShowModal(false);
+      fetchStats(); // Refresh stats after create
     } catch (err) {
       console.error('Create sheet error:', err);
     }
-  }, [createSheet]);
+  }, [createSheet, fetchStats]);
 
   const handleDownload = useCallback(async (sheet) => {
     try {
@@ -102,39 +130,26 @@ export default function AttendanceSheetPage() {
     try {
       await deleteSheet(deleteState.sheet.id);
       closeDeleteModal();
+      fetchStats(); // Refresh stats after delete
     } catch (err) {
       console.error('Delete error:', err);
     }
-  }, [deleteState.sheet, deleteSheet, closeDeleteModal]);
+  }, [deleteState.sheet, deleteSheet, closeDeleteModal, fetchStats]);
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
-        {/* Page Header */}
-        <div className="mb-6">
-          <div>
-            <h1 className="text-3xl font-semibold text-gray-800">Attendance Sheets</h1>
-          </div>
-
-          {/* Controls */}
-          <div className="mt-4 flex items-center gap-3">
-            <button
-              type="button"
-              className="flex items-center justify-center h-10 px-3 bg-[#FDB54A] text-white rounded-lg shadow-sm hover:opacity-95"
-              onClick={() => setShowModal(true)}
-              style={{ backgroundColor: ACCENT }}
-            >
-              <Plus className="w-4 h-4 text-white" />
-            </button>
-
-            <SearchBar
-              value={searchDraft}
-              onChange={(e) => setSearchDraft(e.target.value)}
-              onSubmit={handleSearchSubmit}
-              placeholder="Search by event title..."
-            />
-          </div>
-        </div>
+        {/* Toolbar */}
+        <AttendanceToolbar
+          stats={stats}
+          statsLoading={statsLoading}
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
+          eventFilter={filters.event}
+          onEventFilterChange={handleEventFilterChange}
+          events={events}
+          onCreateClick={() => setShowModal(true)}
+        />
 
         {/* Create Modal */}
         <AttendanceSheetInput
@@ -145,50 +160,52 @@ export default function AttendanceSheetPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6" role="alert">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-6" role="alert">
             <p className="text-red-800">{error}</p>
           </div>
         )}
 
         {/* Content */}
-        {loading && sheets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Spinner size="xl" />
-            <p className="mt-3 text-gray-500">Loading attendance sheets...</p>
-          </div>
-        ) : sheets.length === 0 ? (
-          <EmptyState
-            message="No attendance sheets found"
-            actionLabel="Create Your First Sheet"
-            onAction={() => setShowModal(true)}
-          />
-        ) : (
-          <>
-            <AttendanceSheetList
-              sheets={sheets}
-              onDownload={handleDownload}
-              onEdit={handleEdit}
-              onDelete={openDeleteModal}
-              formatDate={formatDate}
+        <div className="mt-6">
+          {loading && sheets.length === 0 ? (
+            <AttendanceSheetSkeleton />
+          ) : sheets.length === 0 ? (
+            <EmptyState
+              message="No attendance sheets found"
+              actionLabel="Create Your First Sheet"
+              onAction={() => setShowModal(true)}
             />
-
-            {/* Pagination */}
-            <Pagination
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              onPageChange={goToPage}
-              hasNext={!!pagination.next}
-              hasPrevious={!!pagination.previous}
-            />
-
-            {/* Results Info */}
-            {pagination.count > 0 && (
-              <div className="text-center text-sm text-gray-500 mt-2">
-                Showing {Math.min((pagination.currentPage - 1) * 10 + 1, pagination.count)} - {Math.min(pagination.currentPage * 10, pagination.count)} of {pagination.count} sheets
+          ) : (
+            <>
+              {/* Loading overlay for subsequent loads */}
+              <div className={`relative ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
+                <AttendanceSheetList
+                  sheets={sheets}
+                  onDownload={handleDownload}
+                  onEdit={handleEdit}
+                  onDelete={openDeleteModal}
+                  formatDate={formatDate}
+                />
               </div>
-            )}
-          </>
-        )}
+
+              {/* Pagination */}
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={goToPage}
+                hasNext={!!pagination.next}
+                hasPrevious={!!pagination.previous}
+              />
+
+              {/* Results Info */}
+              {pagination.count > 0 && (
+                <div className="text-center text-sm text-gray-500 mt-2">
+                  Showing {Math.min((pagination.currentPage - 1) * 10 + 1, pagination.count)} - {Math.min(pagination.currentPage * 10, pagination.count)} of {pagination.count} sheets
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
         {/* Delete Confirmation Modal */}
         <ConfirmationModal
