@@ -25,6 +25,32 @@ class MinistryViewSet(viewsets.ModelViewSet):
     ordering_fields = ["name", "created_at"]
     ordering = ["name"]
 
+    @action(detail=False, methods=["get"])
+    def stats(self, request):
+        """
+        Get ministry statistics
+        GET /api/ministries/stats/
+
+        Returns: { total_ministries, total_members, active_shifts, total_assignments }
+        """
+        from datetime import date
+
+        today = date.today()
+
+        total_ministries = Ministry.objects.count()
+        total_members = MinistryMember.objects.filter(is_active=True).count()
+        active_shifts = Shift.objects.filter(date__gte=today).count()
+        total_assignments = Assignment.objects.count()
+
+        return Response(
+            {
+                "total_ministries": total_ministries,
+                "total_members": total_members,
+                "active_shifts": active_shifts,
+                "total_assignments": total_assignments,
+            }
+        )
+
     @action(
         detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated]
     )  # ← Changed from IsAdminUser
