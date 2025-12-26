@@ -128,41 +128,36 @@ export function VisitorsPage() {
   };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Visitors</h1>
-          <p className="text-gray-500">Manage and track church visitors</p>
+    <main className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Statistics with Actions */}
+        <div className="flex items-center justify-between gap-4 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm mb-4">
+          <StatsCards statistics={statistics} loading={statsLoading} inline />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={refresh}
+              disabled={loading}
+              className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+              title="Refresh"
+            >
+              <HiRefresh className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={handleAddNew}
+              className="flex items-center gap-2 px-4 py-2 bg-[#FDB54A] hover:bg-[#e5a43b] text-white font-medium rounded-lg transition-colors"
+            >
+              <HiPlus className="w-5 h-5" />
+              Add Visitor
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={refresh}
-            disabled={loading}
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-            title="Refresh"
-          >
-            <HiRefresh className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-          <button
-            onClick={handleAddNew}
-            className="flex items-center gap-2 px-4 py-2 bg-sbcc-primary hover:bg-sbcc-primary-dark text-white font-medium rounded-lg transition-colors"
-          >
-            <HiPlus className="w-5 h-5" />
-            Add Visitor
-          </button>
-        </div>
-      </div>
 
-      {/* Statistics */}
-      <StatsCards statistics={statistics} loading={statsLoading} />
-
-      {/* Filters */}
-      <VisitorsFilters
-        filters={filters}
-        onFilterChange={setFilters}
-        onReset={resetFilters}
-      />
+        {/* Filters */}
+        <VisitorsFilters
+          filters={filters}
+          onFilterChange={setFilters}
+          onReset={resetFilters}
+        />
 
       {/* Visitors List */}
       <VisitorsList
@@ -244,7 +239,8 @@ export function VisitorsPage() {
           onClose={hideSnackbar}
         />
       )}
-    </div>
+      </div>
+    </main>
   );
 }
 

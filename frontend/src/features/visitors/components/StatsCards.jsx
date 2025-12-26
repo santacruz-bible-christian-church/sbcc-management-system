@@ -1,45 +1,78 @@
 import { HiUsers, HiUserAdd, HiClock, HiStar } from 'react-icons/hi';
 
-export function StatsCards({ statistics, loading }) {
+export function StatsCards({ statistics, loading, inline = false }) {
   const stats = [
     {
-      label: 'Total Visitors',
+      label: 'Total',
       value: statistics?.total || 0,
       icon: HiUsers,
-      color: 'blue',
+      color: 'text-gray-700',
     },
     {
       label: 'First Time',
       value: statistics?.by_follow_up?.visited_1x || 0,
       icon: HiClock,
-      color: 'amber',
+      color: 'text-amber-600',
     },
     {
       label: 'Second Visit',
       value: statistics?.by_follow_up?.visited_2x || 0,
       icon: HiUserAdd,
-      color: 'indigo',
+      color: 'text-indigo-600',
     },
     {
-      label: 'Regular Visitors',
+      label: 'Regular',
       value: statistics?.by_follow_up?.regular || 0,
       icon: HiStar,
-      color: 'green',
+      color: 'text-green-600',
     },
     {
-      label: 'Converted to Members',
+      label: 'Converted',
       value: statistics?.converted_to_members || 0,
       icon: HiUserAdd,
-      color: 'purple',
+      color: 'text-purple-600',
     },
   ];
 
+  // Inline display for toolbar
+  if (inline) {
+    if (loading) {
+      return (
+        <div className="flex items-center gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-gray-200 rounded animate-pulse" />
+              <div className="w-12 h-4 bg-gray-200 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-1 flex-wrap">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div key={stat.label} className="flex items-center">
+              {index > 0 && <span className="mx-2 text-gray-300">•</span>}
+              <Icon className={`w-4 h-4 mr-1.5 ${stat.color}`} />
+              <span className="text-sm font-medium text-gray-900">{stat.value}</span>
+              <span className="text-sm text-gray-500 ml-1">{stat.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Grid display (original)
   const colorClasses = {
-    blue: 'bg-blue-50 text-blue-600',
-    amber: 'bg-amber-50 text-amber-600',
-    indigo: 'bg-indigo-50 text-indigo-600',
-    green: 'bg-green-50 text-green-600',
-    purple: 'bg-purple-50 text-purple-600',
+    'text-gray-700': 'bg-gray-50 text-gray-600',
+    'text-amber-600': 'bg-amber-50 text-amber-600',
+    'text-indigo-600': 'bg-indigo-50 text-indigo-600',
+    'text-green-600': 'bg-green-50 text-green-600',
+    'text-purple-600': 'bg-purple-50 text-purple-600',
   };
 
   if (loading) {
