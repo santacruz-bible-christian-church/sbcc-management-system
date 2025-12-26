@@ -8,17 +8,7 @@ import {
     HiOutlinePhone,
 } from 'react-icons/hi';
 import { HiArrowPath } from 'react-icons/hi2';
-
-// Ministry color mapping
-const MINISTRY_COLORS = {
-    'Music Ministry': 'bg-blue-100 text-blue-700',
-    'Youth Ministry': 'bg-purple-100 text-purple-700',
-    'Children Ministry': 'bg-pink-100 text-pink-700',
-    'Prayer Ministry': 'bg-green-100 text-green-700',
-    'Media Ministry': 'bg-[#D4FFD9] text-[#00C853]',
-    'Worship Ministry': 'bg-[#E8D4FF] text-[#9C27B0]',
-    default: 'bg-gray-100 text-gray-700',
-};
+import { generateColorFromId, getContrastColor, generateHexFromId } from '../../../utils/colorUtils';
 
 const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -28,10 +18,6 @@ const formatDate = (dateString) => {
         day: 'numeric',
         year: 'numeric'
     });
-};
-
-const getMinistryColor = (ministry) => {
-    return MINISTRY_COLORS[ministry] || MINISTRY_COLORS.default;
 };
 
 const getPageNumbers = (pagination) => {
@@ -152,12 +138,19 @@ const MemberCard = ({
             </p>
 
             {/* Ministry */}
-            <div className={`${getMinistryColor(member.ministry_name)} flex w-[20%] text-[15px] text-sm font-regular rounded-full pl-1 pr-1 pt-1 pb-1 items-center text-center justify-center`}>
-                {member.ministry_name ? (
-                    <div className="truncate">{member.ministry_name}</div>
-                ) : (
-                    <div className="text-[#A0A0A0]">Unassigned</div>
-                )}
+            <div
+                className="flex w-[20%] text-sm font-medium rounded-lg px-3 py-1.5 items-center justify-center"
+                style={member.ministry ? {
+                    backgroundColor: `${generateHexFromId(member.ministry)}15`,
+                    color: generateHexFromId(member.ministry),
+                    borderLeft: `3px solid ${generateHexFromId(member.ministry)}`
+                } : {
+                    backgroundColor: '#F9FAFB',
+                    color: '#9CA3AF',
+                    borderLeft: '3px solid #E5E7EB'
+                }}
+            >
+                <span className="truncate">{member.ministry_name || 'Unassigned'}</span>
             </div>
 
             {/* Actions */}

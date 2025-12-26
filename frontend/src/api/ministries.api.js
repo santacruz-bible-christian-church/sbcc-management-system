@@ -56,6 +56,10 @@ export const ministriesApi = {
   // Assignments
   listAssignments: (params = {}) =>
     apiClient.get('/ministries/assignments/', { params }).then(res => res.data),
+
+  // Get ministry stats
+  getStats: () =>
+    apiClient.get('/ministries/stats/').then(res => res.data),
 };
 
 export default ministriesApi;

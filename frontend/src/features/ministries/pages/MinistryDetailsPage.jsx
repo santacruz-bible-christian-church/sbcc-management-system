@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Spinner, Tabs } from 'flowbite-react';
-import { HiOutlineArrowLeft, HiOutlinePencil, HiOutlineTrash, HiOutlineUsers, HiOutlineClock, HiRefresh } from 'react-icons/hi';
+import { HiOutlinePencil, HiOutlineTrash, HiOutlineUsers, HiOutlineClock, HiRefresh } from 'react-icons/hi';
+import { ChevronLeft } from 'lucide-react';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useMinistryDetails } from '../hooks/useMinistryDetails';
 import { useSnackbar } from '../../../hooks/useSnackbar';
@@ -49,198 +50,187 @@ export const MinistryDetailsPage = () => {
     }
   };
 
-  // Only refresh stats, not the entire ministry data
   const handleStatsRefresh = () => {
-    // This will only update counts in the stat cards
     refresh();
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner size="xl" />
-      </div>
+      <main className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col items-center justify-center py-20">
+            <Spinner size="xl" />
+            <p className="mt-3 text-gray-500">Loading ministry details...</p>
+          </div>
+        </div>
+      </main>
     );
   }
 
   if (!ministry) {
     return (
-      <div className="max-w-[95%] mx-auto p-4 md:p-8">
-        <div className="text-center py-12">
-          <p className="text-gray-500">Ministry not found</p>
-          <button
-            onClick={() => navigate('/ministries')}
-            className="mt-4 text-sbcc-primary hover:underline"
-          >
-            Back to Ministries
-          </button>
+      <main className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center py-12">
+            <p className="text-gray-500">Ministry not found</p>
+            <Link
+              to="/ministries"
+              className="mt-4 text-[#FDB54A] hover:underline inline-block"
+            >
+              ← Back to Ministries
+            </Link>
+          </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="max-w-[95%] mx-auto p-4 md:p-8">
-      {/* Header */}
-      <div className="mb-6">
-        <button
-          onClick={() => navigate('/ministries')}
-          className="flex items-center gap-2 text-[#A0A0A0] hover:text-[#383838] mb-2 transition-colors"
+    <main className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Back Navigation */}
+        <Link
+          to="/ministries"
+          className="inline-flex items-center text-sm text-[#FDB54A] font-medium hover:underline mb-4"
         >
-          <HiOutlineArrowLeft className="w-4 h-4" />
-          <span className="text-[15px]">Back to Ministries</span>
-        </button>
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-[30px] text-[#383838] leading-none font-bold mb-2">
-              {ministry.name}
-            </h1>
-            <p className="text-[15px] text-[#A0A0A0]">
-              {ministry.description || 'No description provided'}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {canManage && (
-              <>
-                <SecondaryButton
-                  icon={HiRefresh}
-                  onClick={() => setRotationModalOpen(true)}
-                  size="sm"
-                >
-                  Rotate Shifts
-                </SecondaryButton>
-                <button
-                  onClick={() => setEditModal(true)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Edit Ministry"
-                >
-                  <HiOutlinePencil className="w-5 h-5 text-[#FFB039]" />
-                </button>
-                <button
-                  onClick={() => setDeleteModal(true)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Delete Ministry"
-                >
-                  <HiOutlineTrash className="w-5 h-5 text-[#E55050]" />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+          <ChevronLeft className="w-4 h-4 mr-1" />
+          Back to Ministries
+        </Link>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow-[2px_2px_10px_rgba(0,0,0,0.15)] p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-[#FDB54A] bg-opacity-10 rounded-lg">
-              <HiOutlineUsers className="w-6 h-6 text-[#FDB54A]" />
-            </div>
-            <div>
-              <p className="text-[14px] text-[#A0A0A0]">Active Members</p>
-              <p className="text-[24px] font-bold text-[#383838]">
-                {ministry.active_member_count || 0}
-              </p>
+        {/* Ministry Info + Actions Card */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-800 mb-1">
+                  {ministry.name}
+                </h2>
+                <p className="text-sm text-gray-500">
+                  {ministry.description || 'No description provided'}
+                </p>
+              </div>
+              {canManage && (
+                <div className="flex items-center gap-2">
+                  <SecondaryButton
+                    icon={HiRefresh}
+                    onClick={() => setRotationModalOpen(true)}
+                    size="sm"
+                  >
+                    Rotate Shifts
+                  </SecondaryButton>
+                  <button
+                    onClick={() => setEditModal(true)}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Edit Ministry"
+                  >
+                    <HiOutlinePencil className="w-5 h-5 text-[#FDB54A]" />
+                  </button>
+                  <button
+                    onClick={() => setDeleteModal(true)}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Delete Ministry"
+                  >
+                    <HiOutlineTrash className="w-5 h-5 text-red-500" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        <div className="bg-white rounded-lg shadow-[2px_2px_10px_rgba(0,0,0,0.15)] p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-[#FDB54A] bg-opacity-10 rounded-lg">
-              <HiOutlineUsers className="w-6 h-6 text-[#FDB54A]" />
+          {/* Stats Row */}
+          <div className="grid grid-cols-3 divide-x divide-gray-100">
+            <div className="px-5 py-3 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <HiOutlineUsers className="w-5 h-5 text-emerald-600" />
+                <p className="text-2xl font-bold text-gray-900">{ministry.active_member_count || 0}</p>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Active Members</p>
             </div>
-            <div>
-              <p className="text-[14px] text-[#A0A0A0]">Total Members</p>
-              <p className="text-[24px] font-bold text-[#383838]">
-                {ministry.member_count || 0}
-              </p>
+            <div className="px-5 py-3 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <HiOutlineUsers className="w-5 h-5 text-blue-600" />
+                <p className="text-2xl font-bold text-gray-900">{ministry.member_count || 0}</p>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Total Members</p>
+            </div>
+            <div className="px-5 py-3 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <HiOutlineClock className="w-5 h-5 text-[#FDB54A]" />
+                <p className="text-2xl font-bold text-gray-900">{ministry.upcoming_shifts?.length || 0}</p>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Upcoming Shifts</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-[2px_2px_10px_rgba(0,0,0,0.15)] p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-[#FDB54A] bg-opacity-10 rounded-lg">
-              <HiOutlineClock className="w-6 h-6 text-[#FDB54A]" />
-            </div>
-            <div>
-              <p className="text-[14px] text-[#A0A0A0]">Upcoming Shifts</p>
-              <p className="text-[24px] font-bold text-[#383838]">
-                {ministry.upcoming_shifts?.length || 0}
-              </p>
-            </div>
-          </div>
+        {/* Tabs */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <Tabs
+            aria-label="Ministry tabs"
+            variant="underline"
+            onActiveTabChange={(tab) => setActiveTab(tab)}
+          >
+            <Tabs.Item active title="Overview">
+              <MinistryOverviewTab ministry={ministry} onRefresh={handleStatsRefresh} />
+            </Tabs.Item>
+            <Tabs.Item title="Members">
+              <MinistryMembersTab
+                ministry={ministry}
+                canManage={canManage}
+                onRefresh={handleStatsRefresh}
+              />
+            </Tabs.Item>
+            <Tabs.Item title="Shifts">
+              <MinistryShiftsTab
+                ministryId={ministry.id}
+                ministry={ministry}
+                canManage={canManage}
+                onRefresh={handleStatsRefresh}
+              />
+            </Tabs.Item>
+          </Tabs>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-lg shadow-[2px_2px_10px_rgba(0,0,0,0.15)] p-6">
-        <Tabs
-          aria-label="Ministry tabs"
-          variant="underline"
-          onActiveTabChange={(tab) => setActiveTab(tab)}
-        >
-          <Tabs.Item active title="Overview">
-            <MinistryOverviewTab ministry={ministry} onRefresh={handleStatsRefresh} />
-          </Tabs.Item>
-          <Tabs.Item title="Members">
-            <MinistryMembersTab
-              ministry={ministry}
-              canManage={canManage}
-              onRefresh={handleStatsRefresh}
-            />
-          </Tabs.Item>
-          <Tabs.Item title="Shifts">
-            <MinistryShiftsTab
-              ministryId={ministry.id}
-              ministry={ministry}
-              canManage={canManage}
-              onRefresh={handleStatsRefresh}
-            />
-          </Tabs.Item>
-        </Tabs>
-      </div>
-
-      {/* Edit Modal */}
-      <MinistryFormModal
-        open={editModal}
-        ministry={ministry}
-        onClose={() => setEditModal(false)}
-        onSubmit={handleUpdate}
-        loading={loading}
-      />
-
-      {/* Delete Modal */}
-      <ConfirmationModal
-        open={deleteModal}
-        title="Delete Ministry?"
-        message={`Are you sure you want to delete "${ministry.name}"? This will also remove all associated members, shifts, and assignments. This action cannot be undone.`}
-        confirmText="Delete"
-        confirmVariant="danger"
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteModal(false)}
-        loading={loading}
-      />
-
-      {/* Shift Rotation Modal */}
-      <ShiftRotationModal
-        open={rotationModalOpen}
-        onClose={() => setRotationModalOpen(false)}
-        ministry={ministry}
-        onSuccess={handleStatsRefresh}
-      />
-
-      {/* Snackbar */}
-      {snackbar && (
-        <Snackbar
-          message={snackbar.message}
-          variant={snackbar.variant}
-          duration={snackbar.duration}
-          onClose={hideSnackbar}
+        {/* Edit Modal */}
+        <MinistryFormModal
+          open={editModal}
+          ministry={ministry}
+          onClose={() => setEditModal(false)}
+          onSubmit={handleUpdate}
+          loading={loading}
         />
-      )}
-    </div>
+
+        {/* Delete Modal */}
+        <ConfirmationModal
+          open={deleteModal}
+          title="Delete Ministry?"
+          message={`Are you sure you want to delete "${ministry.name}"? This will also remove all associated members, shifts, and assignments. This action cannot be undone.`}
+          confirmText="Delete"
+          confirmVariant="danger"
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteModal(false)}
+          loading={loading}
+        />
+
+        {/* Shift Rotation Modal */}
+        <ShiftRotationModal
+          open={rotationModalOpen}
+          onClose={() => setRotationModalOpen(false)}
+          ministry={ministry}
+          onSuccess={handleStatsRefresh}
+        />
+
+        {/* Snackbar */}
+        {snackbar && (
+          <Snackbar
+            message={snackbar.message}
+            variant={snackbar.variant}
+            duration={snackbar.duration}
+            onClose={hideSnackbar}
+          />
+        )}
+      </div>
+    </main>
   );
 };
 
