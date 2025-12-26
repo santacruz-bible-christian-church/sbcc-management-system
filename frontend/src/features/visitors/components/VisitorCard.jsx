@@ -21,7 +21,7 @@ export function VisitorCard({
   const isConverted = visitor.status === 'member';
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
@@ -47,7 +47,7 @@ export function VisitorCard({
 
         {/* Visit Count */}
         <div className="text-center">
-          <div className="text-2xl font-bold text-sbcc-primary">
+          <div className="text-2xl font-bold text-[#FDB54A]">
             {visitor.visit_count || 0}
           </div>
           <div className="text-xs text-gray-500">visits</div>
