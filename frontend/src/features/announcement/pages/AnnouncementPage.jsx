@@ -4,6 +4,7 @@ import { useAnnouncements } from '../hooks/useAnnouncements';
 import StatsCards from '../components/StatsCards';
 import AnnouncementFilters from '../components/AnnouncementFilters';
 import AnnouncementCard from '../components/AnnouncementCard';
+import AnnouncementSkeleton from '../components/AnnouncementSkeleton';
 import AnnouncementModal from '../components/AnnouncementModal';
 import PreviewRecipientsModal from '../components/PreviewRecipientsModal';
 import SendNowModal from '../components/SendNowModal';
@@ -137,100 +138,94 @@ const AnnouncementPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <p className="text-gray-500 text-sm">Pages</p>
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Announcements</h1>
+    <main className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Unified Toolbar */}
+        <div className="flex items-center justify-between gap-4 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm mb-4">
+          <StatsCards announcements={announcements} inline />
           <button
             onClick={handleCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-[#FDB54A] text-white rounded-lg hover:bg-[#F6C67E] font-medium shadow"
+            className="flex items-center gap-2 px-4 py-2 bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] font-medium whitespace-nowrap"
           >
             <HiPlus className="w-5 h-5" />
             New Announcement
           </button>
         </div>
+
+        {/* Filters */}
+        <AnnouncementFilters
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          audienceFilter={audienceFilter}
+          setAudienceFilter={setAudienceFilter}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+        />
+
+        {/* Content */}
+        {loading ? (
+          <AnnouncementSkeleton />
+        ) : error ? (
+          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+            <p className="text-red-500">Error loading announcements: {error.message}</p>
+          </div>
+        ) : filteredAnnouncements.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+            <p className="text-gray-500">
+              {searchQuery || audienceFilter || statusFilter
+                ? 'No announcements match your filters.'
+                : 'No announcements yet. Create your first announcement!'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filteredAnnouncements.map((announcement) => (
+              <AnnouncementCard
+                key={announcement.id}
+                announcement={announcement}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onDeactivate={handleDeactivateClick}
+                onSendNow={handleSendNowClick}
+                onPreview={handlePreview}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Modals */}
+        <AnnouncementModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingAnnouncement(null);
+          }}
+          onSubmit={handleSubmit}
+          announcement={editingAnnouncement}
+        />
+
+        <PreviewRecipientsModal
+          isOpen={previewModal.isOpen}
+          onClose={() => setPreviewModal({ isOpen: false, data: null, announcement: null })}
+          recipientData={previewModal.data}
+          announcement={previewModal.announcement}
+        />
+
+        <SendNowModal
+          isOpen={sendNowModal.isOpen}
+          onClose={() => setSendNowModal({ isOpen: false, announcement: null })}
+          onConfirm={handleSendNowConfirm}
+          announcement={sendNowModal.announcement}
+        />
+
+        <DeactivateModal
+          isOpen={deactivateModal.isOpen}
+          onClose={() => setDeactivateModal({ isOpen: false, announcement: null })}
+          onConfirm={handleDeactivateConfirm}
+          announcement={deactivateModal.announcement}
+        />
       </div>
-
-      {/* Stats */}
-      <StatsCards announcements={announcements} />
-
-      {/* Filters */}
-      <AnnouncementFilters
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        audienceFilter={audienceFilter}
-        setAudienceFilter={setAudienceFilter}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-      />
-
-      {/* Content */}
-      {loading ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Loading announcements...</p>
-        </div>
-      ) : error ? (
-        <div className="text-center py-12">
-          <p className="text-red-500">Error loading announcements: {error.message}</p>
-        </div>
-      ) : filteredAnnouncements.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">
-            {searchQuery || audienceFilter || statusFilter
-              ? 'No announcements match your filters.'
-              : 'No announcements yet. Create your first announcement!'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredAnnouncements.map((announcement) => (
-            <AnnouncementCard
-              key={announcement.id}
-              announcement={announcement}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onDeactivate={handleDeactivateClick}
-              onSendNow={handleSendNowClick}
-              onPreview={handlePreview}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Modals */}
-      <AnnouncementModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingAnnouncement(null);
-        }}
-        onSubmit={handleSubmit}
-        announcement={editingAnnouncement}
-      />
-
-      <PreviewRecipientsModal
-        isOpen={previewModal.isOpen}
-        onClose={() => setPreviewModal({ isOpen: false, data: null, announcement: null })}
-        recipientData={previewModal.data}
-        announcement={previewModal.announcement}
-      />
-
-      <SendNowModal
-        isOpen={sendNowModal.isOpen}
-        onClose={() => setSendNowModal({ isOpen: false, announcement: null })}
-        onConfirm={handleSendNowConfirm}
-        announcement={sendNowModal.announcement}
-      />
-
-      <DeactivateModal
-        isOpen={deactivateModal.isOpen}
-        onClose={() => setDeactivateModal({ isOpen: false, announcement: null })}
-        onConfirm={handleDeactivateConfirm}
-        announcement={deactivateModal.announcement}
-      />
-    </div>
+    </main>
   );
 };
 

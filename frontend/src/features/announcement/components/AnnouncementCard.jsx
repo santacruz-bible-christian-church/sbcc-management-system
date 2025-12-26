@@ -28,7 +28,7 @@ const AnnouncementCard = ({ announcement, onEdit, onDelete, onDeactivate, onSend
   }, [showMenu]);
 
   return (
-    <div className="bg-white rounded-lg shadow border hover:shadow-lg transition-shadow">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
       <div className="p-5">
         {/* Header */}
         <div className="flex justify-between items-start mb-3">
