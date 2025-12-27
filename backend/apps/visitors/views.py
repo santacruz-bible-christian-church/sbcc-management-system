@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -23,11 +25,17 @@ class VisitorViewSet(viewsets.ModelViewSet):
     - Check-in for attendance
     - Convert visitor to member
     - Update follow-up status
+    - Search by name, email, phone
     """
 
     queryset = Visitor.objects.select_related("converted_to_member").all()
     serializer_class = VisitorSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["status", "follow_up_status"]
+    search_fields = ["full_name", "email", "phone"]
+    ordering_fields = ["full_name", "date_added", "status"]
+    ordering = ["-date_added"]
 
     @action(detail=True, methods=["post"])
     def check_in(self, request, pk=None):

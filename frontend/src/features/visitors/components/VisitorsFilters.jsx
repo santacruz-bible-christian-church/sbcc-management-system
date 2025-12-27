@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { HiSearch, HiX } from 'react-icons/hi';
 import { VISITOR_STATUS_OPTIONS, FOLLOW_UP_STATUS_OPTIONS } from '../utils/constants';
 import { useDebounce } from '../../../hooks/useDebounce';
@@ -10,17 +10,29 @@ export function VisitorsFilters({ filters, onFilterChange, onReset }) {
   // Debounced search value
   const debouncedSearch = useDebounce(localSearch, 400);
 
-  // Sync local search with filters prop
+  // Track if this is the initial mount
+  const isInitialMount = useRef(true);
+
+  // Sync local search with filters prop when it changes externally (e.g. reset)
   useEffect(() => {
-    setLocalSearch(filters.search || '');
+    if (filters.search !== undefined) {
+      setLocalSearch(filters.search || '');
+    }
   }, [filters.search]);
 
-  // Trigger search when debounced value changes
+  // Trigger API search when debounced value changes
   useEffect(() => {
+    // Skip initial mount to avoid unnecessary API call
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // Only update if the debounced search is different from current filter
     if (debouncedSearch !== (filters.search || '')) {
       onFilterChange({ search: debouncedSearch });
     }
-  }, [debouncedSearch, filters.search, onFilterChange]);
+  }, [debouncedSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSearchChange = (e) => {
     setLocalSearch(e.target.value);
