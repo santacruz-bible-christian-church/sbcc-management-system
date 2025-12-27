@@ -157,8 +157,8 @@ const PrayerRequestsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <main className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="mx-auto max-w-6xl space-y-6">
         {/* Header */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#FFB84D] to-[#FFA726] p-8 shadow-md">
           <div className="relative z-10">
@@ -238,7 +238,7 @@ const PrayerRequestsPage = () => {
           onSubmit={handleAddFollowUp}
         />
       </div>
-    </div>
+    </main>
   );
 };
 

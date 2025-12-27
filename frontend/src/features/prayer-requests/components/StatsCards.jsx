@@ -10,9 +10,9 @@ const StatsCards = ({ statsCards, activeFilter, onFilterChange }) => {
           <div
             key={stat.key}
             onClick={() => onFilterChange(stat.filterValue)}
-            className={`cursor-pointer rounded-2xl border-2 bg-white p-6 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
+            className={`cursor-pointer rounded-xl border bg-white p-5 transition-all duration-200 shadow-sm hover:shadow-md ${
               activeFilter === stat.filterValue
-                ? 'border-[#FFB84D] ring-2 ring-[#FFB84D]/20 shadow-md'
+                ? 'border-[#FFB84D] ring-2 ring-[#FFB84D]/20'
                 : 'border-gray-200 hover:border-[#FFB84D]/50'
             }`}
           >
