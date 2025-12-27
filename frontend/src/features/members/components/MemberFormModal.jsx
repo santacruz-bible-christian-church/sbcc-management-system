@@ -6,7 +6,7 @@ import EducationalBackgroundStep from "./steps/EducationalBackgroundStep";
 import FamilyBackgroundStep from "./steps/FamilyBackgroundStep";
 import SpiritualInfoStep from "./steps/SpiritualInfoStep";
 import ChurchBackgroundStep from "./steps/ChurchBackgroundStep";
-import { generateMembershipFormPDF } from "../../../utils/memberFormPDF";
+import { generateMembershipFormPDF } from "../utils/memberFormPDF";
 
 const STEPS = [
   {

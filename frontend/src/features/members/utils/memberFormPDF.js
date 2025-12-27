@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 // ✅ Import your church logo (place PNG in src/assets/)
-import churchLogo from '../assets/SBCCLogoHD.png';
+import churchLogo from '../../../assets/SBCCLogoHD.png';
 
 export const generateMembershipFormPDF = (formData) => {
   const doc = new jsPDF();
@@ -54,7 +54,7 @@ export const generateMembershipFormPDF = (formData) => {
   const pictureBoxY = yPos;
   const pictureBoxWidth = 30;
   const pictureBoxHeight = 30;
-  
+
   doc.rect(pictureBoxX, pictureBoxY, pictureBoxWidth, pictureBoxHeight);
   doc.setFontSize(8);
   doc.setFont(undefined, 'normal');
@@ -67,7 +67,7 @@ export const generateMembershipFormPDF = (formData) => {
   doc.setFontSize(11);
   doc.setFont(undefined, 'bold');
   doc.text('PASIG BIBLE CHRISTIAN MISSION INC.', pageCenterX, yPos + 6, { align: 'center' });
-  
+
   doc.setFontSize(9);
   doc.setFont(undefined, 'normal');
   doc.text('No. 43 B-Tatco Street, Bagong Ilog, Pasig City', pageCenterX, yPos + 11, { align: 'center' });
@@ -81,7 +81,7 @@ export const generateMembershipFormPDF = (formData) => {
   doc.setFont(undefined, 'bold');
   doc.text('CHURCH MEMBERSHIP FORM', pageWidth / 2, yPos, { align: 'center' });
   yPos += 3;
-  
+
   const titleWidth = doc.getTextWidth('CHURCH MEMBERSHIP FORM');
   doc.line(pageWidth / 2 - titleWidth / 2, yPos, pageWidth / 2 + titleWidth / 2, yPos);
   yPos += 8;
@@ -144,11 +144,11 @@ export const generateMembershipFormPDF = (formData) => {
   doc.text(`•   Complete Birthday:    Month `, margin + 2, yPos);
   doc.line(margin + 47, yPos, margin + 67, yPos);
   if (birthMonth) doc.text(birthMonth, margin + 48, yPos - 0.5);
-  
+
   doc.text(`    Day `, margin + 68, yPos);
   doc.line(margin + 80, yPos, margin + 90, yPos);
   if (birthDay) doc.text(String(birthDay), margin + 81, yPos - 0.5);
-  
+
   doc.text(`    Year `, margin + 91, yPos);
   doc.line(margin + 105, yPos, margin + 125, yPos);
   if (birthYear) doc.text(String(birthYear), margin + 106, yPos - 0.5);
@@ -173,19 +173,19 @@ export const generateMembershipFormPDF = (formData) => {
   // Status
   doc.text(`•   Status:`, margin + 2, yPos);
   const statusX = margin + 22;
-  
+
   addCheckbox(statusX, yPos - 2.5, formData.marital_status === 'single');
   doc.text('Single', statusX + 5, yPos);
-  
+
   addCheckbox(statusX + 25, yPos - 2.5, formData.marital_status === 'married');
   doc.text('Married', statusX + 30, yPos);
-  
+
   addCheckbox(statusX + 53, yPos - 2.5, formData.marital_status === 'divorced');
   doc.text('Divorced', statusX + 58, yPos);
-  
+
   addCheckbox(statusX + 83, yPos - 2.5, formData.marital_status === 'widowed');
   doc.text('Widowed', statusX + 88, yPos);
-  
+
   addCheckbox(statusX + 113, yPos - 2.5, formData.marital_status === 'remarried');
   doc.text('Remarried', statusX + 118, yPos);
   yPos += 6;
@@ -222,7 +222,7 @@ export const generateMembershipFormPDF = (formData) => {
       ['Tertiary/College:', formData.college || '', formData.college_year_graduated || ''],
     ],
     theme: 'grid',
-    styles: { 
+    styles: {
       fontSize: 9,
       cellPadding: 3,
     },
@@ -263,7 +263,7 @@ export const generateMembershipFormPDF = (formData) => {
     head: [['Family Members in your Household', 'Relationship', 'Birthdate']],
     body: familyData,
     theme: 'grid',
-    styles: { 
+    styles: {
       fontSize: 9,
       cellPadding: 3,
     },
@@ -302,10 +302,10 @@ export const generateMembershipFormPDF = (formData) => {
 
   // Have you accepted Jesus Christ
   doc.text('•   Have you accepted Jesus Christ as your personal Lord and Savior?', margin + 2, yPos);
-  
+
   addCheckbox(pageWidth - margin - 35, yPos - 2.5, formData.accepted_jesus === true);
   doc.text('Yes', pageWidth - margin - 31, yPos);
-  
+
   addCheckbox(pageWidth - margin - 18, yPos - 2.5, formData.accepted_jesus === false);
   doc.text('Not yet', pageWidth - margin - 14, yPos);
   yPos += 5;
@@ -315,7 +315,7 @@ export const generateMembershipFormPDF = (formData) => {
     doc.setFontSize(8);
     doc.text('If yes, how did you come to know Jesus Christ as your Savior? (Explain briefly)', margin + 6, yPos);
     yPos += 4;
-    
+
     const testimonySplit = doc.splitTextToSize(formData.salvation_testimony, pageWidth - 2 * margin - 10);
     testimonySplit.forEach((line) => {
       checkNewPage();
@@ -355,10 +355,10 @@ export const generateMembershipFormPDF = (formData) => {
 
   // If not, are you willing to be baptized?
   doc.text('•   If not, are you willing to be baptized?', margin + 2, yPos);
-  
+
   addCheckbox(pageWidth - margin - 35, yPos - 2.5, formData.willing_to_be_baptized === true);
   doc.text('Yes', pageWidth - margin - 31, yPos);
-  
+
   addCheckbox(pageWidth - margin - 18, yPos - 2.5, formData.willing_to_be_baptized === false);
   doc.text('No', pageWidth - margin - 14, yPos);
   yPos += 6;
@@ -400,6 +400,6 @@ export const generateMembershipFormPDF = (formData) => {
 
   // Save the PDF
   doc.save(fileName);
-  
+
   console.log('✅ PDF generated successfully:', fileName);
 };
