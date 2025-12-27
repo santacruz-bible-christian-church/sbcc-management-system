@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   HiOutlinePlus,
   HiSearch,
@@ -9,6 +9,7 @@ import {
   HiUserGroup,
   HiTrendingUp,
 } from 'react-icons/hi';
+import { useDebounce } from '../../../hooks/useDebounce';
 
 // Stats display component
 const AttendanceStats = ({ stats, loading }) => {
@@ -103,37 +104,23 @@ export const AttendanceToolbar = ({
   const [eventOpen, setEventOpen] = useState(false);
   const eventRef = useRef(null);
 
-  // Debounce search
+  // Local search state for immediate UI feedback
   const [localSearch, setLocalSearch] = useState(searchTerm);
-  const debounceRef = useRef(null);
 
+  // Debounced search
+  const debouncedSearch = useDebounce(localSearch, 400);
+
+  // Sync local search with prop
   useEffect(() => {
     setLocalSearch(searchTerm);
   }, [searchTerm]);
 
-  const handleSearchChange = useCallback((e) => {
-    const value = e.target.value;
-    setLocalSearch(value);
-
-    // Clear existing timeout
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    // Set new debounce timeout
-    debounceRef.current = setTimeout(() => {
-      onSearchChange(value);
-    }, 300);
-  }, [onSearchChange]);
-
-  // Cleanup debounce on unmount
+  // Trigger search when debounced value changes
   useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, []);
+    if (debouncedSearch !== searchTerm) {
+      onSearchChange(debouncedSearch);
+    }
+  }, [debouncedSearch, searchTerm, onSearchChange]);
 
   // Click outside handler
   useEffect(() => {
@@ -156,7 +143,7 @@ export const AttendanceToolbar = ({
     onEventFilterChange('');
   };
 
-  const hasActiveFilters = eventFilter || searchTerm;
+  const hasActiveFilters = eventFilter || localSearch;
 
   return (
     <div className="space-y-3">
@@ -183,7 +170,7 @@ export const AttendanceToolbar = ({
           <input
             type="search"
             value={localSearch}
-            onChange={handleSearchChange}
+            onChange={(e) => setLocalSearch(e.target.value)}
             placeholder="Search by event..."
             className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FDB54A]/50 focus:border-[#FDB54A] transition-all"
           />
