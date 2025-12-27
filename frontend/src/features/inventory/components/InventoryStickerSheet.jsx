@@ -1,49 +1,47 @@
-import { forwardRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
-import { SBCC_COLORS } from '../../../store/theme.store';
 import { formatLabel } from '../utils';
 
-export const InventoryStickerSheet = forwardRef(({ items }, ref) => {
+/**
+ * Display inventory stickers as a preview grid
+ * For printing, use the Print Labels button which generates a professional PDF
+ */
+export const InventoryStickerSheet = ({ items }) => {
   if (!items.length) {
     return (
-      <div className="rounded-3xl border border-dashed border-sbcc-gray/40 bg-sbcc-cream px-6 py-12 text-center text-sbcc-gray">
-        Nothing to print yet. Add or filter to a subset of assets and try again.
+      <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center text-gray-500">
+        No items to display. Add or filter assets to see labels here.
       </div>
     );
   }
 
   return (
-    <div
-      ref={ref}
-      className="grid grid-cols-1 gap-4 rounded-3xl border border-sbcc-gray/20 bg-white p-6 shadow-[0_20px_70px_rgba(56,56,56,0.08)] print:bg-white print:shadow-none sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
-    >
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
       {items.map((item) => (
         <div
           key={item.id}
-          className="flex flex-col items-center gap-3 rounded-2xl border border-sbcc-gray/30 bg-sbcc-cream px-4 py-5 text-center text-sbcc-dark print:border-sbcc-dark"
+          className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:border-gray-300 hover:shadow-sm transition-all"
         >
-          <QRCodeCanvas
-            value={`SBCC-INV-${item.id}`}
-            size={96}
-            bgColor={SBCC_COLORS.fill.white}
-            fgColor={SBCC_COLORS.accent}
-            includeMargin={false}
-          />
-          <div className="space-y-1">
-            <p className="text-base font-semibold text-sbcc-dark">{item.item_name}</p>
-            <p className="text-xs font-semibold uppercase tracking-wide text-sbcc-gray">
-              {formatLabel(item.label)} | Qty {item.metrics.quantity}
+          <div className="flex-shrink-0">
+            <QRCodeCanvas
+              value={`SBCC-INV-${item.id}`}
+              size={56}
+              bgColor="#FFFFFF"
+              fgColor="#000000"
+              includeMargin={false}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 truncate">{item.item_name}</p>
+            <p className="text-xs text-gray-600">ID: #{item.id}</p>
+            <p className="text-xs text-gray-600">
+              {formatLabel(item.label)} • Qty: {item.quantity || item.metrics?.quantity || 1}
             </p>
-            <p className="text-xs text-sbcc-gray">
-              ID #{item.id} | {item.ministry_name || 'Ministry TBD'}
-            </p>
+            <p className="text-xs text-gray-500 truncate">{item.ministry_name || 'Unassigned'}</p>
           </div>
         </div>
       ))}
     </div>
   );
-});
-
-InventoryStickerSheet.displayName = 'InventoryStickerSheet';
+};
 
 export default InventoryStickerSheet;
