@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { HiX, HiUpload, HiTrash, HiDocument, HiClock, HiPencil } from 'react-icons/hi';
+import { HiX, HiUpload, HiTrash, HiDocument, HiClock, HiPencil, HiDownload } from 'react-icons/hi';
 import { VersionHistoryPanel } from './VersionHistoryPanel';
 
 export const MeetingMinutesModal = ({
@@ -320,30 +320,41 @@ export const MeetingMinutesModal = ({
                             <div className="flex items-center gap-3">
                               <HiDocument className="w-5 h-5 text-gray-500" />
                               <div>
-                                <a
-                                  href={attachment.file_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-sm font-medium text-blue-600 hover:underline"
-                                >
+                                <p className="text-sm font-medium text-gray-900">
                                   {attachment.file_name}
-                                </a>
+                                </p>
                                 <p className="text-xs text-gray-500">
                                   {attachment.file_type?.toUpperCase()} •{' '}
                                   {attachment.file_size_mb
                                     ? `${attachment.file_size_mb} MB`
-                                    : `${Math.round(attachment.file_size / 1024)} KB`}
+                                    : `${Math.round((attachment.file_size || 0) / 1024)} KB`}
                                 </p>
                               </div>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => onDeleteAttachment(attachment.id)}
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Delete attachment"
-                            >
-                              <HiTrash className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              {/* Download Button */}
+                              {(attachment.file_url || attachment.file) && (
+                                <a
+                                  href={attachment.file_url || attachment.file}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  download={attachment.file_name}
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                  title="Download"
+                                >
+                                  <HiDownload className="w-4 h-4" />
+                                </a>
+                              )}
+                              {/* Delete Button */}
+                              <button
+                                type="button"
+                                onClick={() => onDeleteAttachment(attachment.id)}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete attachment"
+                              >
+                                <HiTrash className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>

@@ -1,8 +1,18 @@
 import PropTypes from 'prop-types';
-import { HiEye, HiDownload, HiTrash, HiDotsVertical } from 'react-icons/hi';
+import { HiDownload, HiTrash, HiPencil } from 'react-icons/hi';
 
 export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelete, onFileClick }) => {
   if (files.length === 0) return null;
+
+  const handleEdit = (file, e) => {
+    e.stopPropagation();
+    onFileClick && onFileClick(file.id);
+  };
+
+  const handleDelete = (file, e) => {
+    e.stopPropagation();
+    onDelete(file);
+  };
 
   return (
     <div>
@@ -13,8 +23,7 @@ export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelet
             {files.map((file) => (
               <tr
                 key={file.id}
-                onClick={() => onFileClick && onFileClick(file.id)}
-                className={`hover:bg-gray-50 transition-colors cursor-pointer ${
+                className={`hover:bg-gray-50 transition-colors ${
                   selectedFiles.includes(file.id) ? 'bg-blue-50' : ''
                 }`}
               >
@@ -33,35 +42,39 @@ export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelet
                 <td className="px-6 py-4">
                   <span className="text-sm text-gray-500">{file.modified}</span>
                 </td>
-                <td className="w-32 px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center gap-2">
+                <td className="w-28 px-6 py-4">
+                  <div className="flex items-center gap-1">
+                    {/* Edit Button */}
                     <button
-                      onClick={() => onFileClick && onFileClick(file.id)}
+                      onClick={(e) => handleEdit(file, e)}
                       className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                      title="View"
+                      title="Edit"
                     >
-                      <HiEye className="w-4 h-4 text-gray-500" />
+                      <HiPencil className="w-4 h-4 text-gray-500" />
                     </button>
+
+                    {/* Download Button - Only show if file has URL */}
                     {file.fileUrl && (
                       <a
                         href={file.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        download
+                        onClick={(e) => e.stopPropagation()}
                         className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                         title="Download"
                       >
                         <HiDownload className="w-4 h-4 text-gray-500" />
                       </a>
                     )}
+
+                    {/* Delete Button */}
                     <button
-                      onClick={() => onDelete(file)}
+                      onClick={(e) => handleDelete(file, e)}
                       className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
                       title="Delete"
                     >
                       <HiTrash className="w-4 h-4 text-red-500" />
-                    </button>
-                    <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                      <HiDotsVertical className="w-4 h-4 text-gray-500" />
                     </button>
                   </div>
                 </td>
