@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   HiSearch,
   HiFilter,
@@ -18,8 +18,10 @@ import { FilesListView } from '../components/FilesListView';
 import { FoldersGridView } from '../components/FoldersGridView';
 import { FilesGridView } from '../components/FilesGridView';
 import { MeetingMinutesModal } from '../components/MeetingMinutesModal';
+import { FileManagementSkeleton } from '../components/FileManagementSkeleton';
 import { useMeetingMinutes } from '../hooks/useMeetingMinutes';
 import { meetingMinutesApi } from '../../../api/meeting-minutes.api';
+import { useDebounce } from '../../../hooks/useDebounce';
 
 export const FileManagementPage = () => {
   const {
@@ -63,6 +65,19 @@ export const FileManagementPage = () => {
     : (currentCategory !== null
         ? getFiles().filter(f => f._original?.category === currentCategory)
         : getFiles());
+
+  // Debounced search
+  const debouncedSearchTerm = useDebounce(searchTerm, 400);
+  const isSearching = debouncedSearchTerm.trim().length > 0;
+
+  // Effect to trigger search when debounced value changes
+  useEffect(() => {
+    if (debouncedSearchTerm.trim()) {
+      searchMeetings(debouncedSearchTerm);
+    } else {
+      refetch();
+    }
+  }, [debouncedSearchTerm, searchMeetings, refetch]);
 
   // Open modal for create/edit
   const openCreateModal = useCallback(() => {
@@ -158,6 +173,9 @@ export const FileManagementPage = () => {
     const newBreadcrumbs = breadcrumbs.slice(0, index + 1);
     setBreadcrumbs(newBreadcrumbs);
 
+    // Clear search when navigating via breadcrumbs
+    setSearchTerm('');
+
     if (crumb.id === null) {
       setCurrentCategory(null);
       setViewingMeeting(false);
@@ -171,27 +189,35 @@ export const FileManagementPage = () => {
     }
   }, [breadcrumbs, setFilters, setSelectedMeeting]);
 
-  // Handle search
+  // Handle search (for form submit - optional, debounce handles it)
   const handleSearch = useCallback((e) => {
     e.preventDefault();
+    // Debounce already handles this, but allow manual submit
     if (searchTerm.trim()) {
       searchMeetings(searchTerm);
-    } else {
-      refetch();
     }
-  }, [searchTerm, searchMeetings, refetch]);
+  }, [searchTerm, searchMeetings]);
 
-  // Handle filter change
+  // Handle filter change (from dropdown - should reset breadcrumbs)
   const handleFilterChange = useCallback((e) => {
     const value = e.target.value;
     if (value) {
-      handleFolderClick(value);
+      const category = categories.find((c) => c.value === value);
+      if (category) {
+        setCurrentCategory(value);
+        setFilters((prev) => ({ ...prev, category: value }));
+        // Reset breadcrumbs to root + selected category (not append)
+        setBreadcrumbs([
+          { id: null, name: 'Meeting Minutes' },
+          { id: value, name: category.label, type: 'category' }
+        ]);
+      }
     } else {
       setCurrentCategory(null);
       setFilters((prev) => ({ ...prev, category: null }));
       setBreadcrumbs([{ id: null, name: 'Meeting Minutes' }]);
     }
-  }, [handleFolderClick, setFilters]);
+  }, [categories, setFilters]);
 
   // Handle clear filter
   const handleClearFilter = useCallback(() => {
@@ -269,9 +295,6 @@ export const FileManagementPage = () => {
       {/* Header */}
       <div className="bg-transparent border-b border-gray-200">
         <div className="px-8 py-6">
-          {/* Title */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Meeting Minutes</h1>
-
           {/* Search and Actions Bar */}
           <div className="flex items-stretch gap-3 h-12">
             {/* Add Button */}
@@ -385,25 +408,23 @@ export const FileManagementPage = () => {
         </nav>
 
         {/* Loading State */}
-        {loading && meetings.length === 0 && (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FDB54A]"></div>
-            <span className="ml-3 text-gray-600">Loading...</span>
-          </div>
-        )}
+        {loading && meetings.length === 0 && <FileManagementSkeleton />}
 
         {/* Content */}
         {!loading && (
           <>
             {viewMode === 'grid' ? (
               <div className="space-y-6">
-                <FoldersGridView
-                  folders={folders}
-                  selectedFiles={selectedFiles}
-                  onToggleSelection={toggleFileSelection}
-                  onDelete={openDeleteModal}
-                  onFolderClick={handleFolderClick}
-                />
+                {/* Hide folders when searching */}
+                {!isSearching && (
+                  <FoldersGridView
+                    folders={folders}
+                    selectedFiles={selectedFiles}
+                    onToggleSelection={toggleFileSelection}
+                    onDelete={openDeleteModal}
+                    onFolderClick={handleFolderClick}
+                  />
+                )}
                 <FilesGridView
                   files={files}
                   selectedFiles={selectedFiles}
@@ -414,13 +435,16 @@ export const FileManagementPage = () => {
               </div>
             ) : (
               <div className="space-y-6">
-                <FoldersListView
-                  folders={folders}
-                  selectedFiles={selectedFiles}
-                  onToggleSelection={toggleFileSelection}
-                  onDelete={openDeleteModal}
-                  onFolderClick={handleFolderClick}
-                />
+                {/* Hide folders when searching */}
+                {!isSearching && (
+                  <FoldersListView
+                    folders={folders}
+                    selectedFiles={selectedFiles}
+                    onToggleSelection={toggleFileSelection}
+                    onDelete={openDeleteModal}
+                    onFolderClick={handleFolderClick}
+                  />
+                )}
                 <FilesListView
                   files={files}
                   selectedFiles={selectedFiles}
