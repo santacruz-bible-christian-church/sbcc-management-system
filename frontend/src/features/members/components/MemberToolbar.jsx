@@ -192,7 +192,7 @@ export const MemberToolbar = ({
         <div className="relative flex-1 min-w-[200px]">
           <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
-            type="search"
+            type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search members..."

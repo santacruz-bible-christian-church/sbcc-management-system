@@ -1,9 +1,41 @@
+import { useState, useEffect, useRef } from 'react';
 import { HiSearch, HiX } from 'react-icons/hi';
 import { VISITOR_STATUS_OPTIONS, FOLLOW_UP_STATUS_OPTIONS } from '../utils/constants';
+import { useDebounce } from '../../../hooks/useDebounce';
 
 export function VisitorsFilters({ filters, onFilterChange, onReset }) {
+  // Local search state for immediate UI feedback
+  const [localSearch, setLocalSearch] = useState(filters.search || '');
+
+  // Debounced search value
+  const debouncedSearch = useDebounce(localSearch, 400);
+
+  // Track if this is the initial mount
+  const isInitialMount = useRef(true);
+
+  // Sync local search with filters prop when it changes externally (e.g. reset)
+  useEffect(() => {
+    if (filters.search !== undefined) {
+      setLocalSearch(filters.search || '');
+    }
+  }, [filters.search]);
+
+  // Trigger API search when debounced value changes
+  useEffect(() => {
+    // Skip initial mount to avoid unnecessary API call
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // Only update if the debounced search is different from current filter
+    if (debouncedSearch !== (filters.search || '')) {
+      onFilterChange({ search: debouncedSearch });
+    }
+  }, [debouncedSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSearchChange = (e) => {
-    onFilterChange({ search: e.target.value });
+    setLocalSearch(e.target.value);
   };
 
   const handleStatusChange = (e) => {
@@ -14,7 +46,12 @@ export function VisitorsFilters({ filters, onFilterChange, onReset }) {
     onFilterChange({ follow_up_status: e.target.value });
   };
 
-  const hasActiveFilters = filters.search || filters.status || filters.follow_up_status;
+  const handleClear = () => {
+    setLocalSearch('');
+    onReset();
+  };
+
+  const hasActiveFilters = localSearch || filters.status || filters.follow_up_status;
 
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-6">
@@ -25,7 +62,7 @@ export function VisitorsFilters({ filters, onFilterChange, onReset }) {
           <input
             type="text"
             placeholder="Search by name, email, or phone..."
-            value={filters.search || ''}
+            value={localSearch}
             onChange={handleSearchChange}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent"
           />
@@ -66,7 +103,7 @@ export function VisitorsFilters({ filters, onFilterChange, onReset }) {
         {/* Reset Button */}
         {hasActiveFilters && (
           <button
-            onClick={onReset}
+            onClick={handleClear}
             className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <HiX className="w-4 h-4" />
