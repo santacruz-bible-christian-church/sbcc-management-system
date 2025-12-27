@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   HiOutlinePlus,
   HiSearch,
@@ -8,6 +8,7 @@ import {
   HiCalendar,
   HiClipboardCheck,
 } from 'react-icons/hi';
+import { useDebounce } from '../../../hooks/useDebounce';
 
 // Stats display component
 const MinistryStats = ({ stats, loading }) => {
@@ -53,34 +54,23 @@ export const MinistryToolbar = ({
   onCreateClick,
   canManage,
 }) => {
-  // Debounce search
+  // Local search state for immediate UI feedback
   const [localSearch, setLocalSearch] = useState(searchTerm);
-  const debounceRef = useRef(null);
 
+  // Debounced search
+  const debouncedSearch = useDebounce(localSearch, 400);
+
+  // Sync local search with prop
   useEffect(() => {
     setLocalSearch(searchTerm);
   }, [searchTerm]);
 
-  const handleSearchChange = useCallback((e) => {
-    const value = e.target.value;
-    setLocalSearch(value);
-
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    debounceRef.current = setTimeout(() => {
-      onSearchChange(value);
-    }, 300);
-  }, [onSearchChange]);
-
+  // Trigger search when debounced value changes
   useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, []);
+    if (debouncedSearch !== searchTerm) {
+      onSearchChange(debouncedSearch);
+    }
+  }, [debouncedSearch, searchTerm, onSearchChange]);
 
   return (
     <div className="space-y-3 mb-6">
@@ -106,7 +96,7 @@ export const MinistryToolbar = ({
           <input
             type="search"
             value={localSearch}
-            onChange={handleSearchChange}
+            onChange={(e) => setLocalSearch(e.target.value)}
             placeholder="Search ministries..."
             className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FDB54A]/50 focus:border-[#FDB54A] transition-all"
           />
