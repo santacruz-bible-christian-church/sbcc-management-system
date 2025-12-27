@@ -3,6 +3,7 @@ import { MemberList } from '../components/MemberList';
 import { useMembers } from '../hooks/useMembers';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useCallback, useState, useEffect, useMemo } from 'react';
+import { useDebounce } from '../../../hooks/useDebounce';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 import ArchiveIllustration from '../../../assets/Archive-Illustration.svg';
@@ -38,11 +39,13 @@ export const MembershipListPage = () => {
         refresh: refreshMembers,
     } = useMembers();
 
-    // Sync search term with hook
-    const handleSearchChange = useCallback((value) => {
-        setSearchTerm(value);
-        setSearch(value);
-    }, [setSearch]);
+    // Debounced search
+    const debouncedSearchTerm = useDebounce(searchTerm, 400);
+
+    // Sync debounced search term with API
+    useEffect(() => {
+        setSearch(debouncedSearchTerm);
+    }, [debouncedSearchTerm, setSearch]);
 
     // Fetch overall stats from backend API
     const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, archived: 0 });
@@ -316,7 +319,7 @@ export const MembershipListPage = () => {
                     filters={filters}
                     setFilters={setFilters}
                     searchTerm={searchTerm}
-                    setSearchTerm={handleSearchChange}
+                    setSearchTerm={setSearchTerm}
                     onCreateClick={handleCreateMember}
                     onImportClick={() => setCsvModalOpen(true)}
                     selectionMode={selectionMode}
