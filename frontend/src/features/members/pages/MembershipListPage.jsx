@@ -13,7 +13,7 @@ import { MemberEditModal } from '../components/MemberEditModal';
 import CSVImportModal from '../components/CSVImportModal';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
 import { showError, showSuccess, showWarning } from '../../../utils/toast';
-import { generateMembershipFormPDF } from '../../../utils/memberFormPDF';
+import { generateMembershipFormPDF } from '../utils/memberFormPDF';
 import { HiOutlineArchive, HiOutlineTrash } from 'react-icons/hi';
 
 const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];

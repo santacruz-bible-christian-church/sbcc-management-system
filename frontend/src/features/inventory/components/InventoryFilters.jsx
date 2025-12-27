@@ -1,5 +1,4 @@
 import { HiOutlineFilter, HiOutlineSearch, HiOutlineX } from 'react-icons/hi';
-import { SecondaryButton } from '../../../components/ui/Button';
 import { LABEL_OPTIONS, STATUS_OPTIONS } from '../utils';
 
 export const InventoryFilters = ({
@@ -20,44 +19,43 @@ export const InventoryFilters = ({
   };
 
   return (
-    <section className="rounded-3xl border border-sbcc-gray/20 bg-white px-6 py-5 shadow-[0_12px_40px_rgba(56,56,56,0.08)] print:hidden">
+    <section className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm print:hidden">
       <div className="flex flex-wrap items-center justify-between gap-4 pb-4">
-        <div className="inline-flex items-center gap-2 rounded-2xl bg-sbcc-light-orange/60 px-4 py-2 text-sm font-semibold text-sbcc-dark">
-          <HiOutlineFilter className="h-5 w-5" />
+        <div className="inline-flex items-center gap-2 rounded-lg bg-amber-100 px-3 py-1.5 text-sm font-medium text-amber-700">
+          <HiOutlineFilter className="h-4 w-4" />
           Smart filters
         </div>
-        <SecondaryButton
-          size="sm"
-          icon={HiOutlineX}
+        <button
           onClick={onReset}
-          className="text-sbcc-dark"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         >
+          <HiOutlineX className="h-4 w-4" />
           Clear filters
-        </SecondaryButton>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <label className="md:col-span-2">
-          <span className="text-xs font-semibold uppercase text-sbcc-gray">Search assets</span>
-          <div className="mt-2 flex items-center gap-2 rounded-2xl border border-sbcc-gray/30 bg-sbcc-cream px-4 py-2 focus-within:border-transparent focus-within:ring-2 focus-within:ring-[color:var(--sbcc-primary)]">
-            <HiOutlineSearch className="h-5 w-5 text-sbcc-gray" />
+          <span className="text-xs font-medium uppercase text-gray-500">Search assets</span>
+          <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500">
+            <HiOutlineSearch className="h-4 w-4 text-gray-400 flex-shrink-0" />
             <input
               type="search"
               value={search}
               onChange={handleSearchInput}
               placeholder="Item name, description, remarks..."
-              className="w-full bg-transparent text-sm text-sbcc-dark placeholder:text-sbcc-gray focus:outline-none"
+              className="w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 border-none outline-none focus:ring-0 focus:outline-none"
             />
           </div>
         </label>
 
         <label>
-          <span className="text-xs font-semibold uppercase text-sbcc-gray">Status</span>
+          <span className="text-xs font-medium uppercase text-gray-500">Status</span>
           <select
             name="status"
             value={filters.status}
             onChange={handleFilterChange}
-            className="mt-2 w-full rounded-2xl border border-sbcc-gray/30 bg-sbcc-cream px-4 py-2 text-sm text-sbcc-dark focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[color:var(--sbcc-primary)]"
+            className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
           >
             {STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -68,12 +66,12 @@ export const InventoryFilters = ({
         </label>
 
         <label>
-          <span className="text-xs font-semibold uppercase text-sbcc-gray">Label</span>
+          <span className="text-xs font-medium uppercase text-gray-500">Label</span>
           <select
             name="label"
             value={filters.label}
             onChange={handleFilterChange}
-            className="mt-2 w-full rounded-2xl border border-sbcc-gray/30 bg-sbcc-cream px-4 py-2 text-sm text-sbcc-dark focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[color:var(--sbcc-primary)]"
+            className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
           >
             {LABEL_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -84,12 +82,12 @@ export const InventoryFilters = ({
         </label>
 
         <label>
-          <span className="text-xs font-semibold uppercase text-sbcc-gray">Ministry</span>
+          <span className="text-xs font-medium uppercase text-gray-500">Ministry</span>
           <select
             name="ministry"
             value={filters.ministry}
             onChange={handleFilterChange}
-            className="mt-2 w-full rounded-2xl border border-sbcc-gray/30 bg-sbcc-cream px-4 py-2 text-sm text-sbcc-dark focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[color:var(--sbcc-primary)]"
+            className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
           >
             <option value="all">All ministries</option>
             {ministryOptions.map((ministry) => (

@@ -1,18 +1,16 @@
 import { useState } from 'react';
-import { Spinner } from 'flowbite-react';
 import {
   HiOutlineDownload,
   HiOutlinePlusCircle,
   HiOutlinePrinter,
   HiOutlineRefresh,
 } from 'react-icons/hi';
-import { PrimaryButton, SecondaryButton } from '../../../components/ui/Button';
 import Snackbar from '../../../components/ui/Snackbar';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 import { useSnackbar } from '../../../hooks/useSnackbar';
-import { useAuth } from '../../auth/hooks/useAuth';
 import { useInventory } from '../hooks/useInventory';
 import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
+import { printStickersPDF } from '../utils/stickersPDF';
 import {
   InventoryFilters,
   InventoryForm,
@@ -21,9 +19,9 @@ import {
   InventorySummaryCards,
   InventoryTable,
 } from '../components';
+import InventorySkeleton from '../components/InventorySkeleton';
 
 const InventoryPage = () => {
-  const { user } = useAuth();
   const {
     filteredItems,
     loading,
@@ -110,58 +108,76 @@ const InventoryPage = () => {
     }
   };
 
-  const handlePrintStickers = () => {
-    window.print();
-  };
-
   return (
-    <div className="min-h-screen bg-sbcc-cream px-4 py-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8">
-        <header className="flex flex-col gap-4 rounded-3xl border border-sbcc-gray/20 bg-white px-6 py-6 shadow-[0_20px_70px_rgba(56,56,56,0.08)] print:hidden md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-sbcc-gray">
-              Inventory tracking
-            </p>
-            <h1 className="text-3xl font-bold text-sbcc-dark">Asset register</h1>
-            <p className="text-sm text-sbcc-gray">
-              Manage acquisition costs, depreciation, and QR labels for every equipment.
-            </p>
-            {user?.role && (
-              <p className="mt-2 text-xs text-sbcc-gray">
-                Signed in as{' '}
-                <span className="font-semibold text-sbcc-dark">{user.role}</span> -- backend must
-                enforce ministry-head permissions for edits.
+    <main className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="mx-auto max-w-6xl space-y-6">
+        {/* Unified Toolbar */}
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white px-5 py-4 rounded-xl border border-gray-200 shadow-sm print:hidden">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-100 rounded-lg">
+              <HiOutlineRefresh className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Asset Register</h2>
+              <p className="text-sm text-gray-500">
+                {summary?.totalItems || 0} assets • {summary?.totalQuantity || 0} pcs on hand
               </p>
-            )}
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <SecondaryButton icon={HiOutlineRefresh} onClick={refresh} disabled={loading}>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={refresh}
+              disabled={loading}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <HiOutlineRefresh className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
-            </SecondaryButton>
-            <SecondaryButton icon={HiOutlineDownload} onClick={handleDownloadReport}>
-              Depreciation PDF
-            </SecondaryButton>
-            <SecondaryButton icon={HiOutlinePrinter} onClick={handlePrintStickers}>
-              Print stickers
-            </SecondaryButton>
-            <PrimaryButton icon={HiOutlinePlusCircle} onClick={openCreate}>
+            </button>
+            <button
+              onClick={handleDownloadReport}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <HiOutlineDownload className="w-4 h-4" />
+              Export PDF
+            </button>
+            <button
+              onClick={() => printStickersPDF(filteredItems)}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <HiOutlinePrinter className="w-4 h-4" />
+              Print Labels
+            </button>
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#FDB54A] hover:bg-[#e5a43b] rounded-lg transition-colors"
+            >
+              <HiOutlinePlusCircle className="w-4 h-4" />
               Add Asset
-            </PrimaryButton>
+            </button>
           </div>
-        </header>
+        </div>
 
+        {/* Error Display */}
         {error && (
-          <div className="rounded-2xl border border-[color:var(--sbcc-danger)] bg-white px-4 py-3 text-sm font-semibold text-[color:var(--sbcc-danger)] print:hidden">
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 print:hidden">
             {error}
           </div>
         )}
 
-        <section className="space-y-8 print:hidden">
-          {loading && !filteredItems.length ? (
-            <div className="flex flex-col items-center justify-center rounded-3xl border border-sbcc-gray/20 bg-white px-6 py-10 text-sbcc-gray">
-              <Spinner size="xl" />
-              <p className="mt-3 text-sm font-semibold">Loading inventory data...</p>
+        {/* Main Content */}
+        <section className="space-y-6 print:hidden relative">
+          {/* Loading Overlay for Refresh */}
+          {loading && filteredItems.length > 0 && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-md border border-gray-200">
+                <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm font-medium text-gray-700">Refreshing...</span>
+              </div>
             </div>
+          )}
+
+          {loading && !filteredItems.length ? (
+            <InventorySkeleton />
           ) : (
             <>
               <InventorySummaryCards
@@ -189,27 +205,19 @@ const InventoryPage = () => {
           )}
         </section>
 
-        <section className="space-y-4">
-          <div className="flex flex-col gap-2 print:hidden md:flex-row md:items-center md:justify-between">
+        {/* Sticker Labels Section */}
+        <section className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 print:hidden">
+          <div className="flex flex-col gap-2 mb-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase text-sbcc-gray">
-                Printable sticker markings
-              </p>
-              <h2 className="text-2xl font-bold text-sbcc-dark">
-                QR-ready labels for on-site audits
-              </h2>
-              <p className="text-sm text-sbcc-gray">
-                Only this grid is visible when printing so you can generate sticker sheets.
-              </p>
+              <h2 className="text-lg font-semibold text-gray-900">QR Label Preview</h2>
+              <p className="text-sm text-gray-500">Scannable stickers for asset tracking</p>
             </div>
-            <SecondaryButton icon={HiOutlinePrinter} onClick={handlePrintStickers}>
-              Print current view
-            </SecondaryButton>
           </div>
-
           <InventoryStickerSheet items={filteredItems} />
         </section>
       </div>
+
+      {/* Modals */}
       <InventoryModal
         open={formState.open}
         title={formState.mode === 'create' ? 'Add asset' : 'Update asset'}
@@ -224,10 +232,6 @@ const InventoryPage = () => {
         />
       </InventoryModal>
 
-      {/* Delete Confirmation Modal */}
-      {/* NOTE: Updated to use two-column confirmation modal with illustration
-          (Trash-WarmTone.svg) — matches Attendance, Members, and Ministries delete modals.
-          Illustration is passed via the `illustration` prop so it remains configurable. */}
       <ConfirmationModal
         open={deleteState.open}
         title="Delete asset?"
@@ -248,9 +252,8 @@ const InventoryPage = () => {
           onClose={hideSnackbar}
         />
       )}
-    </div>
+    </main>
   );
 };
 
 export default InventoryPage;
-

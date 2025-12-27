@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { HiOutlineUpload, HiOutlineDocumentText, HiX, HiOutlineDownload, HiCheckCircle } from 'react-icons/hi';
 import { showWarning, showSuccess, showError } from '../../../utils/toast';
-import { generateMembershipFormPDF } from '../../../utils/memberFormPDF';
+import { generateMembershipFormPDF } from '../utils/memberFormPDF';
 
 
 const SAMPLE_CSV_CONTENT = `first_name,last_name,email,phone,gender,date_of_birth,complete_address,occupation,marital_status,wedding_anniversary,elementary_school,elementary_year_graduated,secondary_school,secondary_year_graduated,vocational_school,vocational_year_graduated,college,college_year_graduated,accepted_jesus,salvation_testimony,spiritual_birthday,baptism_date,willing_to_be_baptized,previous_church,how_introduced,began_attending_since,is_active
@@ -76,23 +76,23 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
 
     try {
       setPdfProgress({ current: 0, total: 0, generating: false });
-      
+
       // ✅ Import the CSV
       const result = await onImport(file);
-      
+
       // ✅ Auto-generate PDFs if enabled and members were imported
       if (generatePDFs && result?.members && Array.isArray(result.members) && result.members.length > 0) {
         setPdfProgress({ current: 0, total: result.members.length, generating: true });
-        
+
         showSuccess(`Imported ${result.members.length} members. Generating PDFs...`);
-        
+
         // Generate PDFs for each imported member
         for (let i = 0; i < result.members.length; i++) {
           const member = result.members[i];
-          
+
           // Delay to avoid overwhelming browser
           await new Promise(resolve => setTimeout(resolve, 500));
-          
+
           try {
             generateMembershipFormPDF(member);
             setPdfProgress(prev => ({ ...prev, current: i + 1 }));
@@ -101,16 +101,16 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
             console.error(`❌ Failed to generate PDF for ${member.first_name} ${member.last_name}:`, error);
           }
         }
-        
+
         setPdfProgress({ current: 0, total: 0, generating: false });
         showSuccess(`✅ Generated ${result.members.length} membership form PDFs!`);
       }
-      
+
       // Reset form
       setFile(null);
       setGeneratePDFs(true);
       onClose();
-      
+
     } catch (error) {
       console.error('Import error:', error);
       showError('Failed to import members');

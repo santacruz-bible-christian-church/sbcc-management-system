@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { inventoryApi } from '../../../api/inventory.api';
 import { ministriesApi } from '../../../api/ministries.api';
+import { generateInventoryReportPDF } from '../utils/inventoryReportPDF';
 import {
   DEFAULT_FILTERS,
   buildLabelBreakdown,
@@ -184,18 +185,9 @@ export const useInventory = () => {
     setSearch('');
   };
 
-  const downloadReport = useCallback(async () => {
-    const blob = await inventoryApi.downloadReport();
-    if (typeof window === 'undefined') return;
-    const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'inventory_depreciation_report.pdf';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  }, []);
+  const downloadReport = useCallback(() => {
+    generateInventoryReportPDF(filteredItems, summary);
+  }, [filteredItems, summary]);
 
   return {
     items,
