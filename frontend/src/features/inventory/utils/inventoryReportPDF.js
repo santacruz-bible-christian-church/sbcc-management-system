@@ -255,8 +255,6 @@ export const generateInventoryReportPDF = (items, summary = {}) => {
 
   // Save the PDF
   doc.save(fileName);
-
-  console.log('✅ Inventory PDF generated successfully:', fileName);
 };
 
 export default generateInventoryReportPDF;

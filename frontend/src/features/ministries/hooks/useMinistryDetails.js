@@ -17,12 +17,7 @@ export const useMinistryDetails = (ministryId) => {
     setError(null);
 
     try {
-      console.log('=== FETCHING MINISTRY ===');
-      console.log('Ministry ID:', ministryId);
-
       const data = await ministriesApi.getMinistry(ministryId);
-
-      console.log('Fetched ministry:', data);
       setMinistry(data);
     } catch (err) {
       console.error('Failed to load ministry:', err);

@@ -315,12 +315,6 @@ export const MemberFormModal = ({
       console.warn('Wedding anniversary recommended for married status');
     }
 
-    // Log sanitized data for debugging
-    console.log('Sanitized form data:', {
-      ...sanitized,
-      family_members_count: sanitized.family_members.length,
-    });
-
     return sanitized;
   }, []);
 

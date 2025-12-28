@@ -23,8 +23,6 @@ export const useInventory = () => {
   // Fetch ALL ministries (handle pagination)
   const fetchMinistries = useCallback(async () => {
     try {
-      console.log('🔄 Fetching ministries...');
-
       let allMinistries = [];
       let page = 1;
       let hasMore = true;
@@ -32,15 +30,7 @@ export const useInventory = () => {
       // Fetch all pages
       while (hasMore) {
         const response = await ministriesApi.listMinistries({ page, page_size: 100 });
-        console.log(`📦 Page ${page} response:`, response);
-
         const pageResults = response?.results || [];
-
-        // Log first ministry to see its structure
-        if (pageResults.length > 0 && page === 1) {
-          console.log('🔍 Sample ministry object:', pageResults[0]);
-        }
-
         allMinistries = [...allMinistries, ...pageResults];
 
         // Check if there's a next page
@@ -48,23 +38,15 @@ export const useInventory = () => {
         page++;
       }
 
-      console.log(`📋 Total ministries fetched: ${allMinistries.length}`);
-      console.log('🔍 All ministries raw:', allMinistries);
-
       // Extract names WITHOUT filtering by is_active (for now)
       const ministryNames = allMinistries
-        .map((m) => {
-          console.log(`Ministry: ${m.name}, is_active: ${m.is_active}, active: ${m.active}`);
-          return m.name;
-        })
+        .map((m) => m.name)
         .filter(Boolean) // Remove null/undefined names
         .sort((a, b) => a.localeCompare(b));
 
-      console.log('✅ All ministry names (unfiltered):', ministryNames);
       setMinistries(ministryNames);
     } catch (err) {
-      console.error('❌ Failed to fetch ministries:', err);
-      console.error('Error details:', err.response?.data);
+      console.error('Failed to fetch ministries:', err);
       setMinistries([]);
     }
   }, []);
@@ -105,10 +87,7 @@ export const useInventory = () => {
       }
     });
 
-    const finalOptions = Array.from(uniqueMinistries).sort((a, b) => a.localeCompare(b));
-    console.log('🎯 Final ministry options:', finalOptions);
-
-    return finalOptions;
+    return Array.from(uniqueMinistries).sort((a, b) => a.localeCompare(b));
   }, [ministries, items]);
 
   const filteredItems = useMemo(() => {

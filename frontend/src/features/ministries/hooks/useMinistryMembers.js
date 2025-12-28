@@ -17,24 +17,16 @@ export const useMinistryMembers = (ministryId) => {
     setError(null);
 
     try {
-      console.log('=== FETCHING MINISTRY MEMBERS ===');
-      console.log('Ministry ID:', ministryId);
-
       // Fetch ALL members by using a large page_size
       const data = await ministriesApi.listMembers({
         ministry: ministryId,
         page_size: 1000  // ← Fetch all volunteers (up to 1000)
       });
 
-      console.log('Raw response:', data);
-
       const membersList = Array.isArray(data) ? data : data.results || [];
-      console.log('Processed members list:', membersList.length, 'volunteers');
-
       setMembers(membersList);
     } catch (err) {
       console.error('Failed to load volunteers:', err);
-      console.error('Error response:', err.response?.data);
       setError(err.response?.data?.detail || 'Failed to load volunteers');
     } finally {
       setLoading(false);

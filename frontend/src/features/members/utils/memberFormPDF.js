@@ -400,6 +400,4 @@ export const generateMembershipFormPDF = (formData) => {
 
   // Save the PDF
   doc.save(fileName);
-
-  console.log('✅ PDF generated successfully:', fileName);
 };

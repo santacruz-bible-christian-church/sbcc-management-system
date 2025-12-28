@@ -250,8 +250,6 @@ export default function AttendanceSheetInput({ open = false, onClose = () => {},
         setDate(formatted);
         setSelectedDate(eventDate);
         validateDate(formatted);
-
-        console.log('📅 Auto-filled date from event:', formatted);
       }
     } else {
       // Clear date if no event selected

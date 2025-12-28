@@ -164,7 +164,7 @@ export const printStickersPDF = async (items) => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      console.log('⚠️ Popup blocked - PDF downloaded instead');
+      console.warn('Popup blocked - PDF downloaded instead');
       return;
     }
 
@@ -174,10 +174,8 @@ export const printStickersPDF = async (items) => {
 
     // Clean up blob URL after a delay
     setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
-
-    console.log('✅ Sticker labels PDF opened for printing');
   } catch (error) {
-    console.error('❌ Failed to generate sticker labels PDF:', error);
+    console.error('Failed to generate sticker labels PDF:', error);
     throw new Error('Failed to generate sticker labels. Please try again.');
   }
 };
