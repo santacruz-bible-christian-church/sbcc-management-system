@@ -60,7 +60,13 @@ export const TaskForm = ({ initialValues, onSubmit, onCancel, submitting }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      onSubmit(formData);
+      // Clean up data before submit - convert empty strings to null for FK fields
+      const cleanedData = {
+        ...formData,
+        assigned_to: formData.assigned_to || null,
+        ministry: formData.ministry || null,
+      };
+      onSubmit(cleanedData);
     }
   };
 

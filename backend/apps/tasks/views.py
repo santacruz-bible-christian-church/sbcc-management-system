@@ -62,8 +62,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = super().get_queryset()
 
-        # Admin and pastors see all
-        if user.role in ["admin", "pastor"]:
+        # Admin, super_admin, and pastors see all
+        if user.role in ["super_admin", "admin", "pastor"]:
             return queryset
 
         # Ministry leaders see their ministry's tasks

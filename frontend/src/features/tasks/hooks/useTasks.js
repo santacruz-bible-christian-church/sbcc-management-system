@@ -57,17 +57,19 @@ export const useTasks = (options = {}) => {
 
   const createTask = useCallback(async (data) => {
     const newTask = await tasksApi.createTask(data);
-    setTasks((prev) => [newTask, ...prev]);
+    // Refresh the full list to ensure consistency with server
+    await fetchTasks();
     await fetchStatistics();
     return newTask;
-  }, [fetchStatistics]);
+  }, [fetchTasks, fetchStatistics]);
 
   const updateTask = useCallback(async (id, data) => {
     const updated = await tasksApi.updateTask(id, data);
-    setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)));
+    // Refresh the full list to ensure consistency with server
+    await fetchTasks();
     await fetchStatistics();
     return updated;
-  }, [fetchStatistics]);
+  }, [fetchTasks, fetchStatistics]);
 
   const deleteTask = useCallback(async (id) => {
     await tasksApi.deleteTask(id);

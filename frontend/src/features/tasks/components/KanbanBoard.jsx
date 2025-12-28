@@ -50,7 +50,8 @@ export const KanbanBoard = ({
     setSelectedTask(null);
   };
 
-  if (loading) {
+  // Only show loading spinner on initial load when there are no tasks
+  if (loading && tasks.length === 0) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-sbcc-gray">Loading tasks...</div>
