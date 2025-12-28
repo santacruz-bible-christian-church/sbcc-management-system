@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Spinner, Tabs } from 'flowbite-react';
+import { Tabs } from 'flowbite-react';
 import { HiOutlineCog, HiOutlineInformationCircle, HiOutlinePhone, HiOutlineUser } from 'react-icons/hi';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useSettings } from '../hooks/useSettings';
@@ -9,6 +9,7 @@ import { AboutTab } from '../components/AboutTab';
 import { ContactTab } from '../components/ContactTab';
 import { ProfileTab } from '../components/ProfileTab';
 import { SettingsPreview } from '../components/SettingsPreview';
+import { SettingsSkeleton } from '../components/SettingsSkeleton';
 import Snackbar from '../../../components/ui/Snackbar';
 
 export const SettingsPage = () => {
@@ -52,27 +53,13 @@ export const SettingsPage = () => {
   };
 
   if (loading && canEditSystemSettings) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner size="xl" />
-      </div>
-    );
+    return <SettingsSkeleton />;
   }
 
   // If user can only access profile, show simplified view
   if (!canEditSystemSettings) {
     return (
-      <div className="max-w-[95%] mx-auto p-4 md:p-8">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-[30px] text-[#383838] leading-none font-bold mb-2">
-            Profile Settings
-          </h1>
-          <p className="text-[15px] text-[#A0A0A0]">
-            Manage your account and credentials
-          </p>
-        </div>
-
+      <div className="max-w-[95%] mx-auto p-4 md:p-6">
         {/* Profile Only */}
         <div className="max-w-2xl">
           <div className="bg-white rounded-xl shadow-sm p-6">
@@ -97,17 +84,7 @@ export const SettingsPage = () => {
   }
 
   return (
-    <div className="max-w-[95%] mx-auto p-4 md:p-8">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-[30px] text-[#383838] leading-none font-bold mb-2">
-          System Settings
-        </h1>
-        <p className="text-[15px] text-[#A0A0A0]">
-          Configure your church management system
-        </p>
-      </div>
-
+    <div className="max-w-[95%] mx-auto p-4 md:p-6">
       {/* Two Column Layout: Tabs + Preview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content - Tabs */}

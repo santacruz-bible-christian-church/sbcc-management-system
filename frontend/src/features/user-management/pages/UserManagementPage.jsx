@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
-import { Shield, UserPlus, Search, Edit, Trash2, Key, UserCheck, UserX, Loader2, RefreshCw } from 'lucide-react';
+import { UserPlus, Search, Edit, Trash2, Key, UserCheck, UserX, RefreshCw } from 'lucide-react';
 import { useUsers } from '../hooks/useUsers';
 import { UserFormModal } from '../components/UserFormModal';
 import { DeleteUserModal } from '../components/DeleteUserModal';
 import { SetPasswordModal } from '../components/SetPasswordModal';
+import { UserManagementSkeleton } from '../components/UserManagementSkeleton';
 
 export const UserManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,7 +50,6 @@ export const UserManagementPage = () => {
       admin: 'bg-blue-100 text-blue-800',
       pastor: 'bg-green-100 text-green-800',
       ministry_leader: 'bg-amber-100 text-amber-800',
-      volunteer: 'bg-gray-100 text-gray-800',
       member: 'bg-gray-100 text-gray-600',
     };
     return colors[role] || 'bg-gray-100 text-gray-800';
@@ -108,21 +108,13 @@ export const UserManagementPage = () => {
     toggleActive(user.id);
   };
 
+  // Show skeleton during initial load
+  if (isLoading && users.length === 0) {
+    return <UserManagementSkeleton />;
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-amber-100 rounded-lg">
-            <Shield className="w-6 h-6 text-amber-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-        </div>
-        <p className="text-gray-600">
-          Manage system users, assign roles, and control access permissions.
-        </p>
-      </div>
-
       {/* Actions Bar */}
       <div className="flex flex-col lg:flex-row gap-4 mb-6">
         {/* Search */}
@@ -149,7 +141,6 @@ export const UserManagementPage = () => {
             <option value="admin">Admin</option>
             <option value="pastor">Pastor</option>
             <option value="ministry_leader">Ministry Leader</option>
-            <option value="volunteer">Volunteer</option>
           </select>
 
           <select
@@ -180,13 +171,7 @@ export const UserManagementPage = () => {
         </button>
       </div>
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-          <span className="ml-2 text-gray-600">Loading users...</span>
-        </div>
-      )}
+
 
       {/* Error State */}
       {error && !isLoading && (
