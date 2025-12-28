@@ -41,6 +41,9 @@ export default [
         }
       ],
 
+      // Prevent console.log from being committed (allow warn/error)
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+
       // Optional: Turn off completely if you want
       'no-unused-vars': 'off',
     },
