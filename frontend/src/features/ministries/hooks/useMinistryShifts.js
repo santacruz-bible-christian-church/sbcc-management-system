@@ -17,13 +17,8 @@ export const useMinistryShifts = (ministryId) => {
     setError(null);
 
     try {
-      console.log('=== FETCHING SHIFTS ===');
-      console.log('Ministry ID:', ministryId);
-
       const data = await ministriesApi.listShifts({ ministry: ministryId });
       const shiftsList = Array.isArray(data) ? data : data.results || [];
-
-      console.log('Fetched shifts:', shiftsList.length);
       setShifts(shiftsList);
     } catch (err) {
       console.error('Failed to load shifts:', err);
