@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AppRouter } from './router'
 import { useAuthStore } from './store/auth.store'
+import { MobileBlocker } from './components/layout/MobileBlocker'
 
 // Create a client
 const queryClient = new QueryClient({
@@ -22,37 +23,39 @@ function App() {
   }, [initialize])
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#363636',
-            color: '#fff',
-          },
-          success: {
+    <MobileBlocker>
+      <QueryClientProvider client={queryClient}>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
             style: {
-              background: '#22c55e',
+              background: '#363636',
+              color: '#fff',
             },
-            iconTheme: {
-              primary: '#fff',
-              secondary: '#22c55e',
+            success: {
+              style: {
+                background: '#22c55e',
+              },
+              iconTheme: {
+                primary: '#fff',
+                secondary: '#22c55e',
+              },
             },
-          },
-          error: {
-            style: {
-              background: '#ef4444',
+            error: {
+              style: {
+                background: '#ef4444',
+              },
+              iconTheme: {
+                primary: '#fff',
+                secondary: '#ef4444',
+              },
             },
-            iconTheme: {
-              primary: '#fff',
-              secondary: '#ef4444',
-            },
-          },
-        }}
-      />
-      <AppRouter />
-    </QueryClientProvider>
+          }}
+        />
+        <AppRouter />
+      </QueryClientProvider>
+    </MobileBlocker>
   )
 }
 
