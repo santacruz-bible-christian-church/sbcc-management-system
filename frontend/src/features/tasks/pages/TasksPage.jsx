@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Spinner } from 'flowbite-react';
-import { HiOutlineFilter, HiOutlinePlusCircle, HiOutlineRefresh } from 'react-icons/hi';
+import { HiOutlineFilter, HiOutlinePlusCircle, HiOutlineSearch } from 'react-icons/hi';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useTasks } from '../hooks/useTasks';
 import { useSnackbar } from '../../../hooks/useSnackbar';
@@ -37,7 +37,6 @@ export const TasksPage = () => {
     createTask,
     updateTask,
     deleteTask,
-    refresh,
   } = useTasks();
 
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -138,66 +137,79 @@ export const TasksPage = () => {
   const isLoading = loading || submitting;
 
   return (
-    <div className="max-w-[1800px] mx-auto p-4 md:p-8">
-      <div className="space-y-8">
-        <header className="flex items-center justify-between mb-6">
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Page/Kanban</p>
-            <h1 className="text-3xl font-bold text-gray-900">Kanban</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <SecondaryButton
-              icon={HiOutlineFilter}
-              onClick={() => setFiltersOpen((prev) => !prev)}
-              className={filtersOpen ? 'bg-gray-100' : undefined}
-            >
-              Filter
-            </SecondaryButton>
-            {canManageTasks && (
-              <PrimaryButton icon={HiOutlinePlusCircle} onClick={openCreateModal} disabled={isLoading}>
-                Add Task
-              </PrimaryButton>
-            )}
-          </div>
-        </header>
+    <div className="max-w-[1800px] mx-auto p-4 md:p-6 space-y-6">
+      {/* Stats Cards Row */}
+      <TaskStatisticsCards statistics={statistics} />
 
-        <TaskStatisticsCards statistics={statistics} />
-
-        <TaskFilters
-          open={filtersOpen}
-          filters={filters}
-          searchDraft={searchDraft}
-          ordering={ordering}
-          onSearchChange={setSearchDraft}
-          onSearchSubmit={handleSearchSubmit}
-          onFilterChange={handleFilterChange}
-          onOrderingChange={setOrdering}
-          onReset={handleResetFilters}
-        />
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4" role="alert">
-            <span className="text-red-800">{error}</span>
-          </div>
-        )}
-
-        <section>
-          {loading && !tasks.length ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Spinner size="xl" />
-              <p className="mt-3 text-sbcc-gray">Loading tasks...</p>
-            </div>
-          ) : (
-            <KanbanBoard
-              tasks={tasks}
-              loading={isLoading}
-              onEdit={openEditModal}
-              onDelete={openDeleteModal}
-              onStatusChange={handleStatusChange}
+      {/* Action Bar: Search + Filters + Buttons */}
+      <div className="flex flex-col md:flex-row md:items-center gap-4 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm">
+        {/* Search */}
+        <form onSubmit={handleSearchSubmit} className="flex-1 min-w-[200px]">
+          <div className="relative">
+            <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchDraft}
+              onChange={(e) => setSearchDraft(e.target.value)}
+              placeholder="Search tasks..."
+              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FDB54A]/50 focus:border-[#FDB54A] transition-all"
             />
-          )}
-        </section>
+          </div>
+        </form>
+
+        {/* Filters Toggle */}
+        <SecondaryButton
+          icon={HiOutlineFilter}
+          onClick={() => setFiltersOpen((prev) => !prev)}
+          className={filtersOpen ? 'bg-gray-100' : undefined}
+        >
+          Filter
+        </SecondaryButton>
+
+        {/* Add Task Button */}
+        {canManageTasks && (
+          <PrimaryButton icon={HiOutlinePlusCircle} onClick={openCreateModal} disabled={isLoading}>
+            Add Task
+          </PrimaryButton>
+        )}
       </div>
+
+      {/* Expandable Filter Panel */}
+      <TaskFilters
+        open={filtersOpen}
+        filters={filters}
+        searchDraft={searchDraft}
+        ordering={ordering}
+        onSearchChange={setSearchDraft}
+        onSearchSubmit={handleSearchSubmit}
+        onFilterChange={handleFilterChange}
+        onOrderingChange={setOrdering}
+        onReset={handleResetFilters}
+      />
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4" role="alert">
+          <span className="text-red-800">{error}</span>
+        </div>
+      )}
+
+      {/* Kanban Board */}
+      <section>
+        {loading && !tasks.length ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Spinner size="xl" />
+            <p className="mt-3 text-sbcc-gray">Loading tasks...</p>
+          </div>
+        ) : (
+          <KanbanBoard
+            tasks={tasks}
+            loading={loading}
+            onEdit={openEditModal}
+            onDelete={openDeleteModal}
+            onStatusChange={handleStatusChange}
+          />
+        )}
+      </section>
 
       <TaskModal
         open={formState.open}

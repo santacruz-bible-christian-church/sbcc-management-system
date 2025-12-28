@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { HiDotsHorizontal } from 'react-icons/hi'; // Changed to horizontal dots to match reference
 import { TaskCardKanban } from './TaskCardKanban';
 
 const statusConfig = {
@@ -86,9 +85,6 @@ export const KanbanColumn = ({
             {tasks.length}
           </span>
         </div>
-        <button className="p-1 hover:bg-black/5 rounded transition-colors text-gray-400 hover:text-gray-600">
-          <HiDotsHorizontal className="h-5 w-5" />
-        </button>
       </div>
 
       {/* Column Body */}
