@@ -96,9 +96,8 @@ export const CSVImportModal = ({ open, onClose, onImport, loading }) => {
           try {
             generateMembershipFormPDF(member);
             setPdfProgress(prev => ({ ...prev, current: i + 1 }));
-            console.log(`✅ Generated PDF ${i + 1}/${result.members.length}: ${member.first_name} ${member.last_name}`);
           } catch (error) {
-            console.error(`❌ Failed to generate PDF for ${member.first_name} ${member.last_name}:`, error);
+            console.error(`Failed to generate PDF for ${member.first_name} ${member.last_name}:`, error);
           }
         }
 

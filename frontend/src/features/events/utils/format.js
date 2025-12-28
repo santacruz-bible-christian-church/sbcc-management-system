@@ -91,7 +91,6 @@ export const serializeEventForm = (values) => {
       ? Number(values.max_attendees)
       : null;
 
-  console.log('📤 Event payload:', payload);
   return payload;
 };
 
