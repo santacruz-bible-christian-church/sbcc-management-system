@@ -13,7 +13,7 @@ jobs:
     name: Backend Gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check if backend files changed
         id: filter
@@ -53,7 +53,7 @@ jobs:
     name: Frontend Gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check if frontend files changed
         id: filter
@@ -93,7 +93,7 @@ jobs:
     name: Docker Gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check if docker files changed
         id: filter
