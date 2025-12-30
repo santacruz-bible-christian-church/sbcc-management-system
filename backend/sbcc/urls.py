@@ -10,8 +10,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from core.views import health_check
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # Health check (for Railway/Render)
+    path("api/health/", health_check, name="health-check"),
     # Authentication
     path("api/auth/", include("apps.authentication.urls")),
     # Domain apps
