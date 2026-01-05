@@ -15,6 +15,7 @@ import {
 import { SUMMARY_CARDS } from '../utils/constants';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { useAuth } from '../../auth/hooks/useAuth';
+import { usersApi } from '../../../api/users.api';
 
 const INITIAL_FOLLOW_UP_DATA = {
   action_type: 'note',
@@ -62,13 +63,19 @@ const PrayerRequestsPage = () => {
     loadStats();
   }, [requests]);
 
-  // TODO: Load team members from users API
+  // Load pastors for assignment
   useEffect(() => {
-    setTeamMembers([
-      { id: 1, first_name: 'Pastor', last_name: 'John', role: 'pastor' },
-      { id: 2, first_name: 'Sister', last_name: 'Mary', role: 'elder' },
-      { id: 3, first_name: 'Brother', last_name: 'David', role: 'elder' },
-    ]);
+    const loadPastors = async () => {
+      try {
+        const data = await usersApi.getUsers({ role: 'pastor' });
+        const pastors = data.results || data || [];
+        setTeamMembers(pastors.filter(u => u.is_active));
+      } catch (err) {
+        console.error('Failed to load pastors:', err);
+        setTeamMembers([]);
+      }
+    };
+    loadPastors();
   }, []);
 
   // Filter requests
@@ -213,6 +220,7 @@ const PrayerRequestsPage = () => {
         <PrayerRequestsList
           requests={filteredRequests}
           loading={loading}
+          viewMode={viewMode}
           onView={(id) => navigate(`/prayer-requests/${id}`)}
           onAssign={handleOpenAssign}
           onFollowUp={handleOpenFollowUp}

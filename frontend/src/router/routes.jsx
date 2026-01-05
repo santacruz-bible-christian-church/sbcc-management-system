@@ -15,6 +15,7 @@ import Inventory from '../features/inventory/pages/Inventory';
 import AnnouncementPage from '../features/announcement/pages/AnnouncementPage';
 import { SettingsPage } from '../features/settings/pages/SettingsPage';
 import PrayerRequestsPage from '../features/prayer-requests/pages/PrayerRequestsPage';
+import PrayerRequestsDetails from '../features/prayer-requests/pages/PrayerRequestsDetails';
 import { FileManagementPage } from '../features/file-management/pages/FileManagementPage';
 import { TasksPage } from '../features/tasks/pages/TasksPage';
 import HelpCenter from '../features/help/pages/HelpCenter';
@@ -178,6 +179,14 @@ export const routes = [
     element: (
       <ProtectedWithLayout>
         <PrayerRequestsPage />
+      </ProtectedWithLayout>
+    ),
+  },
+  {
+    path: '/prayer-requests/:id',
+    element: (
+      <ProtectedWithLayout>
+        <PrayerRequestsDetails />
       </ProtectedWithLayout>
     ),
   },
