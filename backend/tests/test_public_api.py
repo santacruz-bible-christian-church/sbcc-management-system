@@ -241,16 +241,39 @@ class TestPublicEventsAPI:
         assert "results" in response.data
         assert "count" in response.data
 
-    def test_returns_only_upcoming_published_events(self, api_client, published_event, past_event):
-        """Test that only upcoming published events are returned."""
+    def test_returns_all_published_events_by_default(self, api_client, published_event, past_event):
+        """Test that both upcoming and past published events are returned by default."""
         url = reverse("public-events")
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
         titles = [e["title"] for e in response.data["results"]]
 
+        # Both upcoming and past events should be included
+        assert "Upcoming Event" in titles
+        assert "Past Event" in titles
+
+    def test_time_filter_upcoming(self, api_client, published_event, past_event):
+        """Test filtering for upcoming events only."""
+        url = reverse("public-events")
+        response = api_client.get(url, {"time_filter": "upcoming"})
+
+        assert response.status_code == status.HTTP_200_OK
+        titles = [e["title"] for e in response.data["results"]]
+
         assert "Upcoming Event" in titles
         assert "Past Event" not in titles
+
+    def test_time_filter_past(self, api_client, published_event, past_event):
+        """Test filtering for past events only."""
+        url = reverse("public-events")
+        response = api_client.get(url, {"time_filter": "past"})
+
+        assert response.status_code == status.HTTP_200_OK
+        titles = [e["title"] for e in response.data["results"]]
+
+        assert "Past Event" in titles
+        assert "Upcoming Event" not in titles
 
     def test_filter_by_event_type(self, api_client, published_event):
         """Test filtering by event type."""

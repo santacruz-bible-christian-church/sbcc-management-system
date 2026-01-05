@@ -50,12 +50,13 @@ class PublicEventsView(APIView):
     """
     GET /api/public/events/
 
-    Public endpoint for fetching upcoming published events.
+    Public endpoint for fetching published events (including past events).
     No authentication required.
 
     Query Parameters:
         event_type (str): Optional filter by event type (service, bible_study, etc.)
         ministry (int): Optional filter by ministry ID
+        time_filter (str): Filter by time - 'upcoming', 'past', or 'all' (default: 'all')
         limit (int): Max number of results (default: 10, max: 50)
     """
 
@@ -64,11 +65,18 @@ class PublicEventsView(APIView):
     def get(self, request):
         now = timezone.now()
 
-        # Base queryset: published and upcoming
+        # Base queryset: published events (includes completed for historical display)
         queryset = Event.objects.select_related("ministry", "organizer").filter(
-            status="published",
-            date__gte=now,
+            status__in=["published", "completed"],
         )
+
+        # Time filter: upcoming, past, or all (default: all)
+        time_filter = request.query_params.get("time_filter", "all").lower()
+        if time_filter == "upcoming":
+            queryset = queryset.filter(date__gte=now)
+        elif time_filter == "past":
+            queryset = queryset.filter(date__lt=now)
+        # 'all' - no date filtering
 
         # Filter by event_type if provided
         event_type = request.query_params.get("event_type")
@@ -86,7 +94,8 @@ class PublicEventsView(APIView):
         except (ValueError, TypeError):
             limit = 10
 
-        queryset = queryset.order_by("date")[:limit]
+        # Order: upcoming events first (ascending date), then past events
+        queryset = queryset.order_by("-date")[:limit]
 
         serializer = PublicEventSerializer(queryset, many=True)
         return Response(
