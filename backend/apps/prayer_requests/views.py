@@ -48,8 +48,8 @@ class PrayerRequestViewSet(viewsets.ModelViewSet):
         ).prefetch_related("follow_ups")
 
         # Filter based on user role
-        if user.role in ["pastor", "elder", "admin"]:
-            # Pastors, elders, and admins see all requests
+        if user.role in ["super_admin", "pastor", "elder", "admin"]:
+            # Super admins, pastors, elders, and admins see all requests
             return queryset
         elif user.role == "ministry_leader":
             # Ministry leaders see public and their assigned requests
@@ -244,7 +244,7 @@ class PrayerRequestFollowUpViewSet(viewsets.ModelViewSet):
         queryset = PrayerRequestFollowUp.objects.select_related("prayer_request", "created_by")
 
         # Filter private notes for non-pastor users
-        if user.role not in ["pastor", "elder", "admin"]:
+        if user.role not in ["super_admin", "pastor", "elder", "admin"]:
             queryset = queryset.filter(is_private=False)
 
         return queryset
