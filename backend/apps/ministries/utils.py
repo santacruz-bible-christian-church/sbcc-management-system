@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from django.conf import settings
@@ -134,8 +135,8 @@ def rotate_and_assign(
                     # Get shift day name (e.g., "Monday")
                     try:
                         shift_day = shift.date.strftime("%A")
-                    except Exception as e:
-                        print(f"Error getting shift day: {e}")
+                    except Exception:
+                        logging.exception("Error getting shift day for shift %s", shift.id)
                         shift_day = None
 
                     print(f"  Trying {candidate.member.full_name}...")
@@ -197,6 +198,9 @@ def rotate_and_assign(
                                                 f"Email to {candidate.member.email}: Connection timeout (SMTP may be blocked)"
                                             )
                                         except Exception as email_err:
+                                            logging.exception(
+                                                "Email failed for %s", candidate.member.email
+                                            )
                                             error_msg = str(email_err)
                                             # Check for common timeout patterns
                                             if (
@@ -223,6 +227,7 @@ def rotate_and_assign(
                                 assigned = True
 
                         except Exception as e:
+                            logging.exception("Assignment failed for shift %s", shift.id)
                             print(f"    ❌ Assignment failed: {e}")
                             summary["errors"].append(f"Shift {shift.id}: {str(e)}")
                     else:
@@ -242,10 +247,8 @@ def rotate_and_assign(
         print(f"Summary: {summary}")
 
     except Exception as e:
+        logging.exception("Rotation system error")
         print(f"\n❌ ROTATION ERROR: {e}")
-        import traceback
-
-        traceback.print_exc()
         summary["errors"].append(f"System error: {str(e)}")
 
     return summary
@@ -271,6 +274,7 @@ def _send_assignment_notification(assignment, shift, ministry_member):
             start_time = shift.start_time.strftime("%I:%M %p")
             end_time = shift.end_time.strftime("%I:%M %p")
         except Exception:
+            logging.exception("Error formatting shift times for shift %s", shift.id)
             start_time = str(shift.start_time)
             end_time = str(shift.end_time)
 
@@ -278,6 +282,7 @@ def _send_assignment_notification(assignment, shift, ministry_member):
         try:
             shift_date = shift.date.strftime("%A, %B %d, %Y")
         except Exception:
+            logging.exception("Error formatting shift date for shift %s", shift.id)
             shift_date = str(shift.date)
 
         subject = f"Shift Assignment: {shift.ministry.name}"
@@ -314,5 +319,6 @@ SBCC Management System
         return True
 
     except Exception as e:
+        logging.exception("Failed to send assignment notification email to %s", member.email)
         print(f"Failed to send email: {e}")
         raise

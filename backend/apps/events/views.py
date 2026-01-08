@@ -1,3 +1,4 @@
+from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -21,6 +22,7 @@ class EventViewSet(viewsets.ModelViewSet):
     ordering = ["-date"]
 
     @action(detail=True, methods=["post"])
+    @transaction.atomic
     def register(self, request, pk=None):
         """
         Register a member for this event.

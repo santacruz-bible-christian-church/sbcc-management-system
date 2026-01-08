@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.core.mail import send_mass_mail
 
@@ -85,6 +87,7 @@ Posted: {announcement.publish_at.strftime("%A, %B %d, %Y")}
         }
 
     except Exception as e:
+        logging.exception("Failed to send announcement email for announcement %s", announcement.id)
         return {
             "success": False,
             "message": f"Failed to send: {str(e)}",

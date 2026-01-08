@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
@@ -78,6 +80,9 @@ class LogoutView(APIView):
 
             return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
         except Exception as e:
+            logging.exception(
+                "Logout failed for user %s", request.user.username if request.user else "unknown"
+            )
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -146,7 +151,8 @@ class ForgotPasswordView(generics.GenericAPIView):
         try:
             serializer.save()
         except Exception:
-            # Don't expose email sending errors
+            # Log but don't expose email sending errors
+            logging.exception("Failed to send password reset email")
             pass
 
         # Always return success (don't reveal if email exists)
