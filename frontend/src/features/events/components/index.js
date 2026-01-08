@@ -6,3 +6,4 @@ export { default as RegistrationModal } from './RegistrationModal';
 export { default as EventsForm } from './EventsForm';
 export { default as EventsSummaryCards } from './EventsSummaryCards';
 export { default as EventsCalendar } from './EventsCalendar';
+export { default as EventsToolbar } from './EventsToolbar';
