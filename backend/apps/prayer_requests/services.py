@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db.models import Count, Q
@@ -34,6 +36,9 @@ Please log in to the system to view details and add follow-ups.
         )
         return True
     except Exception:
+        logging.exception(
+            "Failed to send prayer request assignment email to %s", prayer_request.assigned_to.email
+        )
         return False
 
 
