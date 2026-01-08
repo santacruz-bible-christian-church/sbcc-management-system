@@ -232,25 +232,6 @@ sbcc-management-system/
 
 ---
 
-## 👥 Team
-
-<div align="center">
-
-**Lead Developer**
-
-[![Jeremy Garin](https://img.shields.io/badge/Jeremy_M._Garin-@emperuna-181717?style=for-the-badge&logo=github)](https://github.com/emperuna)
-
-</div>
-
-| Contributors         |                       |
-| :------------------- | :-------------------- |
-| Agojo, Nigel         | Mendez, Jerick        |
-| Alberto, Marc Justin | Mendoza, Nick Narry   |
-| Aquino, Jose         | Nazareno, Ross Cedric |
-| Eleazar, CJ          | Taquilid, Ella Edz    |
-
----
-
 ## 📄 License
 
 <div align="center">
