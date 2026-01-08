@@ -180,7 +180,7 @@ npm run dev
 
 ```
 sbcc-management-system/
-├── 📂 backend/                 # Django REST API
+├── 📂 backend/                # Django REST API
 │   ├── 📂 apps/               # Feature modules (12 apps)
 │   ├── 📂 common/             # Shared utilities
 │   ├── 📂 core/               # Dashboard aggregation
