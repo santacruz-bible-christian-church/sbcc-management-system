@@ -9,6 +9,8 @@ import {
 } from 'react-icons/hi';
 import { HiArrowPath } from 'react-icons/hi2';
 import { generateColorFromId, getContrastColor, generateHexFromId } from '../../../utils/colorUtils';
+import { Pagination } from '../../../components/ui/Pagination';
+
 
 const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -18,37 +20,6 @@ const formatDate = (dateString) => {
         day: 'numeric',
         year: 'numeric'
     });
-};
-
-const getPageNumbers = (pagination) => {
-    if (!pagination) return [1];
-
-    const { currentPage, totalPages } = pagination;
-    const pages = [];
-
-    if (totalPages <= 7) {
-        for (let i = 1; i <= totalPages; i++) {
-            pages.push(i);
-        }
-    } else {
-        pages.push(1);
-
-        if (currentPage > 3) {
-            pages.push('...');
-        }
-
-        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-            pages.push(i);
-        }
-
-        if (currentPage < totalPages - 2) {
-            pages.push('...');
-        }
-
-        pages.push(totalPages);
-    }
-
-    return pages;
 };
 
 // Column Headers
@@ -201,66 +172,6 @@ const MemberCard = ({
     );
 };
 
-// Pagination Controls
-const PaginationControls = ({ pagination, onPageChange }) => {
-    const pageNumbers = useMemo(() => getPageNumbers(pagination), [pagination]);
-
-    return (
-        <div className="flex justify-center items-center gap-2 mt-6">
-            {/* Previous Button */}
-            <button
-                onClick={() => onPageChange(pagination.currentPage - 1)}
-                disabled={!pagination.previous}
-                className={`px-3 py-2 rounded transition-colors ${
-                    !pagination.previous
-                        ? 'text-gray-300 cursor-not-allowed'
-                        : 'hover:bg-gray-100'
-                }`}
-                aria-label="Previous page"
-            >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-            </button>
-
-            {/* Page Numbers */}
-            {pageNumbers.map((page, index) => (
-                page === '...' ? (
-                    <span key={`ellipsis-${index}`} className="px-3 py-2">...</span>
-                ) : (
-                    <button
-                        key={page}
-                        onClick={() => onPageChange(page)}
-                        className={`px-3 py-2 rounded transition-colors ${
-                            page === pagination.currentPage
-                                ? 'bg-[#FDB54A] text-white'
-                                : 'hover:bg-gray-100'
-                        }`}
-                        aria-label={`Go to page ${page}`}
-                    >
-                        {page}
-                    </button>
-                )
-            ))}
-
-            {/* Next Button */}
-            <button
-                onClick={() => onPageChange(pagination.currentPage + 1)}
-                disabled={!pagination.next}
-                className={`px-3 py-2 rounded transition-colors ${
-                    !pagination.next
-                        ? 'text-gray-300 cursor-not-allowed'
-                        : 'hover:bg-gray-100'
-                }`}
-                aria-label="Next page"
-            >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-            </button>
-        </div>
-    );
-};
 
 // Results Info
 const ResultsInfo = ({ pagination }) => {
@@ -343,9 +254,12 @@ export const MemberList = ({
 
             {/* Pagination */}
             {pagination && pagination.totalPages > 1 && (
-                <PaginationControls
-                    pagination={pagination}
+                <Pagination
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
                     onPageChange={onPageChange}
+                    hasNext={!!pagination.next}
+                    hasPrevious={!!pagination.previous}
                 />
             )}
 
