@@ -1,56 +1,149 @@
-# SBCC Management System
+<div align="center">
 
-A web-based church management platform for Santa Cruz Bible Christian Church.
+# 🏛️ SBCC Management System
 
-[![License](https://img.shields.io/badge/license-Proprietary-blue.svg)]()
-[![Python](https://img.shields.io/badge/python-3.12-blue.svg)]()
-[![Django](https://img.shields.io/badge/django-5.1.4-green.svg)]()
-[![React](https://img.shields.io/badge/react-19.1.1-blue.svg)]()
+**A comprehensive church management platform for Santa Cruz Bible Christian Church**
 
-## Overview
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)]()
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)]()
+[![Django](https://img.shields.io/badge/Django-5.1-092E20?logo=django&logoColor=white)]()
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)]()
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)]()
+[![Status](https://img.shields.io/badge/Status-Production-brightgreen)]()
 
-SBCC Management System streamlines church operations including membership management, attendance tracking, event coordination, volunteer scheduling, and inventory management.
+</div>
 
-**Course:** CMSC 309 - Software Engineering I
-**Client:** Santa Cruz Bible Christian Church
-**Status:** Production
+---
 
-## Features
+## 📋 Overview
 
-| Module          | Status      | Description                               |
-| --------------- | ----------- | ----------------------------------------- |
-| Authentication  | ✅ Complete | JWT-based auth with role management       |
-| Members         | ✅ Complete | Member profiles, birthdays, anniversaries |
-| Ministries      | ✅ Complete | Ministry management, volunteer scheduling |
-| Events          | ✅ Complete | Event calendar with registration          |
-| Attendance      | ✅ Complete | Digital tracking with reports             |
-| Inventory       | ✅ Complete | Equipment and resource tracking           |
-| Dashboard       | ✅ Complete | Analytics and reporting                   |
-| Prayer Requests | ✅ Complete | Digital submission and tracking           |
-| Meeting Minutes | ✅ Complete | Document management with versioning       |
-| Announcements   | ✅ Complete | Church-wide communication                 |
-| Tasks           | ✅ Complete | Task assignment with timeline tracking    |
-| Visitors        | ✅ Complete | Visitor tracking and conversion           |
-| Settings        | ✅ Complete | System configuration and branding         |
-| Public API      | ✅ Complete | Public endpoints for homepage integration |
+SBCC Management System is a modern, full-stack web application designed to streamline church operations. Built with **Django REST Framework** and **React**, it provides a robust solution for managing memberships, events, attendance, volunteers, and more.
 
-## Tech Stack
+<div align="center">
 
-| Layer    | Technologies                                 |
-| -------- | -------------------------------------------- |
-| Frontend | React 19, Vite, Tailwind CSS, Flowbite React |
-| Backend  | Django 5.1, Django REST Framework            |
-| Database | PostgreSQL (Neon Serverless)                 |
-| Auth     | JWT (SimpleJWT)                              |
+|           🎯 **Client**           |           📚 **Course**           |    🏫 **Institution**    |
+| :-------------------------------: | :-------------------------------: | :----------------------: |
+| Santa Cruz Bible Christian Church | CMSC 309 - Software Engineering I | LSPU - Santa Cruz Campus |
 
-## Quick Start
+</div>
+
+---
+
+## ✨ Features
+
+<table>
+<tr>
+<td width="50%">
+
+### 👥 Core Modules
+
+- **Authentication** — JWT-based auth with role management
+- **Members** — Profiles, birthdays, anniversaries
+- **Ministries** — Volunteer scheduling & rotation
+- **Events** — Calendar with registration
+- **Attendance** — Digital tracking & reports
+
+</td>
+<td width="50%">
+
+### 📊 Management Tools
+
+- **Inventory** — Equipment & resource tracking
+- **Dashboard** — Analytics & insights
+- **Tasks** — Assignment with timeline
+- **Announcements** — Church-wide communication
+- **Prayer Requests** — Digital submission
+
+</td>
+</tr>
+<tr>
+<td>
+
+### 📁 Document Management
+
+- **Meeting Minutes** — Version-controlled documents
+- **Visitors** — Tracking & conversion pipeline
+- **Settings** — System configuration & branding
+
+</td>
+<td>
+
+### 🌐 Public API
+
+- Public announcements endpoint
+- Public events listing
+- Prayer request submission
+- Church information API
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🛠️ Tech Stack
+
+<table>
+<tr>
+<td align="center" width="25%">
+
+**Frontend**
+
+![React](https://img.shields.io/badge/-React_19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/-Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/-Tailwind-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+
+</td>
+<td align="center" width="25%">
+
+**Backend**
+
+![Django](https://img.shields.io/badge/-Django_5.1-092E20?style=flat-square&logo=django&logoColor=white)
+![DRF](https://img.shields.io/badge/-REST_Framework-ff1709?style=flat-square&logo=django&logoColor=white)
+![Python](https://img.shields.io/badge/-Python_3.12-3776AB?style=flat-square&logo=python&logoColor=white)
+
+</td>
+<td align="center" width="25%">
+
+**Database**
+
+![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Neon](https://img.shields.io/badge/-Neon-00E599?style=flat-square&logo=neon&logoColor=black)
+
+</td>
+<td align="center" width="25%">
+
+**Auth & Security**
+
+![JWT](https://img.shields.io/badge/-JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
+![SimpleJWT](https://img.shields.io/badge/-SimpleJWT-092E20?style=flat-square&logo=django&logoColor=white)
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.12
+- Node.js 18+
+- PostgreSQL (or Neon account)
+
+### Installation
 
 ```bash
-# Clone
+# Clone the repository
 git clone https://github.com/emperuna/sbcc-management-system.git
 cd sbcc-management-system
+```
 
-# Backend
+<details>
+<summary><b>🔧 Backend Setup</b></summary>
+
+```bash
 cd backend
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
@@ -58,42 +151,65 @@ cp .env.example .env
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
+```
 
-# Frontend (new terminal)
+</details>
+
+<details>
+<summary><b>⚛️ Frontend Setup</b></summary>
+
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-**Backend:** http://localhost:8000
-**Frontend:** http://localhost:5173
+</details>
 
-## Documentation
+### Access Points
 
-| Document                                             | Description                                         |
-| ---------------------------------------------------- | --------------------------------------------------- |
-| [Backend Setup](docs/BACKEND_SETUP.md)               | Django installation, configuration, troubleshooting |
-| [Frontend Setup](docs/FRONTEND_SETUP.md)             | React setup, API integration, styling               |
-| [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md) | Git workflow, conventions, code review              |
-| [Product Requirements](docs/SBCC_PRD.md)             | Full project requirements and specifications        |
+| Service        | URL                          |
+| -------------- | ---------------------------- |
+| 🖥️ Frontend    | http://localhost:5173        |
+| ⚙️ Backend API | http://localhost:8000/api/   |
+| 🔐 Admin Panel | http://localhost:8000/admin/ |
 
-## Project Structure
+---
+
+## 📁 Project Structure
 
 ```
 sbcc-management-system/
-├── backend/              # Django REST API
-│   ├── apps/             # Feature modules
-│   ├── common/           # Shared utilities
-│   ├── core/             # Dashboard aggregation
-│   └── sbcc/             # Django settings
-├── frontend/             # React SPA
-│   ├── src/features/     # Feature modules
-│   ├── src/components/   # Shared components
-│   └── src/services/     # API services
-└── docs/                 # Documentation
+├── 📂 backend/                 # Django REST API
+│   ├── 📂 apps/               # Feature modules (12 apps)
+│   ├── 📂 common/             # Shared utilities
+│   ├── 📂 core/               # Dashboard aggregation
+│   ├── 📂 tests/              # Test suites (35 test files)
+│   └── 📂 sbcc/               # Django settings
+├── 📂 frontend/               # React SPA
+│   ├── 📂 src/features/       # Feature modules (16 features)
+│   ├── 📂 src/components/     # Shared components
+│   └── 📂 src/hooks/          # Custom hooks
+└── 📂 docs/                   # Documentation
 ```
 
-## API Reference
+---
+
+## 📚 Documentation
+
+| Document                                                | Description                         |
+| :------------------------------------------------------ | :---------------------------------- |
+| 📘 [Backend Setup](docs/BACKEND_SETUP.md)               | Django installation & configuration |
+| 📗 [Frontend Setup](docs/FRONTEND_SETUP.md)             | React setup & API integration       |
+| 📙 [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md) | Git workflow & conventions          |
+| 📕 [Product Requirements](docs/SBCC_PRD.md)             | Full specifications                 |
+
+---
+
+## 🔌 API Reference
+
+<details>
+<summary><b>View All Endpoints</b></summary>
 
 | Endpoint                | Description                             |
 | ----------------------- | --------------------------------------- |
@@ -112,31 +228,23 @@ sbcc-management-system/
 | `/api/meeting-minutes/` | Meeting minutes and documents           |
 | `/api/public/*`         | Public APIs (no auth required)          |
 
-## Team
+</details>
 
-**Lead Developer:** Jeremy M. Garin ([@emperuna](https://github.com/emperuna))
+---
 
-| Member               | Member                |
-| -------------------- | --------------------- |
-| Agojo, Nigel         | Mendez, Jerick        |
-| Alberto, Marc Justin | Mendoza, Nick Narry   |
-| Aquino, Jose         | Nazareno, Ross Cedric |
-| Eleazar, CJ          | Taquilid, Ella Edz    |
+## 📄 License
 
-## Contributing
+<div align="center">
 
-1. Create a feature branch: `feature/your-feature`
-2. Follow [conventional commits](https://www.conventionalcommits.org/)
-3. Submit a pull request
+**PROPRIETARY SOFTWARE**
 
-See [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md) for details.
+Copyright © 2025-2026 Santa Cruz Bible Christian Church. All rights reserved.
 
-## License
-
-Copyright © 2025 SBCC Management System Team
-Developed for Santa Cruz Bible Christian Church as part of CMSC 309 coursework.
+Unauthorized copying, modification, or distribution is strictly prohibited.
 
 ---
 
 **Instructor:** Prof. Reynalen Justo
 **Institution:** Laguna State Polytechnic University - Santa Cruz Campus
+
+</div>
