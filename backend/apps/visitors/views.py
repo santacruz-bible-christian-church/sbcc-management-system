@@ -1,5 +1,7 @@
+import logging
+
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -61,6 +63,7 @@ class VisitorViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=["post"])
+    @transaction.atomic
     def convert_to_member(self, request, pk=None):
         """
         Convert a visitor to a member.
@@ -130,6 +133,7 @@ class VisitorViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
+            logging.exception("Failed to convert visitor %s to member", visitor.id)
             return Response(
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
