@@ -18,7 +18,7 @@ from .serializers import InventoryTrackingSerializer
 class InventoryTrackingViewSet(viewsets.ModelViewSet):
     queryset = InventoryTracking.objects.all()
     serializer_class = InventoryTrackingSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     # ...existing code (perform_create, perform_update, printable_list)...
 
