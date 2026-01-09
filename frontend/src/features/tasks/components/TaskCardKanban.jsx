@@ -7,7 +7,7 @@ const priorityConfig = {
   low: { label: 'Low', className: 'bg-blue-100 text-blue-600' },
 };
 
-export const TaskCardKanban = ({ task, onEdit, onDelete, onClick }) => {
+export const TaskCardKanban = ({ task, onClick }) => {
   const handleDragStart = (e) => {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('application/json', JSON.stringify(task));
@@ -28,7 +28,8 @@ export const TaskCardKanban = ({ task, onEdit, onDelete, onClick }) => {
     return name;
   };
 
-  const isCompleted = task.status === 'completed';
+  const effectiveStatus = task.effective_status || task.status;
+  const isCompleted = effectiveStatus === 'completed';
   const priorityStyle = priorityConfig[task.priority] || priorityConfig.medium;
 
   return (
@@ -37,7 +38,7 @@ export const TaskCardKanban = ({ task, onEdit, onDelete, onClick }) => {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={() => onClick(task)}
-      className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer group relative border border-transparent hover:border-gray-200"
+      className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-gray-200"
     >
       {/* Header: Title + Priority/Status Badge */}
       <div className="flex items-start justify-between mb-3">
@@ -65,7 +66,7 @@ export const TaskCardKanban = ({ task, onEdit, onDelete, onClick }) => {
         {/* Assignee Badge */}
         {task.assigned_to_name ? (
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white ${isCompleted ? 'bg-green-600' :
-              task.status === 'in_progress' ? 'bg-orange-400' :
+              effectiveStatus === 'in_progress' ? 'bg-orange-400' :
                 'bg-red-500'
             }`}>
             {getInitials(task.assigned_to_name)}
@@ -82,34 +83,6 @@ export const TaskCardKanban = ({ task, onEdit, onDelete, onClick }) => {
             `Due: ${format(new Date(task.end_date), 'MMM d')}`
           )}
         </span>
-      </div>
-
-      {/* Quick Actions (on hover) */}
-      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-lg shadow-sm border border-gray-100">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(task);
-          }}
-          className="p-1.5 rounded hover:bg-gray-100 transition-colors text-gray-600"
-          title="Edit"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(task);
-          }}
-          className="p-1.5 rounded hover:bg-red-50 transition-colors text-red-500"
-          title="Delete"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
       </div>
     </div>
   );

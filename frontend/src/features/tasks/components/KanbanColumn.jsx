@@ -107,8 +107,6 @@ export const KanbanColumn = ({
                 key={task.id}
                 task={task}
                 onClick={onTaskClick}
-                onEdit={onTaskEdit}
-                onDelete={onTaskDelete}
               />
             ))
           )}

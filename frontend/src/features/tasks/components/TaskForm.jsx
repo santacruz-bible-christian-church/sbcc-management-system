@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../auth/hooks/useAuth';
-import { useMembers } from '../../members/hooks/useMembers';
+import { useUsers } from '../../user-management/hooks/useUsers';
+import { useMinistries } from '../../ministries/hooks/useMinistries';
 
+/**
+ * TaskForm - Compact redesign with sticky action buttons
+ */
 export const TaskForm = ({ initialValues, onSubmit, onCancel, submitting }) => {
-  const { user } = useAuth();
-  const { members } = useMembers(); // Fetch members for assignment
+  const { users } = useUsers();
+  const { ministries } = useMinistries();
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -60,7 +64,6 @@ export const TaskForm = ({ initialValues, onSubmit, onCancel, submitting }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      // Clean up data before submit - convert empty strings to null for FK fields
       const cleanedData = {
         ...formData,
         assigned_to: formData.assigned_to || null,
@@ -70,14 +73,15 @@ export const TaskForm = ({ initialValues, onSubmit, onCancel, submitting }) => {
     }
   };
 
-  const inputClasses = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sbcc-orange/20 focus:border-sbcc-orange transition-all outline-none text-gray-900 placeholder-gray-400";
-  const selectClasses = `${inputClasses} appearance-none pr-10`; // Added pr-10 for icon space
-  const labelClasses = "block text-sm font-semibold text-gray-700 mb-1.5";
+  const inputClasses = "w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all outline-none text-gray-900 text-sm";
+  const selectClasses = `${inputClasses} appearance-none`;
+  const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* General Info Section */}
-      <div className="space-y-6">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full">
+      {/* Scrollable Content */}
+      <div className="flex-1 space-y-5 overflow-y-auto -mx-6 px-6 pb-4">
+        {/* Title */}
         <div>
           <label className={labelClasses}>
             Task Title <span className="text-red-500">*</span>
@@ -90,56 +94,41 @@ export const TaskForm = ({ initialValues, onSubmit, onCancel, submitting }) => {
             className={inputClasses}
             placeholder="e.g., Update Website Homepage"
           />
-          {errors.title && <p className="mt-1.5 text-sm text-red-500 font-medium">{errors.title}</p>}
+          {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title}</p>}
         </div>
 
+        {/* Description */}
         <div>
-          <label className={labelClasses}>
-            Description
-          </label>
+          <label className={labelClasses}>Description</label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
-            rows={4}
+            rows={2}
             className={inputClasses}
-            placeholder="Describe the task details..."
+            placeholder="Brief task description..."
           />
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Priority */}
-        <div>
-          <label className={labelClasses}>
-            Priority Level
-          </label>
-          <div className="relative">
+        {/* Priority & Status - Side by Side */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClasses}>Priority</label>
             <select
               name="priority"
               value={formData.priority}
               onChange={handleChange}
               className={selectClasses}
             >
-              <option value="low">Low Priority</option>
-              <option value="medium">Medium Priority</option>
-              <option value="high">High Priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
               <option value="urgent">Urgent</option>
             </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
           </div>
-        </div>
 
-        {/* Status */}
-        <div>
-          <label className={labelClasses}>
-            Current Status
-          </label>
-          <div className="relative">
+          <div>
+            <label className={labelClasses}>Status</label>
             <select
               name="status"
               value={formData.status}
@@ -151,19 +140,11 @@ export const TaskForm = ({ initialValues, onSubmit, onCancel, submitting }) => {
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
           </div>
         </div>
-      </div>
 
-      {/* Schedule Section */}
-      <div className="p-5 bg-gray-50 rounded-xl border border-gray-100 space-y-5">
-        <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Schedule & Assignment</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Dates - Side by Side */}
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className={labelClasses}>
               Start Date <span className="text-red-500">*</span>
@@ -173,9 +154,9 @@ export const TaskForm = ({ initialValues, onSubmit, onCancel, submitting }) => {
               name="start_date"
               value={formData.start_date}
               onChange={handleChange}
-              className={`${inputClasses} bg-white`}
+              className={inputClasses}
             />
-            {errors.start_date && <p className="mt-1.5 text-sm text-red-500 font-medium">{errors.start_date}</p>}
+            {errors.start_date && <p className="mt-1 text-xs text-red-500">{errors.start_date}</p>}
           </div>
 
           <div>
@@ -187,69 +168,77 @@ export const TaskForm = ({ initialValues, onSubmit, onCancel, submitting }) => {
               name="end_date"
               value={formData.end_date}
               onChange={handleChange}
-              className={`${inputClasses} bg-white`}
+              className={inputClasses}
             />
-            {errors.end_date && <p className="mt-1.5 text-sm text-red-500 font-medium">{errors.end_date}</p>}
+            {errors.end_date && <p className="mt-1 text-xs text-red-500">{errors.end_date}</p>}
+          </div>
+        </div>
+
+        {/* Assignment - Side by Side */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClasses}>Assigned To</label>
+            <select
+              name="assigned_to"
+              value={formData.assigned_to || ''}
+              onChange={handleChange}
+              className={selectClasses}
+            >
+              <option value="">Unassigned</option>
+              {users.filter(u => u.is_active).map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.first_name} {user.last_name} ({user.role})
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Assigned To */}
-          <div className="md:col-span-2">
-            <label className={labelClasses}>
-              Assigned To
-            </label>
-            <div className="relative">
-              <select
-                name="assigned_to"
-                value={formData.assigned_to || ''}
-                onChange={handleChange}
-                className={`${selectClasses} bg-white`}
-              >
-                <option value="">Unassigned</option>
-                {members.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.first_name} {member.last_name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+          <div>
+            <label className={labelClasses}>Ministry</label>
+            <select
+              name="ministry"
+              value={formData.ministry || ''}
+              onChange={handleChange}
+              className={selectClasses}
+            >
+              <option value="">No Ministry</option>
+              {ministries.map((ministry) => (
+                <option key={ministry.id} value={ministry.id}>
+                  {ministry.name}
+                </option>
+              ))}
+            </select>
           </div>
+        </div>
+
+        {/* Notes */}
+        <div>
+          <label className={labelClasses}>Notes</label>
+          <textarea
+            name="notes"
+            value={formData.notes}
+            onChange={handleChange}
+            rows={2}
+            className={inputClasses}
+            placeholder="Additional notes..."
+          />
         </div>
       </div>
 
-      {/* Notes */}
-      <div>
-        <label className={labelClasses}>
-          Additional Notes
-        </label>
-        <textarea
-          name="notes"
-          value={formData.notes}
-          onChange={handleChange}
-          rows={3}
-          className={inputClasses}
-          placeholder="Any extra information..."
-        />
-      </div>
-
-      {/* Actions */}
-      <div className="flex justify-end gap-3 pt-4">
+      {/* Sticky Footer */}
+      <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-4 -mx-6 px-6 bg-white">
         <button
           type="button"
           onClick={onCancel}
           disabled={submitting}
-          className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 transition-all"
+          className="px-5 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={submitting}
-          className="px-6 py-2.5 bg-gradient-to-r from-sbcc-orange to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-orange-500/30 disabled:opacity-50 transition-all transform active:scale-95"
+          className="px-5 py-2 text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg hover:shadow-lg hover:shadow-orange-500/25 disabled:opacity-50 transition-all"
         >
           {submitting ? 'Saving...' : 'Save Task'}
         </button>
@@ -257,3 +246,5 @@ export const TaskForm = ({ initialValues, onSubmit, onCancel, submitting }) => {
     </form>
   );
 };
+
+export default TaskForm;

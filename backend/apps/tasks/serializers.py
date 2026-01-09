@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import serializers
 
 from .models import Task, TaskAttachment, TaskComment
@@ -78,6 +79,7 @@ class TaskSerializer(serializers.ModelSerializer):
     days_remaining = serializers.IntegerField(read_only=True)
     duration_days = serializers.IntegerField(read_only=True)
     timeline_progress_percentage = serializers.IntegerField(read_only=True)
+    effective_status = serializers.SerializerMethodField()
 
     # Related fields
     created_by_name = serializers.CharField(source="created_by.get_full_name", read_only=True)
@@ -101,6 +103,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "description",
             "priority",
             "status",
+            "effective_status",
             "start_date",
             "end_date",
             "progress_percentage",
@@ -135,6 +138,14 @@ class TaskSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def get_effective_status(self, obj):
+        """Compute real-time status based on end_date"""
+        if obj.status in ["completed", "cancelled"]:
+            return obj.status
+        if obj.end_date < timezone.now().date():
+            return "overdue"
+        return obj.status
+
     def validate(self, data):
         """Validate timeline dates"""
         start_date = data.get("start_date")
@@ -168,6 +179,7 @@ class TaskListSerializer(serializers.ModelSerializer):
     ministry_name = serializers.CharField(source="ministry.name", read_only=True, allow_null=True)
     is_overdue = serializers.BooleanField(read_only=True)
     days_remaining = serializers.IntegerField(read_only=True)
+    effective_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -176,6 +188,7 @@ class TaskListSerializer(serializers.ModelSerializer):
             "title",
             "priority",
             "status",
+            "effective_status",
             "start_date",
             "end_date",
             "progress_percentage",
@@ -188,6 +201,14 @@ class TaskListSerializer(serializers.ModelSerializer):
             "days_remaining",
             "created_at",
         ]
+
+    def get_effective_status(self, obj):
+        """Compute real-time status based on end_date"""
+        if obj.status in ["completed", "cancelled"]:
+            return obj.status
+        if obj.end_date < timezone.now().date():
+            return "overdue"
+        return obj.status
 
 
 class TaskDashboardSerializer(serializers.ModelSerializer):

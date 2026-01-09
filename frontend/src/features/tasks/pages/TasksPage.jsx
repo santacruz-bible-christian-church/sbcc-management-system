@@ -37,6 +37,7 @@ export const TasksPage = () => {
     createTask,
     updateTask,
     deleteTask,
+    reopenTask,
   } = useTasks();
 
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -125,11 +126,51 @@ export const TasksPage = () => {
   };
 
   const handleStatusChange = async (taskId, newStatus) => {
+    const statusLabels = {
+      pending: 'To Do',
+      in_progress: 'In Progress',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+      overdue: 'Overdue',
+    };
+
+    // Find the task to check its effective status
+    const task = tasks.find(t => t.id === taskId);
+    const currentStatus = task?.effective_status || task?.status;
+
+    // Prevent moving overdue tasks back to pending/in_progress
+    if (currentStatus === 'overdue' && ['pending', 'in_progress'].includes(newStatus)) {
+      showError('Cannot move overdue task to "' + statusLabels[newStatus] + '". Please extend the due date or mark as completed.');
+      return;
+    }
+
+    // Prevent moving completed tasks (use Reopen action instead)
+    if (currentStatus === 'completed' && newStatus !== 'completed') {
+      showError('Cannot move completed task. Use the "Reopen" action to reopen this task.');
+      return;
+    }
+
+    // Prevent moving cancelled tasks
+    if (currentStatus === 'cancelled' && newStatus !== 'cancelled') {
+      showError('Cannot move cancelled task. Use the "Reopen" action to reopen this task.');
+      return;
+    }
+
     try {
       await updateTask(taskId, { status: newStatus });
-      showSuccess('Task status updated!');
+      showSuccess(`Task moved to "${statusLabels[newStatus] || newStatus}"`);
     } catch (err) {
       const errorMsg = err.response?.data?.detail || 'Failed to update status.';
+      showError(errorMsg);
+    }
+  };
+
+  const handleReopen = async (task) => {
+    try {
+      await reopenTask(task.id);
+      showSuccess(`Task "${task.title}" has been reopened`);
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || 'Failed to reopen task.';
       showError(errorMsg);
     }
   };
@@ -207,6 +248,7 @@ export const TasksPage = () => {
             onEdit={openEditModal}
             onDelete={openDeleteModal}
             onStatusChange={handleStatusChange}
+            onReopen={handleReopen}
           />
         )}
       </section>
