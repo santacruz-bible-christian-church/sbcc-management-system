@@ -1,4 +1,4 @@
-import { HiCalendar, HiClock, HiUser, HiUserGroup, HiPencil, HiTrash, HiPaperClip } from 'react-icons/hi';
+import { HiCalendar, HiClock, HiUser, HiUserGroup, HiPencil, HiTrash, HiPaperClip, HiRefresh } from 'react-icons/hi';
 import { format } from 'date-fns';
 
 const priorityColors = {
@@ -16,7 +16,10 @@ const statusColors = {
   cancelled: 'bg-gray-100 text-gray-800',
 };
 
-export const TaskDetailsView = ({ task, onEdit, onDelete, onClose }) => {
+export const TaskDetailsView = ({ task, onEdit, onDelete, onReopen, onClose }) => {
+  const effectiveStatus = task.effective_status || task.status;
+  const canReopen = ['completed', 'cancelled'].includes(effectiveStatus);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -27,17 +30,21 @@ export const TaskDetailsView = ({ task, onEdit, onDelete, onClose }) => {
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${priorityColors[task.priority]}`}>
               {task.priority}
             </span>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[task.status]}`}>
-              {task.status.replace('_', ' ')}
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[effectiveStatus]}`}>
+              {effectiveStatus.replace('_', ' ')}
             </span>
-            {task.is_overdue && (
-              <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                Overdue
-              </span>
-            )}
           </div>
         </div>
         <div className="flex gap-2 ml-4">
+          {canReopen && onReopen && (
+            <button
+              onClick={() => onReopen(task)}
+              className="p-2 text-sbcc-gray hover:text-green-600 transition-colors"
+              title="Reopen task"
+            >
+              <HiRefresh className="h-6 w-6" />
+            </button>
+          )}
           <button
             onClick={onEdit}
             className="p-2 text-sbcc-gray hover:text-sbcc-orange transition-colors"
