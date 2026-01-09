@@ -9,11 +9,13 @@ export const KanbanBoard = ({
   onEdit,
   onDelete,
   onStatusChange,
+  onReopen,
 }) => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
-  // Group tasks by status
+  // Group tasks by effective status (computed on backend)
+  // Fallback: calculate overdue on frontend if effective_status not present
   const tasksByStatus = useMemo(() => {
     const grouped = {
       pending: [],
@@ -23,13 +25,24 @@ export const KanbanBoard = ({
       cancelled: [],
     };
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     tasks.forEach((task) => {
-      // If task is overdue and not completed/cancelled, put it in overdue column
-      // Backend handles setting status to 'overdue' automatically, but we can double check here
-      // or just rely on the status field if the backend is doing its job.
-      // Based on the user request, they want explicit columns.
-      if (grouped[task.status]) {
-        grouped[task.status].push(task);
+      // Use effective_status from backend, or calculate on frontend as fallback
+      let status = task.effective_status || task.status;
+
+      // Frontend fallback: check if task is overdue
+      if (!task.effective_status && task.end_date) {
+        const endDate = new Date(task.end_date);
+        endDate.setHours(0, 0, 0, 0);
+        if (endDate < today && !['completed', 'cancelled'].includes(task.status)) {
+          status = 'overdue';
+        }
+      }
+
+      if (grouped[status]) {
+        grouped[status].push(task);
       }
     });
 
@@ -122,6 +135,10 @@ export const KanbanBoard = ({
               closeDetailsModal();
               onDelete(selectedTask);
             }}
+            onReopen={onReopen ? (task) => {
+              closeDetailsModal();
+              onReopen(task);
+            } : undefined}
             onClose={closeDetailsModal}
           />
         )}
