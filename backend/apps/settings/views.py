@@ -1,11 +1,17 @@
+from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.permissions import IsAdmin
 
-from .models import SystemSettings
-from .serializers import PublicSettingsSerializer, SystemSettingsSerializer
+from .models import SystemSettings, TeamMember
+from .serializers import (
+    PublicSettingsSerializer,
+    PublicTeamMemberSerializer,
+    SystemSettingsSerializer,
+    TeamMemberSerializer,
+)
 
 
 class SystemSettingsView(APIView):
@@ -62,4 +68,37 @@ class PublicSettingsView(APIView):
         """Get public system settings (branding, contact, about)."""
         settings = SystemSettings.get_settings()
         serializer = PublicSettingsSerializer(settings, context={"request": request})
+        return Response(serializer.data)
+
+
+class TeamMemberViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for managing team members.
+
+    GET /api/team/ - List all team members
+    POST /api/team/ - Create a new team member
+    GET /api/team/{id}/ - Get team member details
+    PUT/PATCH /api/team/{id}/ - Update team member
+    DELETE /api/team/{id}/ - Delete team member
+    """
+
+    queryset = TeamMember.objects.all()
+    serializer_class = TeamMemberSerializer
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+
+class PublicTeamView(APIView):
+    """
+    Public API endpoint for team members.
+    Returns only active team members for the public site.
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """Get active team members for public display."""
+        team = TeamMember.objects.filter(is_active=True).order_by("order", "name")
+        serializer = PublicTeamMemberSerializer(
+            team, many=True, context={"request": request}
+        )
         return Response(serializer.data)

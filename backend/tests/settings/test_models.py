@@ -1,6 +1,6 @@
 import pytest
 
-from apps.settings.models import SystemSettings
+from apps.settings.models import SystemSettings, TeamMember
 
 
 @pytest.mark.django_db
@@ -72,3 +72,40 @@ class TestSystemSettingsModel:
 
         system_settings.refresh_from_db()
         assert system_settings.updated_at >= original_updated_at
+
+
+@pytest.mark.django_db
+class TestTeamMemberModel:
+    """Test TeamMember model behavior."""
+
+    def test_create_team_member(self, team_member):
+        """Team member is created correctly."""
+        assert team_member.name == "John Pastor"
+        assert team_member.role == "pastor"
+        assert team_member.title == "Senior Pastor"
+        assert team_member.is_active is True
+
+    def test_str_representation(self, team_member):
+        """String representation shows name and title."""
+        assert str(team_member) == "John Pastor - Senior Pastor"
+
+    def test_default_ordering(self, multiple_team_members):
+        """Team members are ordered by order field then name."""
+        members = list(TeamMember.objects.all())
+        orders = [m.order for m in members]
+        assert orders == sorted(orders)
+
+    def test_role_choices(self, db):
+        """All role choices are valid."""
+        for role, _ in TeamMember.ROLE_CHOICES:
+            member = TeamMember.objects.create(
+                name=f"Test {role}",
+                role=role,
+                title=f"Test {role.title()}",
+            )
+            assert member.role == role
+
+    def test_timestamps(self, team_member):
+        """Timestamps are auto-populated."""
+        assert team_member.created_at is not None
+        assert team_member.updated_at is not None

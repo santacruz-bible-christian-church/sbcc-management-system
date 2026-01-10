@@ -35,18 +35,6 @@ class SystemSettings(models.Model):
         null=True,
         help_text="Church logo (recommended: 200x200px PNG)",
     )
-    banner = models.ImageField(
-        upload_to="settings/banners/",
-        blank=True,
-        null=True,
-        help_text="Church banner for headers (recommended: 1200x300px)",
-    )
-    favicon = models.ImageField(
-        upload_to="settings/favicons/",
-        blank=True,
-        null=True,
-        help_text="Favicon for browser tab (recommended: 32x32px ICO/PNG)",
-    )
     login_background = models.ImageField(
         upload_to="settings/backgrounds/",
         blank=True,
@@ -133,3 +121,59 @@ class SystemSettings(models.Model):
         """Get or create the singleton settings instance."""
         settings, _ = cls.objects.get_or_create(pk=1)
         return settings
+
+
+class TeamMember(models.Model):
+    """
+    Church leadership/staff displayed on public site.
+    Replaces unused banner/favicon fields with a more useful feature.
+    """
+
+    ROLE_CHOICES = [
+        ("pastor", "Pastor"),
+        ("elder", "Elder"),
+        ("deacon", "Deacon"),
+        ("staff", "Staff"),
+    ]
+
+    name = models.CharField(max_length=255, help_text="Full name of the team member")
+    role = models.CharField(
+        max_length=50,
+        choices=ROLE_CHOICES,
+        default="staff",
+        help_text="Role category",
+    )
+    title = models.CharField(
+        max_length=255,
+        help_text="Display title (e.g., 'Senior Pastor', 'Youth Director')",
+    )
+    bio = models.TextField(
+        blank=True,
+        default="",
+        help_text="Short biography or description",
+    )
+    photo = models.ImageField(
+        upload_to="team/",
+        blank=True,
+        null=True,
+        help_text="Profile photo (recommended: 300x300px)",
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text="Display order (lower numbers appear first)",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether to display this member on the public site",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["order", "name"]
+        verbose_name = "Team Member"
+        verbose_name_plural = "Team Members"
+
+    def __str__(self):
+        return f"{self.name} - {self.title}"
+
