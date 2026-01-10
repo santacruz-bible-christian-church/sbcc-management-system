@@ -7,3 +7,5 @@ export { default as AttendanceFilterBar } from './AttendanceFilterBar';
 export { default as AttendanceMemberRow } from './AttendanceMemberRow';
 export { default as AttendanceMemberList } from './AttendanceMemberList';
 export { default as AttendanceToolbar } from './AttendanceToolbar';
+export { default as AttendanceTrackerHeader } from './AttendanceTrackerHeader';
+export { default as AttendanceBulkActionsBar } from './AttendanceBulkActionsBar';
