@@ -30,6 +30,24 @@ export const authApi = {
     return response.data;
   },
 
+  // Upload profile picture
+  async uploadProfilePicture(file) {
+    const formData = new FormData();
+    formData.append('profile_picture', file);
+    const response = await apiClient.patch('/auth/me/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Remove profile picture
+  async removeProfilePicture() {
+    const response = await apiClient.patch('/auth/me/', { profile_picture: null });
+    return response.data;
+  },
+
   // Refresh token
   async refreshToken(refreshToken) {
     const response = await apiClient.post('/auth/refresh/', {
