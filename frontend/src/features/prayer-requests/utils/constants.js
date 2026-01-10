@@ -1,4 +1,5 @@
 import { SBCC_COLORS } from '../../../store/theme.store';
+import { HiClipboardList, HiClock, HiHeart, HiCheckCircle } from 'react-icons/hi';
 
 export const PRAYER_CATEGORY_OPTIONS = [
   { value: 'health', label: 'Health & Healing' },
@@ -46,22 +47,18 @@ export const PRIORITY_METADATA = {
   low: {
     label: 'Low',
     color: 'bg-gray-100 text-gray-700 border-gray-200',
-    icon: '📝'
   },
   medium: {
     label: 'Medium',
     color: 'bg-blue-100 text-blue-700 border-blue-200',
-    icon: '📌'
   },
   high: {
     label: 'High',
     color: 'bg-orange-100 text-orange-700 border-orange-200',
-    icon: '⚠️'
   },
   urgent: {
     label: 'Urgent',
     color: 'bg-red-100 text-red-700 border-red-200',
-    icon: '🚨'
   },
 };
 
@@ -69,37 +66,30 @@ export const STATUS_METADATA = {
   pending: {
     label: 'Pending',
     tint: SBCC_COLORS.text.gray,
-    icon: '⏳'
   },
   assigned: {
     label: 'Assigned',
     tint: SBCC_COLORS.info,
-    icon: '👤'
   },
   in_progress: {
     label: 'In Progress',
     tint: SBCC_COLORS.warning,
-    icon: '⚙️'
   },
   prayed: {
     label: 'Prayed For',
     tint: SBCC_COLORS.secondary,
-    icon: '🙏'
   },
   follow_up: {
     label: 'Needs Follow-up',
     tint: SBCC_COLORS.warning,
-    icon: '🔔'
   },
   completed: {
     label: 'Completed',
     tint: SBCC_COLORS.success,
-    icon: '✅'
   },
   archived: {
     label: 'Archived',
     tint: SBCC_COLORS.text.gray,
-    icon: '📦'
   },
 };
 
@@ -117,8 +107,8 @@ export const DEFAULT_FORM_VALUES = {
 };
 
 export const SUMMARY_CARDS = [
-  { key: 'all', icon: '📋', title: 'All Requests', filterValue: 'all' },
-  { key: 'pending', icon: '⏳', title: 'Pending', filterValue: 'pending' },
-  { key: 'in_progress', icon: '🙏', title: 'In Prayer', filterValue: 'in_progress' },
-  { key: 'completed', icon: '✅', title: 'Completed', filterValue: 'completed' },
+  { key: 'all', icon: HiClipboardList, title: 'All Requests', filterValue: 'all' },
+  { key: 'pending', icon: HiClock, title: 'Pending', filterValue: 'pending' },
+  { key: 'in_progress', icon: HiHeart, title: 'In Prayer', filterValue: 'in_progress' },
+  { key: 'completed', icon: HiCheckCircle, title: 'Completed', filterValue: 'completed' },
 ];
