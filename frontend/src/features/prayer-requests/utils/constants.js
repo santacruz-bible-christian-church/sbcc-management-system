@@ -47,18 +47,22 @@ export const PRIORITY_METADATA = {
   low: {
     label: 'Low',
     color: 'bg-gray-100 text-gray-700 border-gray-200',
+    tint: '#6b7280',
   },
   medium: {
     label: 'Medium',
     color: 'bg-blue-100 text-blue-700 border-blue-200',
+    tint: '#3b82f6',
   },
   high: {
     label: 'High',
     color: 'bg-orange-100 text-orange-700 border-orange-200',
+    tint: '#f97316',
   },
   urgent: {
     label: 'Urgent',
     color: 'bg-red-100 text-red-700 border-red-200',
+    tint: '#ef4444',
   },
 };
 
@@ -109,6 +113,6 @@ export const DEFAULT_FORM_VALUES = {
 export const SUMMARY_CARDS = [
   { key: 'all', icon: HiClipboardList, title: 'All Requests', filterValue: 'all' },
   { key: 'pending', icon: HiClock, title: 'Pending', filterValue: 'pending' },
-  { key: 'in_progress', icon: HiHeart, title: 'In Prayer', filterValue: 'in_progress' },
+  { key: 'active', icon: HiHeart, title: 'In Prayer', filterValue: 'active' },
   { key: 'completed', icon: HiCheckCircle, title: 'Completed', filterValue: 'completed' },
 ];

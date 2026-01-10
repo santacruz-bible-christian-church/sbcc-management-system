@@ -79,8 +79,15 @@ const PrayerRequestsPage = () => {
   }, []);
 
   // Filter requests
+  const ACTIVE_STATUSES = ['assigned', 'in_progress', 'prayed', 'follow_up'];
+
   const filteredRequests = requests.filter((req) => {
-    const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
+    let matchesStatus = statusFilter === 'all';
+    if (!matchesStatus) {
+      matchesStatus = statusFilter === 'active'
+        ? ACTIVE_STATUSES.includes(req.status)
+        : req.status === statusFilter;
+    }
     const matchesPriority = !priorityFilter || req.priority === priorityFilter;
     const matchesCategory = !categoryFilter || req.category === categoryFilter;
     const matchesSearch =
@@ -98,7 +105,7 @@ const PrayerRequestsPage = () => {
     { ...SUMMARY_CARDS[1], count: requests.filter((r) => r.status === 'pending').length },
     {
       ...SUMMARY_CARDS[2],
-      count: requests.filter((r) => ['assigned', 'in_progress', 'prayed'].includes(r.status)).length,
+      count: requests.filter((r) => ACTIVE_STATUSES.includes(r.status)).length,
     },
     { ...SUMMARY_CARDS[3], count: requests.filter((r) => r.status === 'completed').length },
   ];
