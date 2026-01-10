@@ -1,259 +1,82 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Spinner } from 'flowbite-react';
-import { attendanceApi } from '../../../api/attendance.api';
 import {
   AttendanceFilterBar,
   AttendanceMemberList,
+  AttendanceTrackerHeader,
+  AttendanceBulkActionsBar,
 } from '../components';
+import { useAttendanceTracker } from '../hooks/useAttendanceTracker';
+import { useAttendanceFilters } from '../hooks/useAttendanceFilters';
+import { useMultiSelect } from '../hooks/useMultiSelect';
 
 export default function AttendanceTracker() {
   const location = useLocation();
   const navigate = useNavigate();
   const attendanceId = location.state?.attendanceId;
 
-  const [sheet, setSheet] = useState(null);
-  const [attendanceRecords, setAttendanceRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState('');
+  // Main data hook
+  const {
+    sheet,
+    attendanceRecords,
+    setAttendanceRecords,
+    loading,
+    saving,
+    error,
+    successMessage,
+    hasChanges,
+    setHasChanges,
+    handleToggleAttendance,
+    handleSaveChanges,
+  } = useAttendanceTracker(attendanceId);
 
-  const [query, setQuery] = useState('');
-  const [ministryFilter, setMinistryFilter] = useState('');
-  const [page, setPage] = useState(1);
-  const [hasChanges, setHasChanges] = useState(false);
+  // Filter and pagination hook
+  const {
+    query,
+    ministryFilter,
+    page,
+    pageSize,
+    ministries,
+    filtered,
+    pageCount,
+    pageItems,
+    setPage,
+    handleQueryChange,
+    handleMinistryChange,
+    handleClearFilters,
+    resetFilters,
+  } = useAttendanceFilters(attendanceRecords);
 
-  // Multi-select state
-  const [selectedRecords, setSelectedRecords] = useState(new Set());
-  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  // Multi-select hook
+  const {
+    selectedRecords,
+    isMultiSelectMode,
+    isAllPageSelected,
+    isSomePageSelected,
+    toggleMultiSelectMode,
+    toggleRecordSelection,
+    toggleAllPageSelection,
+    handleBulkMarkPresent,
+    handleBulkMarkAbsent,
+    handleBulkToggle,
+    clearSelection,
+    resetMultiSelect,
+  } = useMultiSelect({
+    attendanceRecords,
+    setAttendanceRecords,
+    setHasChanges,
+    pageItems,
+  });
 
-  const pageSize = 8;
-
-  // Fetch attendance sheet details
-  useEffect(() => {
-    if (!attendanceId) {
-      setError('No attendance sheet ID provided');
-      setLoading(false);
-      return;
-    }
-
-    fetchAttendanceSheet();
-  }, [attendanceId]);
-
-  const fetchAttendanceSheet = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await attendanceApi.getSheet(attendanceId);
-      setSheet(data);
-      setAttendanceRecords(data.attendance_records || []);
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError(err.response?.data?.detail || 'Unable to load attendance sheet');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Get unique ministries from members
-  const ministries = useMemo(() => {
-    const ministrySet = new Set();
-    attendanceRecords.forEach((record) => {
-      if (record.member_ministry) {
-        ministrySet.add(record.member_ministry);
-      }
+  // Save handler with reset callback
+  const onSave = useCallback(() => {
+    handleSaveChanges(() => {
+      resetFilters();
+      resetMultiSelect();
     });
-    return Array.from(ministrySet).sort();
-  }, [attendanceRecords]);
-
-  // Filter members
-  const filtered = useMemo(() => {
-    return attendanceRecords.filter((record) => {
-      // Ministry filter
-      if (ministryFilter && record.member_ministry !== ministryFilter) return false;
-
-      // Search filter
-      if (query) {
-        const searchLower = query.toLowerCase();
-        const memberName = record.member_name?.toLowerCase() || '';
-        if (!memberName.includes(searchLower)) return false;
-      }
-
-      return true;
-    });
-  }, [query, ministryFilter, attendanceRecords]);
-
-  // Pagination
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  // Multi-select helpers
-  const pageItemIds = useMemo(() => new Set(pageItems.map(r => r.id)), [pageItems]);
-  const isAllPageSelected = pageItems.length > 0 && pageItems.every(r => selectedRecords.has(r.id));
-  const isSomePageSelected = pageItems.some(r => selectedRecords.has(r.id)) && !isAllPageSelected;
-
-  // Toggle multi-select mode
-  const toggleMultiSelectMode = () => {
-    setIsMultiSelectMode(!isMultiSelectMode);
-    setSelectedRecords(new Set());
-  };
-
-  // Select/deselect individual record
-  const toggleRecordSelection = useCallback((recordId) => {
-    setSelectedRecords((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(recordId)) {
-        newSet.delete(recordId);
-      } else {
-        newSet.add(recordId);
-      }
-      return newSet;
-    });
-  }, []);
-
-  // Select/deselect all on current page
-  const toggleAllPageSelection = useCallback(() => {
-    setSelectedRecords((prev) => {
-      const newSet = new Set(prev);
-
-      if (isAllPageSelected) {
-        // Deselect all on current page
-        pageItems.forEach(record => newSet.delete(record.id));
-      } else {
-        // Select all on current page
-        pageItems.forEach(record => newSet.add(record.id));
-      }
-
-      return newSet;
-    });
-  }, [pageItems, isAllPageSelected]);
-
-  // Bulk actions
-  const handleBulkMarkPresent = useCallback(() => {
-    if (selectedRecords.size === 0) return;
-
-    setAttendanceRecords((prev) =>
-      prev.map((record) =>
-        selectedRecords.has(record.id) ? { ...record, attended: true } : record
-      )
-    );
-    setHasChanges(true);
-    setSuccessMessage('');
-    setSelectedRecords(new Set());
-  }, [selectedRecords]);
-
-  const handleBulkMarkAbsent = useCallback(() => {
-    if (selectedRecords.size === 0) return;
-
-    setAttendanceRecords((prev) =>
-      prev.map((record) =>
-        selectedRecords.has(record.id) ? { ...record, attended: false } : record
-      )
-    );
-    setHasChanges(true);
-    setSuccessMessage('');
-    setSelectedRecords(new Set());
-  }, [selectedRecords]);
-
-  const handleBulkToggle = useCallback(() => {
-    if (selectedRecords.size === 0) return;
-
-    setAttendanceRecords((prev) =>
-      prev.map((record) =>
-        selectedRecords.has(record.id) ? { ...record, attended: !record.attended } : record
-      )
-    );
-    setHasChanges(true);
-    setSuccessMessage('');
-    setSelectedRecords(new Set());
-  }, [selectedRecords]);
-
-  // Handle attendance toggle (single click)
-  const handleToggleAttendance = useCallback((recordId) => {
-    setAttendanceRecords((prev) =>
-      prev.map((record) =>
-        record.id === recordId ? { ...record, attended: !record.attended } : record
-      )
-    );
-    setHasChanges(true);
-    setSuccessMessage('');
-  }, []);
-
-  // Save changes
-  const handleSaveChanges = async () => {
-    setSaving(true);
-    setError(null);
-    setSuccessMessage('');
-
-    try {
-      const updates = attendanceRecords.map((record) => ({
-        member: record.member,
-        attended: record.attended,
-      }));
-
-      const response = await attendanceApi.updateAttendances(attendanceId, { attendances: updates });
-
-      if (response && response.sheet) {
-        setSheet(response.sheet);
-        setAttendanceRecords([...(response.sheet.attendance_records || [])]);
-        setHasChanges(false);
-
-        // Reset filters and pagination to show all results
-        setMinistryFilter('');
-        setQuery('');
-        setPage(1);
-        setSelectedRecords(new Set());
-        setIsMultiSelectMode(false);
-
-        setSuccessMessage(`Successfully updated ${response.updated_count} attendance records!`);
-
-        setTimeout(() => {
-          setSuccessMessage('');
-        }, 3000);
-      } else {
-        await fetchAttendanceSheet();
-        setHasChanges(false);
-
-        setMinistryFilter('');
-        setQuery('');
-        setPage(1);
-        setSelectedRecords(new Set());
-        setIsMultiSelectMode(false);
-
-        setSuccessMessage('Attendance saved successfully!');
-
-        setTimeout(() => {
-          setSuccessMessage('');
-        }, 3000);
-      }
-    } catch (err) {
-      console.error('Save error:', err);
-      console.error('Error response:', err.response?.data);
-      setError(err.response?.data?.detail || err.message || 'Unable to save changes');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Clear filters
-  const handleClearFilters = useCallback(() => {
-    setMinistryFilter('');
-    setQuery('');
-    setPage(1);
-  }, []);
-
-  // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
+  }, [handleSaveChanges, resetFilters, resetMultiSelect]);
 
   // Loading state
   if (loading) {
@@ -269,7 +92,7 @@ export default function AttendanceTracker() {
     );
   }
 
-  // Error state
+  // Error state (no sheet loaded)
   if (error && !sheet) {
     return (
       <main className="min-h-screen bg-gray-50 p-8">
@@ -301,99 +124,34 @@ export default function AttendanceTracker() {
             Back to Attendance Sheets
           </Link>
 
-          {/* Event info + Stats combined */}
-          {sheet && (
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-800">
-                      {sheet.event_title || 'Event'}
-                    </h2>
-                    <p className="text-sm text-gray-500">{formatDate(sheet.date)}</p>
-                  </div>
-                  <button
-                    onClick={toggleMultiSelectMode}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isMultiSelectMode
-                        ? 'bg-[#FDB54A] text-white hover:bg-[#e5a43d]'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {isMultiSelectMode ? '✓ Multi-Select' : 'Select'}
-                  </button>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 divide-x divide-gray-100">
-                <div className="px-5 py-3 text-center">
-                  <p className="text-2xl font-bold text-gray-900">{sheet.total_expected || 0}</p>
-                  <p className="text-xs text-gray-500 mt-1">Total Members</p>
-                </div>
-                <div className="px-5 py-3 text-center">
-                  <p className="text-2xl font-bold text-emerald-600">{sheet.total_attended || 0}</p>
-                  <p className="text-xs text-gray-500 mt-1">Present</p>
-                </div>
-                <div className="px-5 py-3 text-center">
-                  <p className="text-2xl font-bold text-[#FDB54A]">{sheet.attendance_rate ? `${sheet.attendance_rate.toFixed(0)}%` : '0%'}</p>
-                  <p className="text-xs text-gray-500 mt-1">Attendance Rate</p>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Event info + Stats */}
+          <AttendanceTrackerHeader
+            sheet={sheet}
+            isMultiSelectMode={isMultiSelectMode}
+            onToggleMultiSelectMode={toggleMultiSelectMode}
+          />
 
           {/* Bulk Actions Bar */}
-          {isMultiSelectMode && selectedRecords.size > 0 && (
-            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-blue-900">
-                  {selectedRecords.size} {selectedRecords.size === 1 ? 'member' : 'members'} selected
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleBulkMarkPresent}
-                    className="px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Mark Present
-                  </button>
-                  <button
-                    onClick={handleBulkMarkAbsent}
-                    className="px-3 py-1.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
-                  >
-                    Mark Absent
-                  </button>
-                  <button
-                    onClick={handleBulkToggle}
-                    className="px-3 py-1.5 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
-                  >
-                    Toggle
-                  </button>
-                  <button
-                    onClick={() => setSelectedRecords(new Set())}
-                    className="px-3 py-1.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-            </div>
+          {isMultiSelectMode && (
+            <AttendanceBulkActionsBar
+              selectedCount={selectedRecords.size}
+              onMarkPresent={handleBulkMarkPresent}
+              onMarkAbsent={handleBulkMarkAbsent}
+              onToggle={handleBulkToggle}
+              onClear={clearSelection}
+            />
           )}
 
           {/* Controls row */}
           <div className="mt-4">
             <AttendanceFilterBar
               query={query}
-              onQueryChange={(value) => {
-                setQuery(value);
-                setPage(1);
-              }}
+              onQueryChange={handleQueryChange}
               ministryFilter={ministryFilter}
-              onMinistryChange={(value) => {
-                setMinistryFilter(value);
-                setPage(1);
-              }}
+              onMinistryChange={handleMinistryChange}
               ministries={ministries}
               onClearFilters={handleClearFilters}
-              onSave={handleSaveChanges}
+              onSave={onSave}
               hasChanges={hasChanges}
               saving={saving}
             />
