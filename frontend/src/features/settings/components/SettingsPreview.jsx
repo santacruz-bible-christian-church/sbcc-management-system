@@ -67,33 +67,7 @@ export const SettingsPreview = ({ settings, onRefresh, loading }) => {
           </div>
 
           {/* Other Images */}
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {settings.banner && (
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Banner</p>
-                <div className="aspect-video bg-gray-100 rounded border border-gray-200 overflow-hidden">
-                  <img
-                    src={settings.banner}
-                    alt="Banner"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            )}
-
-            {settings.favicon && (
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Favicon</p>
-                <div className="aspect-square bg-gray-100 rounded border border-gray-200 overflow-hidden p-1">
-                  <img
-                    src={settings.favicon}
-                    alt="Favicon"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              </div>
-            )}
-
+          <div className="mt-3 grid grid-cols-2 gap-2">
             {settings.login_background && (
               <div>
                 <p className="text-xs text-gray-500 mb-1">Login BG</p>

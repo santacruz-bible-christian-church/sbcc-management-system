@@ -12,8 +12,6 @@ export const BrandingTab = ({ settings, onSave, saving }) => {
 
   const [imageUploads, setImageUploads] = useState({
     logo: null,
-    banner: null,
-    favicon: null,
     login_background: null,
   });
 
@@ -130,24 +128,6 @@ export const BrandingTab = ({ settings, onSave, saving }) => {
             onUpload={(file) => handleImageUpload('logo', file)}
             onRemove={() => handleImageRemove('logo')}
             helpText="Recommended: 200x200px PNG with transparent background"
-            disabled={saving}
-          />
-
-          <ImageUpload
-            label="Banner"
-            currentImage={settings?.banner}
-            onUpload={(file) => handleImageUpload('banner', file)}
-            onRemove={() => handleImageRemove('banner')}
-            helpText="Recommended: 1200x300px for header banners"
-            disabled={saving}
-          />
-
-          <ImageUpload
-            label="Favicon"
-            currentImage={settings?.favicon}
-            onUpload={(file) => handleImageUpload('favicon', file)}
-            onRemove={() => handleImageRemove('favicon')}
-            helpText="Recommended: 32x32px ICO or PNG for browser tab icon"
             disabled={saving}
           />
 

@@ -135,9 +135,17 @@ export function Navbar() {
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-              {getUserInitials()}
-            </div>
+            {user?.profile_picture ? (
+              <img
+                src={user.profile_picture}
+                alt="Profile"
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                {getUserInitials()}
+              </div>
+            )}
             <ChevronDown
               size={16}
               className={`text-gray-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
@@ -150,9 +158,17 @@ export function Navbar() {
               {/* User Info */}
               <div className="px-4 py-3 border-b border-gray-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-                    {getUserInitials()}
-                  </div>
+                  {user?.profile_picture ? (
+                    <img
+                      src={user.profile_picture}
+                      alt="Profile"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+                      {getUserInitials()}
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">
                       {user?.first_name && user?.last_name

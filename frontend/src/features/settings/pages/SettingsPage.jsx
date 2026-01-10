@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Tabs } from 'flowbite-react';
-import { HiOutlineCog, HiOutlineInformationCircle, HiOutlinePhone, HiOutlineUser } from 'react-icons/hi';
+import { HiOutlineCog, HiOutlineInformationCircle, HiOutlinePhone, HiOutlineUser, HiOutlineUserGroup } from 'react-icons/hi';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useSettings } from '../hooks/useSettings';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { BrandingTab } from '../components/BrandingTab';
 import { AboutTab } from '../components/AboutTab';
 import { ContactTab } from '../components/ContactTab';
+import { TeamTab } from '../components/TeamTab';
 import { ProfileTab } from '../components/ProfileTab';
 import { SettingsPreview } from '../components/SettingsPreview';
 import { SettingsSkeleton } from '../components/SettingsSkeleton';
@@ -138,6 +139,19 @@ export const SettingsPage = () => {
 
             <Tabs.Item
               active={activeTab === 3}
+              title="Team"
+              icon={HiOutlineUserGroup}
+            >
+              <div className="py-6">
+                <TeamTab
+                  onSuccess={showSuccess}
+                  onError={showError}
+                />
+              </div>
+            </Tabs.Item>
+
+            <Tabs.Item
+              active={activeTab === 4}
               title="Profile"
               icon={HiOutlineUser}
             >
