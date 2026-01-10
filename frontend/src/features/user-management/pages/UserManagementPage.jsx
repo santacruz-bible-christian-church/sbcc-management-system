@@ -1,21 +1,34 @@
-import { useState, useMemo } from 'react';
-import { UserPlus, Search, Edit, Trash2, Key, UserCheck, UserX, RefreshCw } from 'lucide-react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Edit, Trash2, Key, UserCheck, UserX } from 'lucide-react';
 import { useUsers } from '../hooks/useUsers';
+import { useUserModals } from '../hooks/useUserModals';
+import { useUserActions } from '../hooks/useUserActions';
 import { UserFormModal } from '../components/UserFormModal';
 import { DeleteUserModal } from '../components/DeleteUserModal';
 import { SetPasswordModal } from '../components/SetPasswordModal';
 import { UserManagementSkeleton } from '../components/UserManagementSkeleton';
+import { UserManagementToolbar } from '../components/UserManagementToolbar';
+
+const getRoleBadgeColor = (role) => {
+  const colors = {
+    super_admin: 'bg-purple-100 text-purple-800',
+    admin: 'bg-blue-100 text-blue-800',
+    pastor: 'bg-green-100 text-green-800',
+    ministry_leader: 'bg-amber-100 text-amber-800',
+    member: 'bg-gray-100 text-gray-600',
+  };
+  return colors[role] || 'bg-gray-100 text-gray-800';
+};
+
+const formatRole = (role) => {
+  return role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
 
 export const UserManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-
-  // Modal states
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const hasInitialLoad = useRef(false);
 
   // Build query params
   const queryParams = useMemo(() => {
@@ -27,6 +40,7 @@ export const UserManagementPage = () => {
     return params;
   }, [searchTerm, roleFilter, statusFilter]);
 
+  // Data and mutations
   const {
     users,
     isLoading,
@@ -44,134 +58,64 @@ export const UserManagementPage = () => {
     isTogglingActive,
   } = useUsers(queryParams);
 
-  const getRoleBadgeColor = (role) => {
-    const colors = {
-      super_admin: 'bg-purple-100 text-purple-800',
-      admin: 'bg-blue-100 text-blue-800',
-      pastor: 'bg-green-100 text-green-800',
-      ministry_leader: 'bg-amber-100 text-amber-800',
-      member: 'bg-gray-100 text-gray-600',
-    };
-    return colors[role] || 'bg-gray-100 text-gray-800';
-  };
+  // Modal state
+  const {
+    selectedUser,
+    isFormModalOpen,
+    isDeleteModalOpen,
+    isPasswordModalOpen,
+    openCreateModal,
+    openEditModal,
+    openDeleteModal,
+    openPasswordModal,
+    closeFormModal,
+    closeDeleteModal,
+    closePasswordModal,
+  } = useUserModals();
 
-  const formatRole = (role) => {
-    return role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
+  // Action handlers
+  const {
+    handleFormSubmit,
+    handleDeleteConfirm,
+    handleSetPassword,
+    handleToggleActive,
+  } = useUserActions({
+    createUser,
+    updateUser,
+    deleteUser,
+    setPassword,
+    toggleActive,
+    closeFormModal,
+    closeDeleteModal,
+    closePasswordModal,
+    selectedUser,
+  });
 
-  // Handlers
-  const handleAddUser = () => {
-    setSelectedUser(null);
-    setIsFormModalOpen(true);
-  };
-
-  const handleEditUser = (user) => {
-    setSelectedUser(user);
-    setIsFormModalOpen(true);
-  };
-
-  const handleDeleteClick = (user) => {
-    setSelectedUser(user);
-    setIsDeleteModalOpen(true);
-  };
-
-  const handlePasswordClick = (user) => {
-    setSelectedUser(user);
-    setIsPasswordModalOpen(true);
-  };
-
-  const handleFormSubmit = (data) => {
-    if (selectedUser) {
-      updateUser({ id: selectedUser.id, data }, {
-        onSuccess: () => setIsFormModalOpen(false),
-      });
-    } else {
-      createUser(data, {
-        onSuccess: () => setIsFormModalOpen(false),
-      });
+  // Track initial load
+  useEffect(() => {
+    if (!isLoading && !hasInitialLoad.current) {
+      hasInitialLoad.current = true;
     }
-  };
+  }, [isLoading]);
 
-  const handleDeleteConfirm = (id) => {
-    deleteUser(id, {
-      onSuccess: () => setIsDeleteModalOpen(false),
-    });
-  };
-
-  const handleSetPassword = ({ id, password }) => {
-    setPassword({ id, password }, {
-      onSuccess: () => setIsPasswordModalOpen(false),
-    });
-  };
-
-  const handleToggleActive = (user) => {
-    toggleActive(user.id);
-  };
-
-  // Show skeleton during initial load
-  if (isLoading && users.length === 0) {
+  // Show skeleton only on very first load
+  if (isLoading && !hasInitialLoad.current) {
     return <UserManagementSkeleton />;
   }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Actions Bar */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-6">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search users by name, email, or username..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-          />
-        </div>
-
-        {/* Filters */}
-        <div className="flex gap-3">
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
-          >
-            <option value="">All Roles</option>
-            <option value="super_admin">Super Admin</option>
-            <option value="admin">Admin</option>
-            <option value="pastor">Pastor</option>
-            <option value="ministry_leader">Ministry Leader</option>
-          </select>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-
-          <button
-            onClick={() => refetch()}
-            className="p-2 text-gray-600 hover:text-amber-600 hover:bg-amber-50 border border-gray-300 rounded-lg transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw size={20} />
-          </button>
-        </div>
-
-        <button
-          onClick={handleAddUser}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors whitespace-nowrap"
-        >
-          <UserPlus size={18} />
-          Add User
-        </button>
-      </div>
-
-
+      <UserManagementToolbar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        roleFilter={roleFilter}
+        onRoleChange={setRoleFilter}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+        onRefresh={refetch}
+        onAddUser={openCreateModal}
+      />
 
       {/* Error State */}
       {error && !isLoading && (
@@ -187,7 +131,7 @@ export const UserManagementPage = () => {
       )}
 
       {/* Users Table */}
-      {!isLoading && !error && (
+      {!error && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -250,21 +194,21 @@ export const UserManagementPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => handleEditUser(user)}
+                            onClick={() => openEditModal(user)}
                             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Edit"
                           >
                             <Edit size={16} />
                           </button>
                           <button
-                            onClick={() => handlePasswordClick(user)}
+                            onClick={() => openPasswordModal(user)}
                             className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                             title="Reset Password"
                           >
                             <Key size={16} />
                           </button>
                           <button
-                            onClick={() => handleDeleteClick(user)}
+                            onClick={() => openDeleteModal(user)}
                             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Delete"
                           >
@@ -295,7 +239,7 @@ export const UserManagementPage = () => {
       {/* Modals */}
       <UserFormModal
         isOpen={isFormModalOpen}
-        onClose={() => setIsFormModalOpen(false)}
+        onClose={closeFormModal}
         onSubmit={handleFormSubmit}
         user={selectedUser}
         isSubmitting={isCreating || isUpdating}
@@ -303,7 +247,7 @@ export const UserManagementPage = () => {
 
       <DeleteUserModal
         isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
+        onClose={closeDeleteModal}
         onConfirm={handleDeleteConfirm}
         user={selectedUser}
         isDeleting={isDeleting}
@@ -311,7 +255,7 @@ export const UserManagementPage = () => {
 
       <SetPasswordModal
         isOpen={isPasswordModalOpen}
-        onClose={() => setIsPasswordModalOpen(false)}
+        onClose={closePasswordModal}
         onSubmit={handleSetPassword}
         user={selectedUser}
         isSubmitting={isSettingPassword}
