@@ -623,4 +623,3 @@ class TestPublicTeamEndpoint:
         assert "role_display" in member
         assert "is_active" not in member  # Not in public serializer
         assert "created_at" not in member
-

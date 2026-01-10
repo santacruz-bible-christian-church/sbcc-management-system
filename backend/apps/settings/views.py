@@ -98,7 +98,5 @@ class PublicTeamView(APIView):
     def get(self, request):
         """Get active team members for public display."""
         team = TeamMember.objects.filter(is_active=True).order_by("order", "name")
-        serializer = PublicTeamMemberSerializer(
-            team, many=True, context={"request": request}
-        )
+        serializer = PublicTeamMemberSerializer(team, many=True, context={"request": request})
         return Response(serializer.data)
