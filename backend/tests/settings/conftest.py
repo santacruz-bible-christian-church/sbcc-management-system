@@ -1,6 +1,6 @@
 import pytest
 
-from apps.settings.models import SystemSettings
+from apps.settings.models import SystemSettings, TeamMember
 
 
 @pytest.fixture
@@ -66,3 +66,70 @@ def member_client(api_client, member_user):
     refresh = RefreshToken.for_user(member_user)
     api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
     return api_client
+
+
+# Team Member Fixtures
+@pytest.fixture
+def team_member(db):
+    """Create a basic team member."""
+    return TeamMember.objects.create(
+        name="John Pastor",
+        role="pastor",
+        title="Senior Pastor",
+        bio="Serving since 2010",
+        order=1,
+        is_active=True,
+    )
+
+
+@pytest.fixture
+def inactive_team_member(db):
+    """Create an inactive team member."""
+    return TeamMember.objects.create(
+        name="Jane Elder",
+        role="elder",
+        title="Board Member",
+        bio="Retired elder",
+        order=10,
+        is_active=False,
+    )
+
+
+@pytest.fixture
+def team_member_data():
+    """Data for creating a new team member."""
+    return {
+        "name": "New Member",
+        "role": "deacon",
+        "title": "Deacon",
+        "bio": "A new team member",
+        "order": 5,
+        "is_active": True,
+    }
+
+
+@pytest.fixture
+def multiple_team_members(db):
+    """Create multiple team members for testing ordering."""
+    members = []
+    members.append(
+        TeamMember.objects.create(
+            name="Pastor A", role="pastor", title="Senior Pastor", order=1, is_active=True
+        )
+    )
+    members.append(
+        TeamMember.objects.create(
+            name="Elder B", role="elder", title="Elder", order=2, is_active=True
+        )
+    )
+    members.append(
+        TeamMember.objects.create(
+            name="Deacon C", role="deacon", title="Deacon", order=3, is_active=True
+        )
+    )
+    members.append(
+        TeamMember.objects.create(
+            name="Staff D", role="staff", title="Secretary", order=4, is_active=False
+        )
+    )
+    return members

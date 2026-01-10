@@ -21,6 +21,12 @@ class User(AbstractUser):
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="admin")
     phone = models.CharField(max_length=15, blank=True)
+    profile_picture = models.ImageField(
+        upload_to="profiles/",
+        blank=True,
+        null=True,
+        help_text="User profile picture (recommended: 200x200px)",
+    )
 
     class Meta:
         db_table = "users"

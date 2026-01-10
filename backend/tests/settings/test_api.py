@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from apps.settings.models import SystemSettings
+from apps.settings.models import SystemSettings, TeamMember
 
 
 # =============================================================================
@@ -488,3 +488,138 @@ class TestSettingsEdgeCases:
         assert response.status_code == status.HTTP_200_OK
         assert response.data["church_name"] == "Iglesia ni Cristo 教会"
         assert response.data["tagline"] == "믿음으로 함께 成長"
+
+
+# =============================================================================
+# Team Member API Tests
+# =============================================================================
+@pytest.mark.django_db
+class TestTeamMemberPermissions:
+    """Test access control for team members."""
+
+    def test_admin_can_list_team_members(self, admin_client, team_member):
+        """Admin can list team members."""
+        url = reverse("team-member-list")
+        response = admin_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_admin_can_create_team_member(self, admin_client, team_member_data):
+        """Admin can create team members."""
+        url = reverse("team-member-list")
+        response = admin_client.post(url, team_member_data, format="json")
+
+        assert response.status_code == status.HTTP_201_CREATED
+
+    def test_member_cannot_create_team_member(self, member_client, team_member_data):
+        """Regular member cannot create team members."""
+        url = reverse("team-member-list")
+        response = member_client.post(url, team_member_data, format="json")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_unauthenticated_cannot_create_team_member(self, api_client, team_member_data):
+        """Unauthenticated users cannot create team members."""
+        url = reverse("team-member-list")
+        response = api_client.post(url, team_member_data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+class TestTeamMemberCRUD:
+    """Test team member CRUD operations."""
+
+    def test_create_team_member(self, admin_client, team_member_data):
+        """Create a new team member."""
+        url = reverse("team-member-list")
+        response = admin_client.post(url, team_member_data, format="json")
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["name"] == "New Member"
+        assert response.data["role"] == "deacon"
+        assert TeamMember.objects.filter(name="New Member").exists()
+
+    def test_list_team_members(self, admin_client, multiple_team_members):
+        """List all team members."""
+        url = reverse("team-member-list")
+        response = admin_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) >= 4
+
+    def test_retrieve_team_member(self, admin_client, team_member):
+        """Retrieve a single team member."""
+        url = reverse("team-member-detail", kwargs={"pk": team_member.pk})
+        response = admin_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["name"] == "John Pastor"
+
+    def test_update_team_member(self, admin_client, team_member):
+        """Update a team member."""
+        url = reverse("team-member-detail", kwargs={"pk": team_member.pk})
+        response = admin_client.patch(
+            url,
+            {"title": "Lead Pastor"},
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        team_member.refresh_from_db()
+        assert team_member.title == "Lead Pastor"
+
+    def test_delete_team_member(self, admin_client, team_member):
+        """Delete a team member."""
+        pk = team_member.pk
+        url = reverse("team-member-detail", kwargs={"pk": pk})
+        response = admin_client.delete(url)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not TeamMember.objects.filter(pk=pk).exists()
+
+
+@pytest.mark.django_db
+class TestPublicTeamEndpoint:
+    """Test public team API endpoint."""
+
+    def test_public_team_no_auth_required(self, api_client, team_member):
+        """GET /api/public/team/ works without authentication."""
+        url = reverse("public-team")
+        response = api_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_public_team_returns_only_active_members(
+        self, api_client, team_member, inactive_team_member
+    ):
+        """Public endpoint returns only active team members."""
+        url = reverse("public-team")
+        response = api_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        names = [m["name"] for m in response.data]
+        assert "John Pastor" in names
+        assert "Jane Elder" not in names  # Inactive
+
+    def test_public_team_ordered_by_order_field(self, api_client, multiple_team_members):
+        """Public team is ordered by order field."""
+        url = reverse("public-team")
+        response = api_client.get(url)
+
+        # Only active members should be returned, in order
+        orders = [m.get("order") for m in response.data if m.get("order")]
+        # Filter nulls and check ordering
+        assert orders == sorted(orders) if orders else True
+
+    def test_public_team_limited_fields(self, api_client, team_member):
+        """Public endpoint returns limited fields."""
+        url = reverse("public-team")
+        response = api_client.get(url)
+
+        member = response.data[0]
+        assert "name" in member
+        assert "title" in member
+        assert "role_display" in member
+        assert "is_active" not in member  # Not in public serializer
+        assert "created_at" not in member

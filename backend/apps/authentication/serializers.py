@@ -21,6 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "role",
             "phone",
+            "profile_picture",
             "is_active",
             "date_joined",
             "last_login",
@@ -38,6 +39,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "phone",
+            "profile_picture",
         ]
 
     def validate_email(self, value):
@@ -208,6 +210,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "last_name": self.user.last_name,
             "role": self.user.role,
             "phone": self.user.phone,
+            "profile_picture": self.user.profile_picture.url if self.user.profile_picture else None,
         }
 
         return data

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import SystemSettings
+from .models import SystemSettings, TeamMember
 
 
 class SystemSettingsSerializer(serializers.ModelSerializer):
@@ -16,8 +16,6 @@ class SystemSettingsSerializer(serializers.ModelSerializer):
             "church_name",
             "tagline",
             "logo",
-            "banner",
-            "favicon",
             "login_background",
             "mission",
             "vision",
@@ -55,8 +53,6 @@ class PublicSettingsSerializer(serializers.ModelSerializer):
             "church_name",
             "tagline",
             "logo",
-            "banner",
-            "favicon",
             "login_background",
             "mission",
             "vision",
@@ -69,4 +65,45 @@ class PublicSettingsSerializer(serializers.ModelSerializer):
             "youtube_url",
             "instagram_url",
             "service_schedule",
+        ]
+
+
+class TeamMemberSerializer(serializers.ModelSerializer):
+    """Serializer for team members."""
+
+    role_display = serializers.CharField(source="get_role_display", read_only=True)
+
+    class Meta:
+        model = TeamMember
+        fields = [
+            "id",
+            "name",
+            "role",
+            "role_display",
+            "title",
+            "bio",
+            "photo",
+            "order",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class PublicTeamMemberSerializer(serializers.ModelSerializer):
+    """Public serializer for team members (limited fields)."""
+
+    role_display = serializers.CharField(source="get_role_display", read_only=True)
+
+    class Meta:
+        model = TeamMember
+        fields = [
+            "id",
+            "name",
+            "role",
+            "role_display",
+            "title",
+            "bio",
+            "photo",
         ]
