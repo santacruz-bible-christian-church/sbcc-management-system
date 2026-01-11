@@ -28,7 +28,12 @@ class R2Storage(Storage):
             "R2_PUBLIC_URL",
         ]
 
-        missing = [s for s in required_settings if not hasattr(settings, s)]
+        missing = []
+        for s in required_settings:
+            val = getattr(settings, s, None)
+            if not val:
+                missing.append(s)
+
         if missing:
             raise ValueError(
                 f"Missing required R2 settings: {', '.join(missing)}\n"

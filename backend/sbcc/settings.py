@@ -156,7 +156,6 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # ========== Cloudflare R2 Configuration ==========
 USE_R2_STORAGE = os.getenv("USE_R2_STORAGE", "False").lower() == "true"
@@ -169,14 +168,21 @@ if USE_R2_STORAGE:
     R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "sbcc-files")
     R2_ENDPOINT_URL = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
-    # Public URL (if you set up public access)
-    # Format: https://pub-{hash}.r2.dev or your custom domain
-    R2_PUBLIC_URL = os.getenv("R2_PUBLIC_URL", f"https://pub-{R2_ACCOUNT_ID}.r2.dev")
+    # Public URL (required - get this from R2 dashboard after enabling public access)
+    # Format: https://pub-{random-hash}.r2.dev or your custom domain
+    R2_PUBLIC_URL = os.getenv("R2_PUBLIC_URL")
 
-    # Use R2 for media files
-    DEFAULT_FILE_STORAGE = "common.storage.R2Storage"
+    # Django 5.2+ STORAGES setting (replaces deprecated DEFAULT_FILE_STORAGE)
+    STORAGES = {
+        "default": {
+            "BACKEND": "common.storage.R2Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
-    # Storage settings
+    # Storage settings for boto3
     AWS_STORAGE_BUCKET_NAME = R2_BUCKET_NAME
     AWS_S3_ENDPOINT_URL = R2_ENDPOINT_URL
     AWS_S3_ACCESS_KEY_ID = R2_ACCESS_KEY_ID
@@ -191,6 +197,14 @@ else:
     # Local file storage (development)
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
 # Max file upload size (10MB for church documents)
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
