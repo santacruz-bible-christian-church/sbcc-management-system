@@ -1,5 +1,5 @@
-from urllib.parse import urljoin
 import logging
+from urllib.parse import urljoin
 
 import boto3
 from botocore.client import Config
@@ -19,7 +19,7 @@ class R2Storage(Storage):
 
     def __init__(self):
         logger.debug("Initializing R2Storage backend")
-        
+
         # Check if R2 is configured
         if not getattr(settings, "USE_R2_STORAGE", False):
             raise ValueError("R2 storage is not enabled. Set USE_R2_STORAGE=true in your .env file")
@@ -46,7 +46,7 @@ class R2Storage(Storage):
             )
 
         logger.debug(f"R2 Config: bucket={settings.R2_BUCKET_NAME}")
-        
+
         self.s3_client = boto3.client(
             "s3",
             endpoint_url=settings.R2_ENDPOINT_URL,
