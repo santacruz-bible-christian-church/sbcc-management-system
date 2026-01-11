@@ -32,6 +32,9 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     """Serializer for users updating their own profile (limited fields)"""
 
+    # Allow null/empty to clear the profile picture
+    profile_picture = serializers.ImageField(required=False, allow_null=True, allow_empty_file=True)
+
     class Meta:
         model = User
         fields = [
@@ -48,6 +51,20 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         if User.objects.filter(email=value).exclude(pk=instance.pk).exists():
             raise serializers.ValidationError("A user with this email already exists.")
         return value
+
+    def update(self, instance, validated_data):
+        """Handle profile picture clearing"""
+        # If profile_picture is explicitly set to None or empty string, clear it
+        if "profile_picture" in validated_data:
+            pic_value = validated_data["profile_picture"]
+            if pic_value is None or pic_value == "":
+                # Delete old file if exists
+                if instance.profile_picture:
+                    instance.profile_picture.delete(save=False)
+                instance.profile_picture = None
+                validated_data.pop("profile_picture")
+
+        return super().update(instance, validated_data)
 
 
 class UserCreateSerializer(serializers.ModelSerializer):

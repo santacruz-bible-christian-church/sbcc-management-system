@@ -1,10 +1,13 @@
 from urllib.parse import urljoin
+import logging
 
 import boto3
 from botocore.client import Config
 from django.conf import settings
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
+
+logger = logging.getLogger(__name__)
 
 
 @deconstructible
@@ -15,6 +18,8 @@ class R2Storage(Storage):
     """
 
     def __init__(self):
+        logger.debug("Initializing R2Storage backend")
+        
         # Check if R2 is configured
         if not getattr(settings, "USE_R2_STORAGE", False):
             raise ValueError("R2 storage is not enabled. Set USE_R2_STORAGE=true in your .env file")
@@ -40,6 +45,8 @@ class R2Storage(Storage):
                 f"Make sure USE_R2_STORAGE=true and all R2_* variables are set in .env"
             )
 
+        logger.debug(f"R2 Config: bucket={settings.R2_BUCKET_NAME}")
+        
         self.s3_client = boto3.client(
             "s3",
             endpoint_url=settings.R2_ENDPOINT_URL,
@@ -62,8 +69,10 @@ class R2Storage(Storage):
                     "ContentType": getattr(content, "content_type", "application/octet-stream")
                 },
             )
+            logger.info(f"Uploaded to R2: {name}")
             return name
         except Exception as e:
+            logger.error(f"Failed to upload {name} to R2: {e}")
             raise IOError(f"Error uploading to R2: {str(e)}")
 
     def _open(self, name, mode="rb"):

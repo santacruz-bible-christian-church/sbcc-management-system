@@ -158,19 +158,19 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
 
 # ========== Cloudflare R2 Configuration ==========
-USE_R2_STORAGE = os.getenv("USE_R2_STORAGE", "False").lower() == "true"
+USE_R2_STORAGE = config("USE_R2_STORAGE", default=False, cast=bool)
 
 if USE_R2_STORAGE:
     # R2 Storage Settings
-    R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID")
-    R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID")
-    R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY")
-    R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "sbcc-files")
+    R2_ACCOUNT_ID = config("R2_ACCOUNT_ID")
+    R2_ACCESS_KEY_ID = config("R2_ACCESS_KEY_ID")
+    R2_SECRET_ACCESS_KEY = config("R2_SECRET_ACCESS_KEY")
+    R2_BUCKET_NAME = config("R2_BUCKET_NAME", default="sbcc-files")
     R2_ENDPOINT_URL = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
     # Public URL (required - get this from R2 dashboard after enabling public access)
     # Format: https://pub-{random-hash}.r2.dev or your custom domain
-    R2_PUBLIC_URL = os.getenv("R2_PUBLIC_URL")
+    R2_PUBLIC_URL = config("R2_PUBLIC_URL")
 
     # Django 5.2+ STORAGES setting (replaces deprecated DEFAULT_FILE_STORAGE)
     STORAGES = {
