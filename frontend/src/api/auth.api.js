@@ -34,11 +34,8 @@ export const authApi = {
   async uploadProfilePicture(file) {
     const formData = new FormData();
     formData.append('profile_picture', file);
-    const response = await apiClient.patch('/auth/me/', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    // Don't set Content-Type manually - axios will auto-set multipart/form-data with boundary
+    const response = await apiClient.patch('/auth/me/', formData);
     return response.data;
   },
 
