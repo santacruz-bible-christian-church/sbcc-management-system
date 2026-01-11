@@ -92,7 +92,7 @@ class CurrentUserView(generics.RetrieveUpdateAPIView):
     Get current authenticated user details
 
     PATCH /api/auth/me/
-    Update current user profile (first_name, last_name, email, phone)
+    Update current user profile (first_name, last_name, email, phone, profile_picture)
     """
 
     permission_classes = [permissions.IsAuthenticated]
@@ -104,6 +104,16 @@ class CurrentUserView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        try:
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            logging.exception("Error updating user profile for user %s", request.user.username)
+            return Response(
+                {"error": f"Failed to update profile: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class ChangePasswordView(generics.UpdateAPIView):
