@@ -1,21 +1,20 @@
 name: CI Required
 
-# This workflow runs on PRs and waits for the actual CI workflows to complete.
-# Set "All CI Passed" as the ONLY required status check in branch protection.
+# Aggregates all CI results into a single required status check.
+# Set "All CI Passed" as the ONLY required check in branch protection.
 
 on:
   pull_request:
     branches: [main]
 
 jobs:
-  # Wait for Backend CI if backend files changed
-  backend-gate:
-    name: Backend Gate
+  gate:
+    name: All CI Passed
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
 
-      - name: Check if backend files changed
+      - name: Check changed paths
         id: filter
         uses: dorny/paths-filter@v3
         with:
@@ -23,47 +22,35 @@ jobs:
             backend:
               - 'backend/**'
               - '.github/workflows/backend-ci.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/frontend-ci.yml'
+            docker:
+              - 'backend/Dockerfile'
+              - 'frontend/Dockerfile'
+              - 'docker-compose.yml'
+              - '.dockerignore'
+              - '.github/workflows/docker-ci.yml'
 
+      # Wait for Backend CI
       - name: Wait for Backend CI
         if: steps.filter.outputs.backend == 'true'
         uses: fountainhead/action-wait-for-check@v1.2.0
         id: wait-backend
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: "Django Tests"
+          checkName: "Lint, Test & Coverage"
           ref: ${{ github.event.pull_request.head.sha }}
           timeoutSeconds: 600
-          intervalSeconds: 15
+          intervalSeconds: 10
 
-      - name: Backend CI Result
-        if: steps.filter.outputs.backend == 'true'
+      - name: Verify Backend CI
+        if: steps.filter.outputs.backend == 'true' && steps.wait-backend.outputs.conclusion != 'success'
         run: |
-          if [[ "${{ steps.wait-backend.outputs.conclusion }}" != "success" ]]; then
-            echo "❌ Backend CI failed or timed out"
-            exit 1
-          fi
-          echo "✅ Backend CI passed"
+          echo "❌ Backend CI failed"
+          exit 1
 
-      - name: No backend changes
-        if: steps.filter.outputs.backend == 'false'
-        run: echo "⏭️ No backend files changed - skipping backend gate"
-
-  # Wait for Frontend CI if frontend files changed
-  frontend-gate:
-    name: Frontend Gate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Check if frontend files changed
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            frontend:
-              - 'frontend/**'
-              - '.github/workflows/frontend-ci.yml'
-
+      # Wait for Frontend CI
       - name: Wait for Frontend CI
         if: steps.filter.outputs.frontend == 'true'
         uses: fountainhead/action-wait-for-check@v1.2.0
@@ -73,41 +60,16 @@ jobs:
           checkName: "Lint & Build"
           ref: ${{ github.event.pull_request.head.sha }}
           timeoutSeconds: 600
-          intervalSeconds: 15
+          intervalSeconds: 10
 
-      - name: Frontend CI Result
-        if: steps.filter.outputs.frontend == 'true'
+      - name: Verify Frontend CI
+        if: steps.filter.outputs.frontend == 'true' && steps.wait-frontend.outputs.conclusion != 'success'
         run: |
-          if [[ "${{ steps.wait-frontend.outputs.conclusion }}" != "success" ]]; then
-            echo "❌ Frontend CI failed or timed out"
-            exit 1
-          fi
-          echo "✅ Frontend CI passed"
+          echo "❌ Frontend CI failed"
+          exit 1
 
-      - name: No frontend changes
-        if: steps.filter.outputs.frontend == 'false'
-        run: echo "⏭️ No frontend files changed - skipping frontend gate"
-
-  # Wait for Docker CI if docker files changed
-  docker-gate:
-    name: Docker Gate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Check if docker files changed
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            docker:
-              - 'backend/Dockerfile'
-              - 'frontend/Dockerfile'
-              - 'docker-compose.yml'
-              - '.dockerignore'
-              - '.github/workflows/docker-ci.yml'
-
-      - name: Wait for Docker CI - Backend
+      # Wait for Docker CI
+      - name: Wait for Docker Backend Image
         if: steps.filter.outputs.docker == 'true'
         uses: fountainhead/action-wait-for-check@v1.2.0
         id: wait-docker-backend
@@ -116,9 +78,9 @@ jobs:
           checkName: "Build Backend Image"
           ref: ${{ github.event.pull_request.head.sha }}
           timeoutSeconds: 600
-          intervalSeconds: 15
+          intervalSeconds: 10
 
-      - name: Wait for Docker CI - Frontend
+      - name: Wait for Docker Frontend Image
         if: steps.filter.outputs.docker == 'true'
         uses: fountainhead/action-wait-for-check@v1.2.0
         id: wait-docker-frontend
@@ -127,43 +89,20 @@ jobs:
           checkName: "Build Frontend Image"
           ref: ${{ github.event.pull_request.head.sha }}
           timeoutSeconds: 600
-          intervalSeconds: 15
+          intervalSeconds: 10
 
-      - name: Docker CI Result
-        if: steps.filter.outputs.docker == 'true'
+      - name: Verify Docker CI
+        if: steps.filter.outputs.docker == 'true' && (steps.wait-docker-backend.outputs.conclusion != 'success' || steps.wait-docker-frontend.outputs.conclusion != 'success')
         run: |
-          if [[ "${{ steps.wait-docker-backend.outputs.conclusion }}" != "success" ]] || \
-             [[ "${{ steps.wait-docker-frontend.outputs.conclusion }}" != "success" ]]; then
-            echo "❌ Docker CI failed or timed out"
-            exit 1
-          fi
-          echo "✅ Docker CI passed"
+          echo "❌ Docker CI failed"
+          exit 1
 
-      - name: No docker changes
-        if: steps.filter.outputs.docker == 'false'
-        run: echo "⏭️ No docker files changed - skipping docker gate"
-
-  # Final aggregated status - this is the ONLY required check
-  all-ci-passed:
-    name: All CI Passed
-    runs-on: ubuntu-latest
-    needs: [backend-gate, frontend-gate, docker-gate]
-    if: always()
-    steps:
-      - name: Check all gates
+      # Summary
+      - name: CI Summary
         run: |
-          echo "Backend Gate: ${{ needs.backend-gate.result }}"
-          echo "Frontend Gate: ${{ needs.frontend-gate.result }}"
-          echo "Docker Gate: ${{ needs.docker-gate.result }}"
-
-          if [[ "${{ needs.backend-gate.result }}" == "failure" ]] || \
-             [[ "${{ needs.frontend-gate.result }}" == "failure" ]] || \
-             [[ "${{ needs.docker-gate.result }}" == "failure" ]]; then
-            echo ""
-            echo "❌ One or more CI checks failed!"
-            echo "Check the individual workflow runs for details."
-            exit 1
-          fi
-
+          echo "📊 CI Results:"
+          echo "  Backend: ${{ steps.filter.outputs.backend == 'true' && '✅ Passed' || '⏭️ Skipped' }}"
+          echo "  Frontend: ${{ steps.filter.outputs.frontend == 'true' && '✅ Passed' || '⏭️ Skipped' }}"
+          echo "  Docker: ${{ steps.filter.outputs.docker == 'true' && '✅ Passed' || '⏭️ Skipped' }}"
           echo ""
           echo "✅ All applicable CI checks passed!"
