@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from django.conf import settings
@@ -8,13 +9,15 @@ from apps.members.models import Member
 
 from .models import Attendance
 
+logger = logging.getLogger(__name__)
+
 
 def check_frequent_absences(threshold=3, days=30, notify=False):
     """
     Check for members with frequent absences and optionally notify admins.
 
     Args:
-        threshold: Number of consecutive absences to trigger notification
+        threshold: Minimum number of absences to trigger notification
         days: Look back period in days
         notify: If True, send email notification to admins
 
@@ -33,12 +36,14 @@ def check_frequent_absences(threshold=3, days=30, notify=False):
 
         total_events = records.count()
         if total_events == 0:
+            # No attendance records in period - skip
             continue
 
         absences = records.filter(attended=False).count()
 
-        # Check if exceeds threshold
-        if absences >= threshold or member.consecutive_absences >= threshold:
+        # Only include members who have actual absences >= threshold in the date range
+        # This ensures we're using real data, not stale consecutive_absences field
+        if absences >= threshold:
             absence_rate = (absences / total_events) * 100
             problem_members.append(
                 {
@@ -101,6 +106,107 @@ def _notify_admins_about_absences(problem_members, threshold, days):
         recipient_list=list(admin_emails),
         fail_silently=True,
     )
+
+
+def send_pastoral_care_email(member, church_name="Santa Cruz Bible Christian Church"):
+    """
+    Send a caring check-in email to an absent member.
+
+    Args:
+        member: Member object with email
+        church_name: Name of the church for email
+
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    if not member.email:
+        return False
+
+    subject = f"We miss you at {church_name}!"
+
+    message = f"""Dear {member.first_name or member.full_name},
+
+We noticed you haven't been able to join us for worship recently, and we wanted to reach out to let you know that we miss you!
+
+We hope everything is well with you and your family. If there's anything we can do to help, or if you'd just like to talk, please don't hesitate to reach out to us.
+
+You are always welcome, and we look forward to seeing you again soon.
+
+With love and prayers,
+{church_name} Family
+"""
+
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[member.email],
+            fail_silently=False,
+        )
+        logger.info(f"Pastoral care email sent to {member.full_name} ({member.email})")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send pastoral care email to {member.full_name}: {e}")
+        return False
+
+
+def notify_inactive_members(threshold=3, days=30, dry_run=True):
+    """
+    Send pastoral care emails to members with frequent absences.
+
+    Args:
+        threshold: Number of absences to trigger notification
+        days: Look back period in days
+        dry_run: If True, only return list without sending emails
+
+    Returns:
+        Dict with results: members_found, emails_sent, emails_failed, skipped_no_email
+    """
+    # Get members with frequent absences
+    problem_members = check_frequent_absences(threshold=threshold, days=days, notify=False)
+
+    results = {
+        "members_found": len(problem_members),
+        "emails_sent": 0,
+        "emails_failed": 0,
+        "skipped_no_email": 0,
+        "dry_run": dry_run,
+        "members": [],
+    }
+
+    for item in problem_members:
+        member_result = {
+            "member_id": item["member_id"],
+            "member_name": item["member_name"],
+            "email": item["email"],
+            "absences": item["absences"],
+            "status": None,
+        }
+
+        if not item["email"]:
+            member_result["status"] = "skipped_no_email"
+            results["skipped_no_email"] += 1
+        elif dry_run:
+            member_result["status"] = "would_send"
+        else:
+            # Get the actual member object for sending email
+            try:
+                member = Member.objects.get(id=item["member_id"])
+                success = send_pastoral_care_email(member)
+                if success:
+                    member_result["status"] = "sent"
+                    results["emails_sent"] += 1
+                else:
+                    member_result["status"] = "failed"
+                    results["emails_failed"] += 1
+            except Member.DoesNotExist:
+                member_result["status"] = "member_not_found"
+                results["emails_failed"] += 1
+
+        results["members"].append(member_result)
+
+    return results
 
 
 def generate_member_report(member_id, days=90):
