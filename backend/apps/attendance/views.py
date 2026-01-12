@@ -17,7 +17,12 @@ from .serializers import (
     AttendanceSheetDetailSerializer,
     AttendanceSheetSerializer,
 )
-from .services import check_frequent_absences, generate_member_report, generate_ministry_report
+from .services import (
+    check_frequent_absences,
+    generate_member_report,
+    generate_ministry_report,
+    notify_inactive_members,
+)
 
 
 class AttendanceSheetViewSet(viewsets.ModelViewSet):
@@ -195,6 +200,28 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
         problem_members = check_frequent_absences(threshold=threshold, days=days, notify=notify)
 
         return Response({"threshold": threshold, "days": days, "problem_members": problem_members})
+
+    @action(detail=False, methods=["post"])
+    def notify_inactive(self, request):
+        """
+        Send pastoral care emails to members with frequent absences.
+        POST /api/attendance/sheets/notify_inactive/
+        Body: { "threshold": 3, "days": 30, "dry_run": true }
+
+        dry_run=true (default): Only returns list of who would be emailed
+        dry_run=false: Actually sends the emails
+        """
+        threshold = int(request.data.get("threshold", 3))
+        days = int(request.data.get("days", 30))
+        dry_run = request.data.get("dry_run", True)
+
+        # Handle string "true"/"false" from frontend
+        if isinstance(dry_run, str):
+            dry_run = dry_run.lower() != "false"
+
+        results = notify_inactive_members(threshold=threshold, days=days, dry_run=dry_run)
+
+        return Response(results)
 
 
 class AttendanceViewSet(viewsets.ModelViewSet):
