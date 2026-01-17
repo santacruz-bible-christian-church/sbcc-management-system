@@ -291,4 +291,6 @@ else:
     EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
     EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 
-DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="SBCC Management <noreply@sbcc.org>")
+DEFAULT_FROM_EMAIL = config(
+    "DEFAULT_FROM_EMAIL", default="SBCC Management <no-reply@pbcm-sbcc.online>"
+)
