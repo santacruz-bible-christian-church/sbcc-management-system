@@ -17,6 +17,7 @@ import {
 } from '../components';
 import EventsSidebar from '../components/EventsSidebar';
 import EventsQuickAdd from '../components/EventsQuickAdd';
+import { EventsSkeleton } from '../components/EventsSkeleton';
 
 import { MANAGER_ROLES } from '../utils/constants';
 import { prepareEventFormValues } from '../utils/format';
@@ -98,6 +99,11 @@ export const EventsPage = () => {
   };
 
   const isLoading = loading || modals.submitting;
+
+  // Show skeleton on initial load only
+  if (loading && events.length === 0) {
+    return <EventsSkeleton />;
+  }
 
   return (
     <div className="max-w-[1600px] mx-auto p-4 md:p-6">
