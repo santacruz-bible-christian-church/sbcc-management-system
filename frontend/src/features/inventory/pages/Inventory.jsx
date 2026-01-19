@@ -20,6 +20,7 @@ import {
   InventoryTable,
 } from '../components';
 import InventorySkeleton from '../components/InventorySkeleton';
+import DateRangeExportModal from '../components/DateRangeExportModal';
 
 const InventoryPage = () => {
   const {
@@ -51,6 +52,7 @@ const InventoryPage = () => {
 
   const [formState, setFormState] = useState({ open: false, mode: 'create', item: null });
   const [deleteState, setDeleteState] = useState({ open: false, item: null });
+  const [exportModalOpen, setExportModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleFilterChange = (name, value) => {
@@ -99,12 +101,13 @@ const InventoryPage = () => {
     }
   };
 
-  const handleDownloadReport = async () => {
+  const handleDownloadReport = async (dateRange = {}) => {
     try {
-      await downloadReport();
+      await downloadReport(dateRange);
       showSuccess('Depreciation report download started.');
+      setExportModalOpen(false);
     } catch (err) {
-      showError('Unable to generate the report. Ensure the backend endpoint is reachable.');
+      showError('Unable to generate the report.');
     }
   };
 
@@ -134,7 +137,7 @@ const InventoryPage = () => {
               Refresh
             </button>
             <button
-              onClick={handleDownloadReport}
+              onClick={() => setExportModalOpen(true)}
               className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
             >
               <HiOutlineDownload className="w-4 h-4" />
@@ -241,6 +244,14 @@ const InventoryPage = () => {
         confirmVariant="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={closeDelete}
+        loading={submitting}
+      />
+
+      {/* Date Range Export Modal */}
+      <DateRangeExportModal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        onExport={handleDownloadReport}
         loading={submitting}
       />
 
