@@ -6,6 +6,7 @@ import { SBCCInfoCard } from '../components/SBCCInfoCard';
 import { StatsGrid } from '../components/StatsGrid';
 import { RecentActivities } from '../components/RecentActivities';
 import { TaskWidgets } from '../components/TaskWidgets';
+import { DashboardSkeleton } from '../components/DashboardSkeleton';
 import TotalMembersStatsCard from '../components/TotalMembersStatsCard';
 import MinistryPieChart from '../components/MinistryPieChart';
 
@@ -15,12 +16,7 @@ export const DashboardPage = () => {
   const activities = useDashboardActivities(stats);
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-sbcc-cream">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-sbcc-primary border-t-transparent mb-4" />
-        <p className="text-gray-500">Loading dashboard...</p>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {

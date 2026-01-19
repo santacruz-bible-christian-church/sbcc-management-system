@@ -1,6 +1,7 @@
 import { MemberToolbar } from '../components/MemberToolbar';
 import { MemberList } from '../components/MemberList';
 import { BulkActionsBar } from '../components/BulkActionsBar';
+import { MembersSkeleton } from '../components/MembersSkeleton';
 import { useMembers } from '../hooks/useMembers';
 import { useMembersPageModals } from '../hooks/useMembersPageModals';
 import { useMembersPageActions } from '../hooks/useMembersPageActions';

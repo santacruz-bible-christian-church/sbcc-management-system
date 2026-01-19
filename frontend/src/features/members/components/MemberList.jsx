@@ -10,6 +10,7 @@ import {
 import { HiArrowPath } from 'react-icons/hi2';
 import { generateColorFromId, getContrastColor, generateHexFromId } from '../../../utils/colorUtils';
 import { Pagination } from '../../../components/ui/Pagination';
+import { MembersSkeleton } from './MembersSkeleton';
 
 
 const formatDate = (dateString) => {
@@ -204,12 +205,7 @@ export const MemberList = ({
     onSelectAll
 }) => {
     if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-10 h-10 border-4 border-[#FDB54A] border-t-transparent rounded-full animate-spin" />
-                <p className="mt-3 text-gray-500">Loading members...</p>
-            </div>
-        );
+        return <MembersSkeleton />;
     }
 
     if (!members || members.length === 0) {
