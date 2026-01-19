@@ -84,9 +84,14 @@ export const generateInventoryReportPDF = (items, summary = {}) => {
   const totalCost = items.reduce((sum, item) => sum + parseNumber(item.acquisition_cost), 0);
   const totalBookValue = items.reduce((sum, item) => {
     const metrics = item.metrics || {};
-    if (metrics.bookValue !== undefined) {
-      return sum + parseNumber(metrics.bookValue);
+    const quantity = parseInt(item.quantity) || 1;
+
+    if (metrics.totalBookValue !== undefined) {
+      return sum + parseNumber(metrics.totalBookValue);
+    } else if (metrics.bookValuePerUnit !== undefined) {
+      return sum + (parseNumber(metrics.bookValuePerUnit) * quantity);
     }
+    // Fallback to acquisition cost if no depreciation data
     return sum + parseNumber(item.acquisition_cost);
   }, 0);
 
@@ -144,12 +149,18 @@ export const generateInventoryReportPDF = (items, summary = {}) => {
 
     const cost = parseNumber(item.acquisition_cost);
     const salvage = parseNumber(item.salvage_value);
+    const quantity = parseInt(item.quantity) || 1;
 
-    // Calculate book value
+    // Calculate book value - use pre-calculated metrics if available
     let bookValue = cost;
-    if (item.metrics?.bookValue !== undefined) {
-      bookValue = parseNumber(item.metrics.bookValue);
+    if (item.metrics?.totalBookValue !== undefined) {
+      // Use total book value (accounts for quantity)
+      bookValue = parseNumber(item.metrics.totalBookValue);
+    } else if (item.metrics?.bookValuePerUnit !== undefined) {
+      // Use per-unit book value * quantity
+      bookValue = parseNumber(item.metrics.bookValuePerUnit) * quantity;
     } else if (item.acquisition_date && item.useful_life_years) {
+      // Fallback: calculate manually
       const yearsUsed = (new Date() - new Date(item.acquisition_date)) / (365 * 24 * 60 * 60 * 1000);
       const depreciableBase = Math.max(0, cost - salvage);
       const annualDep = depreciableBase / item.useful_life_years;

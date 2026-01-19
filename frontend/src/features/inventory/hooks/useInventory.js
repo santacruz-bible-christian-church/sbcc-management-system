@@ -164,8 +164,24 @@ export const useInventory = () => {
     setSearch('');
   };
 
-  const downloadReport = useCallback(() => {
-    generateInventoryReportPDF(filteredItems, summary);
+  const downloadReport = useCallback((dateRange = {}) => {
+    const { startDate, endDate } = dateRange;
+
+    // Filter items by acquisition_date if range provided
+    let itemsToExport = filteredItems;
+    if (startDate || endDate) {
+      itemsToExport = filteredItems.filter((item) => {
+        if (!item.acquisition_date) return false;
+        const itemDate = new Date(item.acquisition_date);
+
+        if (startDate && itemDate < startDate) return false;
+        if (endDate && itemDate > endDate) return false;
+
+        return true;
+      });
+    }
+
+    generateInventoryReportPDF(itemsToExport, summary);
   }, [filteredItems, summary]);
 
   return {
