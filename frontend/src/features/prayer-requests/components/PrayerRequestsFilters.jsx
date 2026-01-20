@@ -28,7 +28,7 @@ const PrayerRequestsFilters = ({
         <select
           value={priorityFilter}
           onChange={(e) => onPriorityChange(e.target.value)}
-          className="rounded-lg border border-gray-300 px-4 py-2 focus:border-[#FFB84D] focus:outline-none focus:ring-2 focus:ring-[#FFB84D]/20"
+          className="rounded-lg border border-gray-300 px-4 py-2 focus:border-[#FFB84D] focus:outline-none focus:ring-2 focus:ring-[#FFB84D]/20 cursor-pointer"
         >
           <option value="">All Priorities</option>
           {PRAYER_PRIORITY_OPTIONS.map((opt) => (
@@ -42,7 +42,7 @@ const PrayerRequestsFilters = ({
         <select
           value={categoryFilter}
           onChange={(e) => onCategoryChange(e.target.value)}
-          className="rounded-lg border border-gray-300 px-4 py-2 focus:border-[#FFB84D] focus:outline-none focus:ring-2 focus:ring-[#FFB84D]/20"
+          className="rounded-lg border border-gray-300 px-4 py-2 focus:border-[#FFB84D] focus:outline-none focus:ring-2 focus:ring-[#FFB84D]/20 cursor-pointer"
         >
           <option value="">All Categories</option>
           {PRAYER_CATEGORY_OPTIONS.map((opt) => (

@@ -115,3 +115,10 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
 }
+
+/* ✅ Date Input */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-clear-button,
+input[type="date"]::-webkit-inner-spin-button {
+  cursor: pointer;
+}

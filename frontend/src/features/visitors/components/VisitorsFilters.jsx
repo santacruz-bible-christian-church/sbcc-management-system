@@ -73,7 +73,7 @@ export function VisitorsFilters({ filters, onFilterChange, onReset }) {
           <select
             value={filters.status || ''}
             onChange={handleStatusChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent bg-white"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent bg-white cursor-pointer"
           >
             <option value="">All Statuses</option>
             {VISITOR_STATUS_OPTIONS.map((opt) => (
@@ -89,7 +89,7 @@ export function VisitorsFilters({ filters, onFilterChange, onReset }) {
           <select
             value={filters.follow_up_status || ''}
             onChange={handleFollowUpChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent bg-white"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-primary focus:border-transparent bg-white cursor-pointer"
           >
             <option value="">All Follow-ups</option>
             {FOLLOW_UP_STATUS_OPTIONS.map((opt) => (

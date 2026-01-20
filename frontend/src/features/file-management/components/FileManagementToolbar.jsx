@@ -66,7 +66,7 @@ export const FileManagementToolbar = ({
             <select
               value={currentCategory || ''}
               onChange={handleFilterDropdownChange}
-              className="bg-transparent px-4 h-full text-sm text-gray-600 outline-none border-0 min-w-[140px]"
+              className="bg-transparent px-4 h-full text-sm text-gray-600 outline-none border-0 min-w-[140px] cursor-pointer"
             >
               <option value="">All Categories</option>
               {categories.map((cat) => (

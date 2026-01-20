@@ -235,7 +235,7 @@ export const MeetingMinutesModal = ({
                       name="meeting_date"
                       value={formData.meeting_date}
                       onChange={handleChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent outline-none transition-all ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent outline-none transition-all cursor-text ${
                         errors.meeting_date ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
@@ -250,7 +250,7 @@ export const MeetingMinutesModal = ({
                       name="category"
                       value={formData.category}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent outline-none transition-all"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent outline-none transition-all cursor-pointer"
                     >
                       {categories.map((cat) => (
                         <option key={cat.value} value={cat.value}>

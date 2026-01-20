@@ -57,7 +57,7 @@ export default function AttendanceFilterBar({
         <select
           value={ministryFilter}
           onChange={(e) => onMinistryChange(e.target.value)}
-          className="bg-transparent px-4 py-2 text-sm text-gray-600 outline-none border-0 min-w-[160px]"
+          className="bg-transparent px-4 py-2 text-sm text-gray-600 outline-none border-0 min-w-[160px] cursor-pointer"
           disabled={disabled || saving}
         >
           <option value="">All Ministries</option>

@@ -74,7 +74,7 @@ export const TaskForm = ({ initialValues, onSubmit, onCancel, submitting }) => {
   };
 
   const inputClasses = "w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all outline-none text-gray-900 text-sm";
-  const selectClasses = `${inputClasses} appearance-none`;
+  const selectClasses = `${inputClasses} appearance-none cursor-pointer`;
   const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
 
   return (
@@ -154,7 +154,7 @@ export const TaskForm = ({ initialValues, onSubmit, onCancel, submitting }) => {
               name="start_date"
               value={formData.start_date}
               onChange={handleChange}
-              className={inputClasses}
+              className={`${inputClasses} cursor-pointer`}
             />
             {errors.start_date && <p className="mt-1 text-xs text-red-500">{errors.start_date}</p>}
           </div>
@@ -168,7 +168,7 @@ export const TaskForm = ({ initialValues, onSubmit, onCancel, submitting }) => {
               name="end_date"
               value={formData.end_date}
               onChange={handleChange}
-              className={inputClasses}
+              className={`${inputClasses} cursor-pointer`}
             />
             {errors.end_date && <p className="mt-1 text-xs text-red-500">{errors.end_date}</p>}
           </div>

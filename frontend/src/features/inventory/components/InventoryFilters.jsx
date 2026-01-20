@@ -55,7 +55,7 @@ export const InventoryFilters = ({
             name="status"
             value={filters.status}
             onChange={handleFilterChange}
-            className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
           >
             {STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -71,7 +71,7 @@ export const InventoryFilters = ({
             name="label"
             value={filters.label}
             onChange={handleFilterChange}
-            className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
           >
             {LABEL_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -87,7 +87,7 @@ export const InventoryFilters = ({
             name="ministry"
             value={filters.ministry}
             onChange={handleFilterChange}
-            className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
           >
             <option value="all">All ministries</option>
             {ministryOptions.map((ministry) => (
