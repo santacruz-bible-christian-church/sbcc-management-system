@@ -48,7 +48,7 @@ const EventsQuickAdd = ({ onCreate, submitting }) => {
     setIsExpanded(false);
   };
 
-  const inputClass = "w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:bg-white focus:border-sbcc-orange focus:ring-1 focus:ring-sbcc-orange transition-all";
+  const inputClass = "w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:bg-white focus:border-sbcc-orange focus:ring-1 focus:ring-sbcc-orange transition-all cursor-text";
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -90,7 +90,7 @@ const EventsQuickAdd = ({ onCreate, submitting }) => {
               Date *
             </label>
             <div className="relative">
-              <HiOutlineCalendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <HiOutlineCalendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer" />
               <input
                 type="date"
                 value={date}
@@ -161,6 +161,7 @@ const EventsQuickAdd = ({ onCreate, submitting }) => {
                   value={eventType}
                   onChange={(e) => setEventType(e.target.value)}
                   className={inputClass}
+                  style={{ cursor: 'pointer' }}
                 >
                   {EVENT_TYPE_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>

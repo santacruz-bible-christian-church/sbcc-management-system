@@ -138,6 +138,7 @@ export const InventoryForm = ({
             }
             placeholder={hasMinistryOptions ? 'Select a ministry' : 'No ministries available'}
             disabled={!hasMinistryOptions}
+            style={{ cursor: hasMinistryOptions ? 'pointer' : 'not-allowed' }}
           />
           <p className="text-xs text-sbcc-gray">
             {hasMinistryOptions
@@ -169,7 +170,7 @@ export const InventoryForm = ({
             name="acquisition_date"
             value={values.acquisition_date}
             onChange={handleChange}
-            className="w-full rounded-2xl border border-sbcc-gray/30 bg-white px-4 py-3 text-sbcc-dark focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[color:var(--sbcc-primary)]"
+            className="w-full rounded-2xl border border-sbcc-gray/30 bg-white px-4 py-3 text-sbcc-dark focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[color:var(--sbcc-primary)] cursor-text"
           />
         </div>
 
@@ -181,7 +182,7 @@ export const InventoryForm = ({
             name="status"
             value={values.status}
             onChange={handleChange}
-            className="w-full rounded-2xl border border-sbcc-gray/30 bg-white px-4 py-3 text-sbcc-dark focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[color:var(--sbcc-primary)]"
+            className="w-full rounded-2xl border border-sbcc-gray/30 bg-white px-4 py-3 text-sbcc-dark focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[color:var(--sbcc-primary)] cursor-pointer"
           >
             {STATUS_OPTIONS.filter((option) => option.value !== 'all').map((option) => (
               <option key={option.value} value={option.value}>
@@ -259,7 +260,7 @@ export const InventoryForm = ({
             name="label"
             value={values.label}
             onChange={handleChange}
-            className="w-full rounded-2xl border border-sbcc-gray/30 bg-white px-4 py-3 text-sbcc-dark focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[color:var(--sbcc-primary)]"
+            className="w-full rounded-2xl border border-sbcc-gray/30 bg-white px-4 py-3 text-sbcc-dark focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[color:var(--sbcc-primary)] cursor-pointer"
           >
             {LABEL_OPTIONS.filter((option) => option.value !== 'all').map((option) => (
               <option key={option.value} value={option.value}>

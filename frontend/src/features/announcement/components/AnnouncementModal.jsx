@@ -113,7 +113,7 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
               required
               value={formData.audience}
               onChange={(e) => setFormData({ ...formData, audience: e.target.value, ministry: '' })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A]"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] cursor-pointer"
             >
               {AUDIENCE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -156,7 +156,7 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
               required
               value={formData.publish_at}
               onChange={(e) => setFormData({ ...formData, publish_at: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A]"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] cursor-text"
             />
           </div>
 
@@ -169,7 +169,7 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
               type="datetime-local"
               value={formData.expire_at}
               onChange={(e) => setFormData({ ...formData, expire_at: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A]"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] cursor-text"
             />
           </div>
 

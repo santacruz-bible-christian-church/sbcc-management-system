@@ -190,7 +190,7 @@ export default function HelpCenter() {
   }
 
   return (
-    <div className="w-full h-full overflow-y-auto bg-[#F5F5F5]">
+    <div className="w-full h-full overflow-y-auto bg-[var(--sbcc-cream)]">
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Hero */}
         <div className="mb-8">

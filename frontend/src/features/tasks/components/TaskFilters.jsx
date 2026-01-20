@@ -43,7 +43,7 @@ export const TaskFilters = ({
               name="status"
               value={filters.status}
               onChange={onFilterChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-orange focus:border-transparent"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-orange focus:border-transparent cursor-pointer"
             >
               <option value="">All Statuses</option>
               <option value="pending">Pending</option>
@@ -63,7 +63,7 @@ export const TaskFilters = ({
               name="priority"
               value={filters.priority}
               onChange={onFilterChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-orange focus:border-transparent"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-orange focus:border-transparent cursor-pointer"
             >
               <option value="">All Priorities</option>
               <option value="urgent">Urgent</option>
@@ -81,7 +81,7 @@ export const TaskFilters = ({
             <select
               value={ordering}
               onChange={(e) => onOrderingChange(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-orange focus:border-transparent"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sbcc-orange focus:border-transparent cursor-pointer"
             >
               <option value="-priority,end_date">Priority (High to Low)</option>
               <option value="priority,end_date">Priority (Low to High)</option>

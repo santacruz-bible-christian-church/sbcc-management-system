@@ -38,7 +38,7 @@ export const TaskCardKanban = ({ task, onClick }) => {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={() => onClick(task)}
-      className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-gray-200"
+      className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-gray-200 cursor-grab active:cursor-grabbing"
     >
       {/* Header: Title + Priority/Status Badge */}
       <div className="flex items-start justify-between mb-3">

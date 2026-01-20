@@ -29,7 +29,7 @@ const AnnouncementFilters = ({
         <select
           value={audienceFilter}
           onChange={(e) => setAudienceFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A]"
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] cursor-pointer"
         >
           <option value="">All Audiences</option>
           {AUDIENCE_OPTIONS.map((option) => (
@@ -43,7 +43,7 @@ const AnnouncementFilters = ({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A]"
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] cursor-pointer"
         >
           <option value="">All Status</option>
           <option value="scheduled">Scheduled</option>

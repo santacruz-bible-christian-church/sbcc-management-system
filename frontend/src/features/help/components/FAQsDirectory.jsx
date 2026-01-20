@@ -8,7 +8,7 @@ const QA = ({ q, a, id }) => (
   </div>
 )
 
-export default function FAQsDirectory({ onBack, targetSection }) {
+export default function FAQs({ onBack, targetSection }) {
   const faqs = [
     { id: 'faq-reset-password', q: 'How do I reset my password?', a: 'Use the "Forgot Password" link on the login page and follow the steps sent to your email.' },
     { id: 'faq-access-settings', q: "Why can't I access Settings?", a: "Settings are restricted to Admins. Ask an Admin to grant appropriate role permissions." },
@@ -26,8 +26,11 @@ export default function FAQsDirectory({ onBack, targetSection }) {
   }, [targetSection])
 
   return (
-    <div className="w-full h-full overflow-y-auto bg-[#F5F5F5]">
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-4">
+    <div
+      className="w-full min-h-screen overflow-y-auto"
+      style={{ backgroundColor: 'var(--sbcc-cream)' }}
+    >
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-4">
         <button
           className="mb-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-700 text-sm font-medium"
           onClick={onBack}

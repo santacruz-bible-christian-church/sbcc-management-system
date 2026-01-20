@@ -34,13 +34,13 @@ const FormSelect = ({ label, name, value, onChange, options, error, required, di
       value={value || ""}
       onChange={onChange}
       disabled={disabled}
-      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FDB54A]/50 focus:border-[#FDB54A] transition-all ${
+      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FDB54A]/50 focus:border-[#FDB54A] transition-all cursor-pointer ${
         error ? "border-red-500" : "border-gray-200"
       } ${disabled ? "bg-gray-100" : ""}`}
     >
       <option value="">Select...</option>
       {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>
+        <option key={opt.value} value={opt.value} style={{ cursor: 'pointer' }}>
           {opt.label}
         </option>
       ))}
