@@ -1,5 +1,13 @@
+from io import BytesIO
+
 from django.db import transaction
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import cm
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -234,6 +242,115 @@ class MeetingMinutesViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(restored)
         return Response(serializer.data)
+
+    @action(detail=True, methods=["get"], url_path="export-pdf")
+    def export_pdf(self, request, pk=None):
+        """
+        Export meeting minutes as PDF.
+        GET /api/meeting-minutes/{id}/export-pdf/
+        """
+        meeting = self.get_object()
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            leftMargin=2 * cm,
+            rightMargin=2 * cm,
+            topMargin=2 * cm,
+            bottomMargin=2 * cm,
+        )
+
+        styles = getSampleStyleSheet()
+        elements = []
+
+        # Title
+        elements.append(Paragraph(meeting.title, styles["Title"]))
+        elements.append(Spacer(1, 0.3 * cm))
+
+        # Metadata table
+        meta_data = [
+            ["Date:", meeting.meeting_date.strftime("%B %d, %Y")],
+            ["Category:", meeting.get_category_display()],
+        ]
+        if meeting.ministry:
+            meta_data.append(["Ministry:", meeting.ministry.name])
+
+        meta_table = Table(meta_data, colWidths=[3 * cm, 12 * cm])
+        meta_table.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+                    ("ALIGN", (0, 0), (0, -1), "RIGHT"),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ]
+            )
+        )
+        elements.append(meta_table)
+        elements.append(Spacer(1, 0.5 * cm))
+
+        # Attendees section
+        if meeting.attendees:
+            elements.append(Paragraph("Attendees", styles["Heading2"]))
+            elements.append(Spacer(1, 0.2 * cm))
+            elements.append(Paragraph(meeting.attendees, styles["Normal"]))
+            elements.append(Spacer(1, 0.5 * cm))
+
+        # Content section
+        elements.append(Paragraph("Meeting Notes", styles["Heading2"]))
+        elements.append(Spacer(1, 0.2 * cm))
+
+        # Split content by lines and add as paragraphs
+        content_style = ParagraphStyle(
+            "ContentStyle",
+            parent=styles["Normal"],
+            spaceBefore=6,
+            spaceAfter=6,
+        )
+        for paragraph in meeting.content.split("\n"):
+            if paragraph.strip():
+                elements.append(Paragraph(paragraph, content_style))
+
+        # Attachments list
+        if meeting.attachments.exists():
+            elements.append(Spacer(1, 0.5 * cm))
+            elements.append(Paragraph("Attachments", styles["Heading2"]))
+            elements.append(Spacer(1, 0.2 * cm))
+            for attachment in meeting.attachments.all():
+                elements.append(
+                    Paragraph(
+                        f"• {attachment.file_name} ({attachment.file_size_mb} MB)", styles["Normal"]
+                    )
+                )
+
+        # Footer
+        elements.append(Spacer(1, 1 * cm))
+        footer_style = ParagraphStyle(
+            "FooterStyle",
+            parent=styles["Normal"],
+            fontSize=8,
+            textColor=colors.grey,
+        )
+        elements.append(
+            Paragraph(
+                f"Generated from SBCC Management System • Created by {meeting.created_by.get_full_name()}",
+                footer_style,
+            )
+        )
+
+        doc.build(elements)
+        pdf_value = buffer.getvalue()
+        buffer.close()
+
+        # Generate safe filename
+        safe_title = "".join(c if c.isalnum() or c in " -_" else "" for c in meeting.title)
+        filename = f"{safe_title}_{meeting.meeting_date}.pdf".replace(" ", "_")
+
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        response.write(pdf_value)
+        return response
 
 
 class MeetingMinutesAttachmentViewSet(viewsets.ModelViewSet):
