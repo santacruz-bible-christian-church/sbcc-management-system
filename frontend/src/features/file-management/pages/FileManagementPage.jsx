@@ -5,6 +5,7 @@ import { FoldersListView } from '../components/FoldersListView';
 import { FilesListView } from '../components/FilesListView';
 import { FoldersGridView } from '../components/FoldersGridView';
 import { FilesGridView } from '../components/FilesGridView';
+import { CollapsibleFoldersView } from '../components/CollapsibleFoldersView';
 import { MeetingMinutesModal } from '../components/MeetingMinutesModal';
 import { FileManagementSkeleton } from '../components/FileManagementSkeleton';
 import { FileManagementToolbar } from '../components/FileManagementToolbar';
@@ -31,6 +32,7 @@ export const FileManagementPage = () => {
     deleteMeeting,
     uploadAttachment,
     deleteAttachment,
+    exportPdf,
     getFolders,
     getFiles,
     getAttachments,
@@ -93,11 +95,15 @@ export const FileManagementPage = () => {
 
   // Get display data based on current view
   const folders = currentCategory === null && !viewingMeeting ? getFolders() : [];
+  const allFiles = getFiles(); // All files for collapsible view
   const files = viewingMeeting
     ? getAttachments()
     : (currentCategory !== null
         ? getFiles().filter(f => f._original?.category === currentCategory)
         : getFiles());
+
+  // Check if we're at home (no category filter, not viewing a meeting, not searching)
+  const isHome = currentCategory === null && !viewingMeeting;
 
   // Debounced search
   const debouncedSearchTerm = useDebounce(searchTerm, 400);
@@ -184,44 +190,57 @@ export const FileManagementPage = () => {
         {/* Content */}
         {!loading && (
           <>
-            {viewMode === 'grid' ? (
+            {/* Home View - Collapsible Folders (List mode only, when not searching) */}
+            {isHome && !isSearching && viewMode === 'list' && (
+              <CollapsibleFoldersView
+                folders={folders}
+                files={allFiles}
+                onFolderClick={handleFolderClick}
+                onFileClick={onFileClick}
+                onFileDelete={openDeleteModal}
+                onExportPdf={exportPdf}
+              />
+            )}
+
+            {/* Home View - Grid mode (when not searching) */}
+            {isHome && !isSearching && viewMode === 'grid' && (
               <div className="space-y-6">
-                {!isSearching && (
-                  <FoldersGridView
-                    folders={folders}
-                    selectedFiles={selectedFiles}
-                    onToggleSelection={toggleFileSelection}
-                    onDelete={openDeleteModal}
-                    onFolderClick={handleFolderClick}
-                  />
-                )}
-                <FilesGridView
-                  files={files}
+                <FoldersGridView
+                  folders={folders}
                   selectedFiles={selectedFiles}
                   onToggleSelection={toggleFileSelection}
                   onDelete={openDeleteModal}
-                  onFileClick={onFileClick}
+                  onFolderClick={handleFolderClick}
                 />
               </div>
-            ) : (
-              <div className="space-y-6">
-                {!isSearching && (
-                  <FoldersListView
-                    folders={folders}
-                    selectedFiles={selectedFiles}
-                    onToggleSelection={toggleFileSelection}
-                    onDelete={openDeleteModal}
-                    onFolderClick={handleFolderClick}
-                  />
+            )}
+
+            {/* Category/Attachment View or Search Results */}
+            {(!isHome || isSearching) && (
+              <>
+                {viewMode === 'grid' ? (
+                  <div className="space-y-6">
+                    <FilesGridView
+                      files={files}
+                      selectedFiles={selectedFiles}
+                      onToggleSelection={toggleFileSelection}
+                      onDelete={openDeleteModal}
+                      onFileClick={onFileClick}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <FilesListView
+                      files={files}
+                      selectedFiles={selectedFiles}
+                      onToggleSelection={toggleFileSelection}
+                      onDelete={openDeleteModal}
+                      onFileClick={onFileClick}
+                      onExportPdf={exportPdf}
+                    />
+                  </div>
                 )}
-                <FilesListView
-                  files={files}
-                  selectedFiles={selectedFiles}
-                  onToggleSelection={toggleFileSelection}
-                  onDelete={openDeleteModal}
-                  onFileClick={onFileClick}
-                />
-              </div>
+              </>
             )}
 
             {/* Empty State */}
