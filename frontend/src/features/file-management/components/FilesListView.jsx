@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { HiDownload, HiTrash, HiPencil } from 'react-icons/hi';
 
-export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelete, onFileClick }) => {
+export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelete, onFileClick, onExportPdf }) => {
   if (files.length === 0) return null;
 
   const handleEdit = (file, e) => {
@@ -12,6 +12,13 @@ export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelet
   const handleDelete = (file, e) => {
     e.stopPropagation();
     onDelete(file);
+  };
+
+  const handleExportPdf = (file, e) => {
+    e.stopPropagation();
+    // Use the original meeting ID if available
+    const meetingId = file._original?.id || file.id;
+    onExportPdf && onExportPdf(meetingId);
   };
 
   return (
@@ -42,7 +49,7 @@ export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelet
                 <td className="px-6 py-4">
                   <span className="text-sm text-gray-500">{file.modified}</span>
                 </td>
-                <td className="w-28 px-6 py-4">
+                <td className="w-32 px-6 py-4">
                   <div className="flex items-center gap-1">
                     {/* Edit Button */}
                     <button
@@ -53,8 +60,9 @@ export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelet
                       <HiPencil className="w-4 h-4 text-gray-500" />
                     </button>
 
-                    {/* Download Button - Only show if file has URL */}
-                    {file.fileUrl && (
+                    {/* Download/Export PDF Button */}
+                    {file.fileUrl ? (
+                      // Attachment with direct URL
                       <a
                         href={file.fileUrl}
                         target="_blank"
@@ -66,7 +74,16 @@ export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelet
                       >
                         <HiDownload className="w-4 h-4 text-gray-500" />
                       </a>
-                    )}
+                    ) : onExportPdf ? (
+                      // Meeting minutes - export as PDF
+                      <button
+                        onClick={(e) => handleExportPdf(file, e)}
+                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Download PDF"
+                      >
+                        <HiDownload className="w-4 h-4 text-gray-500" />
+                      </button>
+                    ) : null}
 
                     {/* Delete Button */}
                     <button
@@ -104,4 +121,5 @@ FilesListView.propTypes = {
   onToggleSelection: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
   onFileClick: PropTypes.func,
+  onExportPdf: PropTypes.func,
 };

@@ -151,9 +151,13 @@ class MeetingMinutesViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     def perform_destroy(self, instance):
-        """Soft delete instead of hard delete."""
-        instance.is_active = False
-        instance.save()
+        """
+        Hard delete meeting minutes and all associated data.
+        The CASCADE on attachments + model delete() method handles R2 cleanup.
+        """
+        # Attachments are automatically deleted via CASCADE
+        # Each attachment's delete() method cleans up R2 files
+        instance.delete()
 
     @action(detail=False, methods=["get"])
     def search(self, request):

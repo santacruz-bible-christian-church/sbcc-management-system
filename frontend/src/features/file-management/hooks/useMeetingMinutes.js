@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { HiFolder, HiDocument, HiPhotograph, HiDocumentText } from 'react-icons/hi';
 import { meetingMinutesApi } from '../../../api/meeting-minutes.api';
+import { generateMeetingMinutesPDF } from '../utils/meetingMinutesPDF';
 import { formatDistanceToNow } from 'date-fns';
 
 // Map file extensions to icons and colors
@@ -188,6 +189,20 @@ export const useMeetingMinutes = () => {
     }
   }, [selectedMeeting, getMeeting]);
 
+  // Export meeting as PDF (frontend generation)
+  const exportPdf = useCallback(async (meetingId) => {
+    try {
+      // Fetch full meeting details with attachments
+      const fullMeeting = await meetingMinutesApi.get(meetingId);
+
+      // Generate PDF on frontend
+      generateMeetingMinutesPDF(fullMeeting);
+    } catch (err) {
+      console.error('Failed to export PDF:', err);
+      throw err;
+    }
+  }, []);
+
   // Get folders (categories with meeting counts)
   const getFolders = useCallback(() => {
     const countByCategory = meetings.reduce((acc, meeting) => {
@@ -240,6 +255,7 @@ export const useMeetingMinutes = () => {
     deleteMeeting,
     uploadAttachment,
     deleteAttachment,
+    exportPdf,
     setSelectedMeeting,
 
     // Transformed data for UI

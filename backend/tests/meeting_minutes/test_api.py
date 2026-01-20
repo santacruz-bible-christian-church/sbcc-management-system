@@ -141,25 +141,33 @@ class TestMeetingMinutesRetrieveUpdateDelete:
         # Check version was created
         assert meeting_minutes.versions.filter(content=original_content).exists()
 
-    def test_soft_delete(self, admin_client, meeting_minutes):
-        """Test soft delete (archive) meeting minutes."""
-        url = reverse("meeting-minutes-detail", kwargs={"pk": meeting_minutes.pk})
+    def test_hard_delete(self, admin_client, meeting_minutes):
+        """Test hard delete (permanently removes) meeting minutes."""
+        from apps.meeting_minutes.models import MeetingMinutes
+
+        meeting_id = meeting_minutes.pk
+        url = reverse("meeting-minutes-detail", kwargs={"pk": meeting_id})
         response = admin_client.delete(url)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        meeting_minutes.refresh_from_db()
-        assert meeting_minutes.is_active is False
+        # Record should be completely deleted
+        assert not MeetingMinutes.objects.filter(pk=meeting_id).exists()
 
-    def test_deleted_not_in_list(self, admin_client, meeting_minutes):
-        """Test soft-deleted items don't appear in list."""
-        meeting_minutes.is_active = False
-        meeting_minutes.save()
+    def test_hard_delete_cascades_attachments(self, admin_client, meeting_attachment):
+        """Test that deleting meeting also deletes attachments."""
+        from apps.meeting_minutes.models import MeetingMinutes, MeetingMinutesAttachment
 
-        url = reverse("meeting-minutes-list")
-        response = admin_client.get(url)
+        meeting = meeting_attachment.meeting_minutes
+        meeting_id = meeting.pk
+        attachment_id = meeting_attachment.pk
 
-        ids = [m["id"] for m in response.data["results"]]
-        assert meeting_minutes.id not in ids
+        url = reverse("meeting-minutes-detail", kwargs={"pk": meeting_id})
+        response = admin_client.delete(url)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        # Both meeting and attachment should be deleted
+        assert not MeetingMinutes.objects.filter(pk=meeting_id).exists()
+        assert not MeetingMinutesAttachment.objects.filter(pk=attachment_id).exists()
 
 
 @pytest.mark.django_db

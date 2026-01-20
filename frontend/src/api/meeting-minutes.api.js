@@ -51,6 +51,14 @@ export const meetingMinutesApi = {
     return response.data;
   },
 
+  // ========== Export PDF ==========
+  exportPdf: async (id) => {
+    const response = await apiClient.get(`/meeting-minutes/${id}/export-pdf/`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
   // ========== Versions ==========
   getVersions: async (meetingId) => {
     const response = await apiClient.get(`/meeting-minutes/${meetingId}/versions/`);
