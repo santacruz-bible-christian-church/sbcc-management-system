@@ -3,6 +3,7 @@ from decimal import Decimal
 from io import BytesIO
 
 from django.http import HttpResponse
+from django_filters.rest_framework import DjangoFilterBackend
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
@@ -10,17 +11,34 @@ from reportlab.lib.units import cm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
 
 from .models import InventoryTracking
 from .serializers import InventoryTrackingSerializer
 
 
 class InventoryTrackingViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing inventory items with depreciation tracking.
+
+    Supports:
+    - CRUD operations
+    - Filtering by status, ministry_name
+    - Search by item_name, description, label
+    - Ordering by any field
+    - PDF report generation
+    """
+
     queryset = InventoryTracking.objects.all()
     serializer_class = InventoryTrackingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    # ...existing code (perform_create, perform_update, printable_list)...
+    # Filtering & Search
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["status", "ministry_name"]
+    search_fields = ["item_name", "description", "label", "remarks"]
+    ordering_fields = ["item_name", "acquisition_date", "acquisition_cost", "status", "created_at"]
+    ordering = ["-created_at"]  # Default ordering
 
     @action(detail=False, methods=["get"], url_path="report-pdf")
     def report_pdf(self, request):
