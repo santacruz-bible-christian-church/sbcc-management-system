@@ -8,7 +8,8 @@ const AssignModal = ({
   teamMembers,
   selectedUserId,
   onSelectUser,
-  onAssign
+  onAssign,
+  submitting = false
 }) => {
   if (!isOpen || !request) return null;
 
@@ -19,7 +20,8 @@ const AssignModal = ({
           <h2 className="text-2xl font-bold text-gray-800">Assign Prayer Team</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            disabled={submitting}
+            className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
           >
             <HiX className="text-3xl" />
           </button>
@@ -35,7 +37,8 @@ const AssignModal = ({
               key={member.id}
               type="button"
               onClick={() => onSelectUser(String(member.id))}
-              className={`w-full flex items-center gap-3 rounded-lg border-2 p-4 transition-all hover:border-[#FFB84D] hover:bg-[#FFB84D]/5 text-left ${
+              disabled={submitting}
+              className={`w-full flex items-center gap-3 rounded-lg border-2 p-4 transition-all hover:border-[#FFB84D] hover:bg-[#FFB84D]/5 text-left disabled:opacity-50 disabled:cursor-not-allowed ${
                 selectedUserId === String(member.id)
                   ? 'border-[#FFB84D] bg-[#FFB84D]/10'
                   : 'border-gray-200'
@@ -59,17 +62,18 @@ const AssignModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-lg border border-gray-300 px-6 py-3 font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            disabled={submitting}
+            className="flex-1 rounded-lg border border-gray-300 px-6 py-3 font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onAssign}
-            disabled={!selectedUserId}
+            disabled={!selectedUserId || submitting}
             className="flex-1 rounded-lg bg-[#FFB84D] px-6 py-3 font-medium text-white hover:bg-[#FFA726] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Assign
+            {submitting ? 'Assigning...' : 'Assign'}
           </button>
         </div>
       </div>
