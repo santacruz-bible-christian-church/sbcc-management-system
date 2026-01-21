@@ -8,9 +8,16 @@ const FollowUpModal = ({
   request,
   formData,
   onChange,
-  onSubmit
+  onSubmit,
+  submitting = false,
 }) => {
   if (!isOpen || !request) return null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (submitting) return; // Prevent double submission
+    onSubmit(e);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -19,7 +26,8 @@ const FollowUpModal = ({
           <h2 className="text-2xl font-bold text-gray-800">Add Follow-Up</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            disabled={submitting}
+            className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <HiX className="text-3xl" />
           </button>
@@ -65,7 +73,7 @@ const FollowUpModal = ({
           </div>
         )}
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Action Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -74,7 +82,8 @@ const FollowUpModal = ({
             <select
               value={formData.action_type}
               onChange={(e) => onChange({ ...formData, action_type: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[#FFB84D] focus:outline-none focus:ring-2 focus:ring-[#FFB84D]/20"
+              disabled={submitting}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[#FFB84D] focus:outline-none focus:ring-2 focus:ring-[#FFB84D]/20 disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               {FOLLOW_UP_ACTION_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -93,8 +102,9 @@ const FollowUpModal = ({
               required
               value={formData.notes}
               onChange={(e) => onChange({ ...formData, notes: e.target.value })}
+              disabled={submitting}
               rows={6}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-[#FFB84D] focus:outline-none focus:ring-2 focus:ring-[#FFB84D]/20"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-[#FFB84D] focus:outline-none focus:ring-2 focus:ring-[#FFB84D]/20 disabled:bg-gray-100 disabled:cursor-not-allowed"
               placeholder="Share an update, testimony, or continued prayer points..."
             />
           </div>
@@ -107,7 +117,8 @@ const FollowUpModal = ({
             <select
               value={formData.update_status}
               onChange={(e) => onChange({ ...formData, update_status: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[#FFB84D] focus:outline-none focus:ring-2 focus:ring-[#FFB84D]/20"
+              disabled={submitting}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[#FFB84D] focus:outline-none focus:ring-2 focus:ring-[#FFB84D]/20 disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               <option value="">Keep current status</option>
               {PRAYER_STATUS_OPTIONS.map((opt) => (
@@ -125,7 +136,8 @@ const FollowUpModal = ({
               id="is_private_followup"
               checked={formData.is_private}
               onChange={(e) => onChange({ ...formData, is_private: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300 text-[#FFB84D] focus:ring-[#FFB84D]"
+              disabled={submitting}
+              className="h-4 w-4 rounded border-gray-300 text-[#FFB84D] focus:ring-[#FFB84D] disabled:cursor-not-allowed"
             />
             <label htmlFor="is_private_followup" className="text-sm text-gray-700">
               Private note (visible only to prayer team)
@@ -137,15 +149,24 @@ const FollowUpModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 px-6 py-3 font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              disabled={submitting}
+              className="flex-1 rounded-lg border border-gray-300 px-6 py-3 font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 rounded-lg bg-[#FFB84D] px-6 py-3 font-medium text-white hover:bg-[#FFA726] transition-colors"
+              disabled={submitting}
+              className="flex-1 rounded-lg bg-[#FFB84D] px-6 py-3 font-medium text-white hover:bg-[#FFA726] transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Add Follow-Up
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                'Add Follow-Up'
+              )}
             </button>
           </div>
         </form>

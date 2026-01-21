@@ -45,6 +45,7 @@ const PrayerRequestsPage = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [assignToUserId, setAssignToUserId] = useState('');
   const [followUpData, setFollowUpData] = useState(INITIAL_FOLLOW_UP_DATA);
+  const [isSubmittingFollowUp, setIsSubmittingFollowUp] = useState(false);
 
   // Statistics & Team Members
   const [statistics, setStatistics] = useState(null);
@@ -136,6 +137,7 @@ const PrayerRequestsPage = () => {
       return;
     }
 
+    setIsSubmittingFollowUp(true);
     try {
       await addPrayerRequestFollowUp(selectedRequest.id, followUpData);
       showSuccess('Follow-up added successfully!');
@@ -144,6 +146,8 @@ const PrayerRequestsPage = () => {
     } catch (err) {
       console.error('Follow-up error:', err);
       showError(err.response?.data?.detail || 'Failed to add follow-up');
+    } finally {
+      setIsSubmittingFollowUp(false);
     }
   };
 
@@ -251,6 +255,7 @@ const PrayerRequestsPage = () => {
           formData={followUpData}
           onChange={setFollowUpData}
           onSubmit={handleAddFollowUp}
+          submitting={isSubmittingFollowUp}
         />
       </div>
     </main>

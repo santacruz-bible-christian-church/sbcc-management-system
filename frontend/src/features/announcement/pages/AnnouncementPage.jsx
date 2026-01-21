@@ -27,8 +27,7 @@ const AnnouncementPage = () => {
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
-
-  // Action modals
+  const [isSubmittingAnnouncement, setIsSubmittingAnnouncement] = useState(false);
   const [previewModal, setPreviewModal] = useState({ isOpen: false, data: null, announcement: null });
   const [sendNowModal, setSendNowModal] = useState({ isOpen: false, announcement: null });
   const [deactivateModal, setDeactivateModal] = useState({ isOpen: false, announcement: null });
@@ -68,6 +67,7 @@ const AnnouncementPage = () => {
   };
 
   const handleSubmit = async (data) => {
+    setIsSubmittingAnnouncement(true);
     try {
       if (editingAnnouncement) {
         await updateAnnouncement(editingAnnouncement.id, data);
@@ -79,6 +79,8 @@ const AnnouncementPage = () => {
     } catch (error) {
       console.error('Error saving announcement:', error);
       showError('Failed to save announcement. Please try again.');
+    } finally {
+      setIsSubmittingAnnouncement(false);
     }
   };
 
@@ -202,6 +204,7 @@ const AnnouncementPage = () => {
           }}
           onSubmit={handleSubmit}
           announcement={editingAnnouncement}
+          submitting={isSubmittingAnnouncement}
         />
 
         <PreviewRecipientsModal
