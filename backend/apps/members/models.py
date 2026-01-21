@@ -98,6 +98,21 @@ class Member(models.Model):
 
     class Meta:
         db_table = "members"
+        indexes = [
+            # Single field indexes for filtering
+            models.Index(fields=["status"]),
+            models.Index(fields=["gender"]),
+            models.Index(fields=["is_active"]),
+            # Composite indexes for common queries
+            models.Index(fields=["status", "is_active"]),
+            models.Index(fields=["ministry", "status"]),
+            # For birthday/anniversary queries
+            models.Index(fields=["date_of_birth"]),
+            models.Index(fields=["wedding_anniversary"]),
+            # For search (partial - full-text would be better)
+            models.Index(fields=["last_name", "first_name"]),
+            models.Index(fields=["email"]),
+        ]
         ordering = ["last_name", "first_name"]
 
     def __str__(self):

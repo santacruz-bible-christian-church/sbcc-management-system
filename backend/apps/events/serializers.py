@@ -24,7 +24,7 @@ class EventRegistrationSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     organizer_name = serializers.CharField(source="organizer.get_full_name", read_only=True)
     ministry_name = serializers.CharField(source="ministry.name", read_only=True, allow_null=True)
-    registration_count = serializers.IntegerField(source="registrations.count", read_only=True)
+    registration_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Event

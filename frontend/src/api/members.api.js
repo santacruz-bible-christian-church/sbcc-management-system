@@ -49,6 +49,27 @@ export const membersApi = {
     return response.data;
   },
 
+  // Bulk delete members (new efficient endpoint)
+  bulkDelete: async (ids) => {
+    // Handle batching if more than 100 IDs (backend limit)
+    if (ids.length <= 100) {
+      const response = await apiClient.post('/members/bulk_delete/', { ids });
+      return response.data;
+    }
+
+    // Batch requests for large selections
+    let totalDeleted = 0;
+    const batchSize = 100;
+    
+    for (let i = 0; i < ids.length; i += batchSize) {
+      const batch = ids.slice(i, i + batchSize);
+      const response = await apiClient.post('/members/bulk_delete/', { ids: batch });
+      totalDeleted += response.data.deleted_count;
+    }
+    
+    return { deleted_count: totalDeleted };
+  },
+
   // Import CSV
   importCSV: async (file) => {
     const formData = new FormData();

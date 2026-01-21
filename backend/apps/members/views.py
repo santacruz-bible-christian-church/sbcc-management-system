@@ -621,3 +621,23 @@ class MemberViewSet(viewsets.ModelViewSet):
             return int(year_str)
         except (ValueError, TypeError):
             return None
+
+    @action(detail=False, methods=["post"], permission_classes=[permissions.IsAuthenticated])
+    def bulk_delete(self, request):
+        """
+        Bulk delete members.
+        Payload: { "ids": [1,2,3] }
+        """
+        ids = request.data.get("ids") or []
+        if not isinstance(ids, (list, tuple)):
+            return Response({"detail": "ids must be a list."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if len(ids) > 100:  # Prevent abuse
+            return Response(
+                {"detail": "Maximum 100 items per request."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            deleted_count, _ = self.get_queryset().filter(id__in=ids).delete()
+
+        return Response({"deleted_count": deleted_count}, status=status.HTTP_200_OK)

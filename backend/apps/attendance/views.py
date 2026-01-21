@@ -227,7 +227,9 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
 class AttendanceViewSet(viewsets.ModelViewSet):
     """ViewSet for individual Attendance records"""
 
-    queryset = Attendance.objects.select_related("member", "sheet__event").all()
+    queryset = Attendance.objects.select_related(
+        "member", "member__ministry", "sheet", "sheet__event"
+    ).all()
     serializer_class = AttendanceSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
