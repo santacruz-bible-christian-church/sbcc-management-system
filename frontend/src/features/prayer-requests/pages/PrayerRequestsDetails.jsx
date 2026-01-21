@@ -40,6 +40,7 @@ const PrayerRequestsDetails = () => {
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
   const [assignToUserId, setAssignToUserId] = useState('');
   const [followUpData, setFollowUpData] = useState(INITIAL_FOLLOW_UP_DATA);
+  const [isSubmittingFollowUp, setIsSubmittingFollowUp] = useState(false);
 
   // Load pastors for assignment
   useEffect(() => {
@@ -81,6 +82,7 @@ const PrayerRequestsDetails = () => {
       showError('Please enter notes');
       return;
     }
+    setIsSubmittingFollowUp(true);
     try {
       await addPrayerRequestFollowUp(id, followUpData);
       showSuccess('Follow-up added!');
@@ -89,6 +91,8 @@ const PrayerRequestsDetails = () => {
       refetch();
     } catch (err) {
       showError(err.response?.data?.detail || 'Failed to add follow-up');
+    } finally {
+      setIsSubmittingFollowUp(false);
     }
   };
 
@@ -329,6 +333,7 @@ const PrayerRequestsDetails = () => {
         formData={followUpData}
         onChange={setFollowUpData}
         onSubmit={handleFollowUp}
+        submitting={isSubmittingFollowUp}
       />
     </div>
   );
