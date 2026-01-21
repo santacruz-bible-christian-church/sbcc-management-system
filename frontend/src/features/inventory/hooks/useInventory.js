@@ -20,6 +20,10 @@ export const useInventory = () => {
   const [filters, setFilters] = useState(() => ({ ...DEFAULT_FILTERS }));
   const [search, setSearch] = useState('');
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+
   // Fetch ALL ministries (handle pagination)
   const fetchMinistries = useCallback(async () => {
     try {
@@ -55,7 +59,9 @@ export const useInventory = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await inventoryApi.listItems();
+      // Fetch all items (backend default is 10, so we request max page_size)
+      // Frontend handles pagination for display
+      const response = await inventoryApi.listItems({ page_size: 1000 });
       const normalized = normalizeInventoryResponse(response).map((item) => ({
         ...item,
         metrics: calculateItemMetrics(item),
@@ -121,6 +127,38 @@ export const useInventory = () => {
   const statusBreakdown = useMemo(() => buildStatusBreakdown(items), [items]);
   const labelBreakdown = useMemo(() => buildLabelBreakdown(items), [items]);
 
+  // Pagination computed values
+  const totalItems = filteredItems.length;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+
+  // Ensure page is within bounds when filtered items change
+  const currentPage = Math.min(page, totalPages);
+
+  // Paginated items for display
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredItems.slice(startIndex, endIndex);
+  }, [filteredItems, currentPage, pageSize]);
+
+  // Pagination controls
+  const goToPage = useCallback((newPage) => {
+    setPage(Math.max(1, Math.min(newPage, totalPages)));
+  }, [totalPages]);
+
+  const goToNextPage = useCallback(() => {
+    goToPage(currentPage + 1);
+  }, [goToPage, currentPage]);
+
+  const goToPrevPage = useCallback(() => {
+    goToPage(currentPage - 1);
+  }, [goToPage, currentPage]);
+
+  const changePageSize = useCallback((newSize) => {
+    setPageSize(newSize);
+    setPage(1); // Reset to first page when changing page size
+  }, []);
+
   const runMutation = useCallback(
     async (mutation) => {
       setLoading(true);
@@ -162,6 +200,7 @@ export const useInventory = () => {
   const resetFilters = () => {
     setFilters({ ...DEFAULT_FILTERS });
     setSearch('');
+    setPage(1); // Reset to first page when resetting filters
   };
 
   const downloadReport = useCallback((dateRange = {}) => {
@@ -187,6 +226,7 @@ export const useInventory = () => {
   return {
     items,
     filteredItems,
+    paginatedItems,
     loading,
     error,
     filters,
@@ -203,6 +243,17 @@ export const useInventory = () => {
     updateItem,
     deleteItem,
     downloadReport,
+    // Pagination
+    pagination: {
+      currentPage,
+      pageSize,
+      totalItems,
+      totalPages,
+      goToPage,
+      goToNextPage,
+      goToPrevPage,
+      changePageSize,
+    },
   };
 };
 

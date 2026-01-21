@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Edit, Trash2, Key, UserCheck, UserX } from 'lucide-react';
+import { Edit, Trash2, Key, UserCheck, UserX, ChevronUp, ChevronDown } from 'lucide-react';
 import { useUsers } from '../hooks/useUsers';
 import { useUserModals } from '../hooks/useUserModals';
 import { useUserActions } from '../hooks/useUserActions';
@@ -24,10 +24,20 @@ const formatRole = (role) => {
   return role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
+// Role hierarchy for sorting (higher number = higher privilege)
+const ROLE_HIERARCHY = {
+  super_admin: 5,
+  admin: 4,
+  pastor: 3,
+  ministry_leader: 2,
+  member: 1,
+};
+
 export const UserManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const hasInitialLoad = useRef(false);
 
   // Build query params
@@ -91,6 +101,58 @@ export const UserManagementPage = () => {
     selectedUser,
   });
 
+  // Sorted users
+  const sortedUsers = useMemo(() => {
+    if (!users || users.length === 0) return [];
+
+    const sorted = [...users].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortConfig.key) {
+        case 'name':
+          aValue = `${a.first_name} ${a.last_name}`.toLowerCase();
+          bValue = `${b.first_name} ${b.last_name}`.toLowerCase();
+          break;
+        case 'role':
+          aValue = ROLE_HIERARCHY[a.role] || 0;
+          bValue = ROLE_HIERARCHY[b.role] || 0;
+          break;
+        case 'status':
+          aValue = a.is_active ? 1 : 0;
+          bValue = b.is_active ? 1 : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  }, [users, sortConfig]);
+
+  // Handle sort toggle
+  const handleSort = (key) => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
+
+  // Sort indicator component
+  const SortIndicator = ({ columnKey }) => {
+    if (sortConfig.key !== columnKey) {
+      return <span className="ml-1 text-gray-300">⇅</span>;
+    }
+    return sortConfig.direction === 'asc' ? (
+      <ChevronUp className="inline w-4 h-4 ml-1" />
+    ) : (
+      <ChevronDown className="inline w-4 h-4 ml-1" />
+    );
+  };
+
   // Track initial load
   useEffect(() => {
     if (!isLoading && !hasInitialLoad.current) {
@@ -137,21 +199,39 @@ export const UserManagementPage = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th
+                    onClick={() => handleSort('name')}
+                    className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                  >
+                    User
+                    <SortIndicator columnKey="name" />
+                  </th>
+                  <th
+                    onClick={() => handleSort('role')}
+                    className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                  >
+                    Role
+                    <SortIndicator columnKey="role" />
+                  </th>
+                  <th
+                    onClick={() => handleSort('status')}
+                    className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                  >
+                    Status
+                    <SortIndicator columnKey="status" />
+                  </th>
                   <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {users.length === 0 ? (
+                {sortedUsers.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
                       No users found
                     </td>
                   </tr>
                 ) : (
-                  users.map((user) => (
+                  sortedUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
