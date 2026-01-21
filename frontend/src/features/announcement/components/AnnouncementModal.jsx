@@ -3,7 +3,7 @@ import { HiX } from 'react-icons/hi';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
 import { AUDIENCE_OPTIONS } from '../utils/constants';
 
-const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) => {
+const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null, submitting = false }) => {
   const { ministries, loading: loadingMinistries } = useMinistries();
   const [formData, setFormData] = useState({
     title: '',
@@ -35,6 +35,7 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (submitting) return; // Prevent double submission
 
     const submitData = {
       title: formData.title,
@@ -56,7 +57,7 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black opacity-50"
-        onClick={onClose}
+        onClick={submitting ? undefined : onClose}
       />
 
       {/* Modal */}
@@ -67,7 +68,8 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full"
+            disabled={submitting}
+            className="p-2 hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <HiX className="w-6 h-6" />
           </button>
@@ -82,9 +84,10 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
             <input
               type="text"
               required
+              disabled={submitting}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A]"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] disabled:bg-gray-100 disabled:cursor-not-allowed"
               placeholder="Enter announcement title"
             />
           </div>
@@ -97,9 +100,10 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
             <textarea
               required
               rows={6}
+              disabled={submitting}
               value={formData.body}
               onChange={(e) => setFormData({ ...formData, body: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] resize-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
               placeholder="Enter announcement message"
             />
           </div>
@@ -111,9 +115,10 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
             </label>
             <select
               required
+              disabled={submitting}
               value={formData.audience}
               onChange={(e) => setFormData({ ...formData, audience: e.target.value, ministry: '' })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] cursor-pointer"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               {AUDIENCE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -133,8 +138,8 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
                 required
                 value={formData.ministry}
                 onChange={(e) => setFormData({ ...formData, ministry: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A]"
-                disabled={loadingMinistries}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                disabled={loadingMinistries || submitting}
               >
                 <option value="">Select ministry...</option>
                 {ministries?.map((ministry) => (
@@ -154,9 +159,10 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
             <input
               type="datetime-local"
               required
+              disabled={submitting}
               value={formData.publish_at}
               onChange={(e) => setFormData({ ...formData, publish_at: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] cursor-text"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] cursor-text disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -167,9 +173,10 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
             </label>
             <input
               type="datetime-local"
+              disabled={submitting}
               value={formData.expire_at}
               onChange={(e) => setFormData({ ...formData, expire_at: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] cursor-text"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB54A] cursor-text disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -178,9 +185,10 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
             <input
               type="checkbox"
               id="is_active"
+              disabled={submitting}
               checked={formData.is_active}
               onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              className="w-4 h-4 text-[#FDB54A] border-gray-300 rounded focus:ring-[#FDB54A]"
+              className="w-4 h-4 text-[#FDB54A] border-gray-300 rounded focus:ring-[#FDB54A] disabled:cursor-not-allowed"
             />
             <label htmlFor="is_active" className="text-sm font-medium text-gray-700">
               Active
@@ -192,15 +200,24 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null }) =
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+              disabled={submitting}
+              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-[#FDB54A] text-white rounded-lg hover:bg-[#F6C67E] font-medium"
+              disabled={submitting}
+              className="px-6 py-2 bg-[#FDB54A] text-white rounded-lg hover:bg-[#F6C67E] font-medium disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {announcement ? 'Update' : 'Create'} Announcement
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  {announcement ? 'Updating...' : 'Creating...'}
+                </>
+              ) : (
+                <>{announcement ? 'Update' : 'Create'} Announcement</>
+              )}
             </button>
           </div>
         </form>
