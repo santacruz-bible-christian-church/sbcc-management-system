@@ -21,10 +21,12 @@ import {
 } from '../components';
 import InventorySkeleton from '../components/InventorySkeleton';
 import DateRangeExportModal from '../components/DateRangeExportModal';
+import InventoryPagination from '../components/InventoryPagination';
 
 const InventoryPage = () => {
   const {
     filteredItems,
+    paginatedItems,
     loading,
     error,
     filters,
@@ -41,6 +43,7 @@ const InventoryPage = () => {
     updateItem,
     deleteItem,
     downloadReport,
+    pagination,
   } = useInventory();
 
   const {
@@ -198,25 +201,42 @@ const InventoryPage = () => {
                 onReset={resetFilters}
               />
 
-              <InventoryTable
-                items={filteredItems}
-                loading={loading}
-                onEdit={openEdit}
-                onDelete={openDelete}
-              />
+              {/* Inventory Table with Pagination - wrapped in same container */}
+              <div className="rounded-3xl border border-sbcc-gray/20 bg-white shadow-[0_20px_70px_rgba(56,56,56,0.08)] overflow-hidden">
+                <InventoryTable
+                  items={paginatedItems}
+                  loading={loading}
+                  onEdit={openEdit}
+                  onDelete={openDelete}
+                />
+
+                {/* Pagination Controls - inside table container */}
+                {filteredItems.length > 0 && (
+                  <InventoryPagination
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
+                    totalItems={pagination.totalItems}
+                    pageSize={pagination.pageSize}
+                    onPageChange={pagination.goToPage}
+                    onPageSizeChange={pagination.changePageSize}
+                  />
+                )}
+              </div>
             </>
           )}
         </section>
 
-        {/* Sticker Labels Section */}
+        {/* Sticker Labels Section - synced with table pagination */}
         <section className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 print:hidden">
           <div className="flex flex-col gap-2 mb-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">QR Label Preview</h2>
-              <p className="text-sm text-gray-500">Scannable stickers for asset tracking</p>
+              <p className="text-sm text-gray-500">
+                Showing stickers for current table page ({paginatedItems.length} items)
+              </p>
             </div>
           </div>
-          <InventoryStickerSheet items={filteredItems} />
+          <InventoryStickerSheet items={paginatedItems} />
         </section>
       </div>
 

@@ -31,7 +31,7 @@ const StatusPill = ({ status }) => {
 
 export const InventoryTable = ({ items, loading, onEdit, onDelete }) => {
   return (
-    <section className="rounded-3xl border border-sbcc-gray/20 bg-white shadow-[0_20px_70px_rgba(56,56,56,0.08)] print:hidden">
+    <div className="print:hidden">
       <div className="flex items-center justify-between border-b border-sbcc-gray/10 px-6 py-4">
         <div>
           <h2 className="text-xl font-semibold text-sbcc-dark">Inventory list</h2>
@@ -141,7 +141,7 @@ export const InventoryTable = ({ items, loading, onEdit, onDelete }) => {
           </div>
         )}
       </div>
-    </section>
+    </div>
   );
 };
 
