@@ -4,7 +4,7 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
-
+from django.db.models import Count
 from apps.members.models import Member
 
 from .models import Event, EventRegistration
@@ -12,7 +12,6 @@ from .serializers import EventRegistrationSerializer, EventSerializer
 
 
 class EventViewSet(viewsets.ModelViewSet):
-    queryset = Event.objects.select_related("organizer", "ministry").all()
     serializer_class = EventSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -20,6 +19,13 @@ class EventViewSet(viewsets.ModelViewSet):
     filterset_fields = ["status", "event_type", "ministry"]
     ordering_fields = ["date", "end_date", "created_at", "title"]
     ordering = ["-date"]
+
+    def get_queryset(self):
+        return (
+            Event.objects.select_related("organizer", "ministry")
+            .annotate(registration_count=Count("registrations"))
+            .order_by("-date")
+        )
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
