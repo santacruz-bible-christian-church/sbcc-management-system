@@ -71,22 +71,33 @@ export function useMembersBulkActions({ members, refreshMembers, pagination }) {
     }
   }, [selectedIds, refreshMembers, pagination.currentPage]);
 
-  // Bulk delete
+  // Bulk delete - NOW USES SINGLE API CALL
   const handleBulkDelete = useCallback(async () => {
     setBulkActionLoading(true);
+    const count = selectedIds.length;
+    
     try {
-      await Promise.all(selectedIds.map((id) => membersApi.deleteMember(id)));
+      // ✅ Single API call instead of N separate requests
+      const result = await membersApi.bulkDelete(selectedIds);
+      
       showSuccess(`Successfully deleted ${selectedIds.length} members`);
       setSelectedIds([]);
       setSelectionMode(false);
-      await refreshMembers(pagination.currentPage);
+      
+      // Handle pagination - if current page might be empty, go to page 1
+      const remainingOnPage = members.length - result.deleted_count;
+      if (remainingOnPage <= 0 && pagination.currentPage > 1) {
+        await refreshMembers(1);
+      } else {
+        await refreshMembers(pagination.currentPage);
+      }
     } catch (err) {
       showError(err.response?.data?.detail || 'Failed to delete members');
     } finally {
       setBulkActionLoading(false);
       setBulkDeleteOpen(false);
     }
-  }, [selectedIds, refreshMembers, pagination.currentPage]);
+  }, [selectedIds, members.length, refreshMembers, pagination.currentPage]);
 
   return {
     // State
