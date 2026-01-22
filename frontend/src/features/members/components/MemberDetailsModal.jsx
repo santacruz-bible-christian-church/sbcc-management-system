@@ -19,6 +19,7 @@ import {
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 import MemberProfilePDF from './MemberProfilePDF';
+import { generateMembershipFormPDF } from '../utils/memberFormPDF';
 import { MemberAttendanceHistory } from './MemberAttendanceHistory';
 import { MemberCelebrationCard } from './MemberCelebrationCard';
 import { showError, showSuccess } from '../../../utils/toast';
@@ -106,6 +107,7 @@ const CollapsibleSection = ({ title, children, defaultOpen = false }) => {
 
 export const MemberDetailsModal = ({ open, onClose, member }) => {
   const [exporting, setExporting] = useState(false);
+  const [exportingForm, setExportingForm] = useState(false);
 
   if (!open || !member) return null;
 
@@ -121,15 +123,30 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
       const safeName = (member.full_name || `${member.first_name}_${member.last_name}`)
         .replace(/\s+/g, '_')
         .toLowerCase();
-      const fileName = `member_profile_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`;
+      const fileName = `member_report_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`;
 
       saveAs(blob, fileName);
-      showSuccess('Profile PDF downloaded successfully');
+      showSuccess('Member report downloaded successfully');
     } catch (err) {
       console.error('Profile export error:', err);
       showError('Failed to generate PDF. Please try again.');
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleExportMembershipForm = async () => {
+    if (!member) return;
+
+    setExportingForm(true);
+    try {
+      await generateMembershipFormPDF(member);
+      showSuccess('Membership form downloaded successfully');
+    } catch (err) {
+      console.error('Membership form export error:', err);
+      showError('Failed to generate membership form. Please try again.');
+    } finally {
+      setExportingForm(false);
     }
   };
 
@@ -458,6 +475,27 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
           {/* Footer */}
           <div className="sticky bottom-0 bg-white flex justify-end gap-3 p-6 border-t border-gray-200">
             <button
+              onClick={handleExportMembershipForm}
+              disabled={exportingForm}
+              className={`px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 ${
+                exportingForm ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {exportingForm ? (
+                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              ) : (
+                <HiOutlineDocumentDownload className="w-4 h-4" />
+              )}
+              Export Membership Form
+            </button>
+            <button
               onClick={handleExportProfile}
               disabled={exporting}
               className={`px-4 py-2 border border-[#FDB54A] text-[#FDB54A] rounded-lg hover:bg-[#FDB54A] hover:text-white transition-colors flex items-center gap-2 ${
@@ -476,7 +514,7 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
               ) : (
                 <HiOutlineDocumentDownload className="w-4 h-4" />
               )}
-              Export PDF
+              Export Member Report
             </button>
             <button
               onClick={onClose}
