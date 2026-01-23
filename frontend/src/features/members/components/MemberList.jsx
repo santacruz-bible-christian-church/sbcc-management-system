@@ -67,12 +67,13 @@ const MemberCard = ({
     onArchive,
     showCheckbox = false,
     isSelected = false,
-    onSelect
+    onSelect,
+    highlightBirthday = false
 }) => {
     return (
         <div className={`flex justify-between pr-3 pl-3 pt-6 pb-6 rounded-[20px] shadow-[2px_2px_10px_rgba(0,0,0,0.2)] transition-all ${
             isSelected ? 'ring-2 ring-[#FDB54A] bg-[#FFF8E7]' : ''
-        }`}>
+        } ${highlightBirthday ? 'border-l-4 border-l-[#FDB54A]' : ''}`}>
             {/* Checkbox */}
             {showCheckbox && (
                 <div className="w-[5%] flex items-center justify-center">
@@ -105,7 +106,9 @@ const MemberCard = ({
             </p>
 
             {/* Birthday */}
-            <p className="hidden lg:flex items-center justify-center text-center w-[15%] font-regular text-[#383838]">
+            <p className={`hidden lg:flex items-center justify-center text-center w-[15%] font-regular ${
+                highlightBirthday ? 'text-[#FDB54A] font-semibold' : 'text-[#383838]'
+            }`}>
                 {formatDate(member.date_of_birth)}
             </p>
 
@@ -175,13 +178,18 @@ const MemberCard = ({
 
 
 // Results Info
-const ResultsInfo = ({ pagination }) => {
+const ResultsInfo = ({ pagination, filteredCount, totalCount, isFiltered }) => {
     const startIndex = (pagination.currentPage - 1) * 10 + 1;
     const endIndex = Math.min(pagination.currentPage * 10, pagination.count);
 
     return (
         <div className="text-center text-sm text-[#A0A0A0] mt-2">
             Showing {Math.min(startIndex, pagination.count)} - {endIndex} of {pagination.count} members
+            {isFiltered && (
+                <span className="ml-1 text-[#FDB54A]">
+                    (filtered from {totalCount} total)
+                </span>
+            )}
         </div>
     );
 };
@@ -202,13 +210,28 @@ export const MemberList = ({
     selectedIds = [],
     allSelected = false,
     onSelect,
-    onSelectAll
+    onSelectAll,
+    birthdayMonthFilter = ''
 }) => {
+    // Filter members by birthday month if filter is active
+    const filteredMembers = useMemo(() => {
+        if (!birthdayMonthFilter || !members) return members;
+        
+        return members.filter(member => {
+            if (!member.date_of_birth) return false;
+            
+            const birthDate = new Date(member.date_of_birth);
+            const birthMonth = birthDate.getMonth() + 1; // JavaScript months are 0-indexed
+            
+            return birthMonth === parseInt(birthdayMonthFilter);
+        });
+    }, [members, birthdayMonthFilter]);
+
     if (loading) {
         return <MembersSkeleton />;
     }
 
-    if (!members || members.length === 0) {
+    if (!filteredMembers || filteredMembers.length === 0) {
         return (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
                 <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -217,7 +240,11 @@ export const MemberList = ({
                     </svg>
                 </div>
                 <h2 className="text-lg font-semibold text-gray-700 mb-2">No members found</h2>
-                <p className="text-sm text-gray-500">Try adjusting your filters or add a new member.</p>
+                <p className="text-sm text-gray-500">
+                    {birthdayMonthFilter 
+                        ? 'No members have birthdays in the selected month.' 
+                        : 'Try adjusting your filters or add a new member.'}
+                </p>
             </div>
         );
     }
@@ -232,7 +259,7 @@ export const MemberList = ({
             />
 
             {/* Member Cards */}
-            {members.map((member) => (
+            {filteredMembers.map((member) => (
                 <MemberCard
                     key={member.id}
                     member={member}
@@ -245,6 +272,7 @@ export const MemberList = ({
                     showCheckbox={showCheckbox}
                     isSelected={selectedIds.includes(member.id)}
                     onSelect={onSelect}
+                    highlightBirthday={!!birthdayMonthFilter}
                 />
             ))}
 
@@ -261,7 +289,12 @@ export const MemberList = ({
 
             {/* Results Info */}
             {pagination && pagination.count > 0 && (
-                <ResultsInfo pagination={pagination} />
+                <ResultsInfo 
+                    pagination={pagination} 
+                    filteredCount={filteredMembers.length}
+                    totalCount={members?.length || 0}
+                    isFiltered={!!birthdayMonthFilter}
+                />
             )}
         </div>
     );
@@ -283,6 +316,7 @@ MemberList.propTypes = {
     allSelected: PropTypes.bool,
     onSelect: PropTypes.func,
     onSelectAll: PropTypes.func,
+    birthdayMonthFilter: PropTypes.string,
 };
 
 export default MemberList;

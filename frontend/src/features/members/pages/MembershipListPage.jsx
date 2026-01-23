@@ -125,6 +125,7 @@ export const MembershipListPage = () => {
           allSelected={bulk.allSelected}
           onSelect={bulk.handleSelect}
           onSelectAll={bulk.handleSelectAll}
+          birthdayMonthFilter={filters.birthday_month}
         />
       </div>
 

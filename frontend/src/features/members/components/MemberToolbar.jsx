@@ -51,7 +51,7 @@ const FilterDropdown = ({ label, value, options, onChange, dropdownRef, isOpen, 
     </button>
 
     {isOpen && (
-      <div className="absolute z-20 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[120px]">
+      <div className="absolute z-20 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[120px] max-h-64 overflow-y-auto">
         <ul className="py-1">
           <li>
             <button
@@ -97,11 +97,13 @@ export const MemberToolbar = ({
   const [statusOpen, setStatusOpen] = useState(false);
   const [genderOpen, setGenderOpen] = useState(false);
   const [ministryOpen, setMinistryOpen] = useState(false);
+  const [birthdayOpen, setBirthdayOpen] = useState(false);
 
   // Refs for click outside handling
   const statusRef = useRef(null);
   const genderRef = useRef(null);
   const ministryRef = useRef(null);
+  const birthdayRef = useRef(null);
 
   // Click outside handler
   useEffect(() => {
@@ -109,6 +111,7 @@ export const MemberToolbar = ({
       if (statusRef.current && !statusRef.current.contains(event.target)) setStatusOpen(false);
       if (genderRef.current && !genderRef.current.contains(event.target)) setGenderOpen(false);
       if (ministryRef.current && !ministryRef.current.contains(event.target)) setMinistryOpen(false);
+      if (birthdayRef.current && !birthdayRef.current.contains(event.target)) setBirthdayOpen(false);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -126,17 +129,32 @@ export const MemberToolbar = ({
     { value: 'female', label: 'Female' },
   ];
 
+  const birthdayOptions = [
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' },
+  ];
+
   const ministryOptions = (ministries || []).map(m => ({
     value: m.id.toString(),
     label: m.name,
   }));
 
   const handleClearFilters = () => {
-    setFilters({ gender: '', ministry: '', status: '' });
+    setFilters({ gender: '', ministry: '', status: '', birthday_month: '' });
     setSearchTerm('');
   };
 
-  const hasActiveFilters = filters.gender || filters.ministry || filters.status || searchTerm;
+  const hasActiveFilters = filters.gender || filters.ministry || filters.status || filters.birthday_month || searchTerm;
 
   return (
     <div className="space-y-3">
@@ -239,6 +257,17 @@ export const MemberToolbar = ({
           dropdownRef={ministryRef}
           isOpen={ministryOpen}
           setIsOpen={setMinistryOpen}
+        />
+
+        {/* Birthday Month Filter */}
+        <FilterDropdown
+          label="Birth Month"
+          value={filters.birthday_month}
+          options={birthdayOptions}
+          onChange={(value) => setFilters(prev => ({ ...prev, birthday_month: value }))}
+          dropdownRef={birthdayRef}
+          isOpen={birthdayOpen}
+          setIsOpen={setBirthdayOpen}
         />
 
         {/* Clear Filters */}

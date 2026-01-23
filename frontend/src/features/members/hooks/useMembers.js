@@ -16,6 +16,7 @@ export const useMembers = () => {
     gender: '',
     ministry: '',
     status: '',
+    birthday_month: '',
   });
   const [search, setSearch] = useState('');
 
@@ -150,7 +151,7 @@ export const useMembers = () => {
   };
 
   const resetFilters = () => {
-    setFilters({ gender: '', ministry: '', status: '' });
+    setFilters({ gender: '', ministry: '', status: '', birthday_month: '' });
     setSearch('');
   };
 
