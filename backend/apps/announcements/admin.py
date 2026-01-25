@@ -14,6 +14,7 @@ class AnnouncementAdmin(admin.ModelAdmin):
         "sent",
         "publish_at",
         "created_at",
+        "photo",
     ]
     list_filter = ["audience", "is_active", "sent", "ministry", "publish_at"]
     search_fields = ["title", "body"]
@@ -21,7 +22,7 @@ class AnnouncementAdmin(admin.ModelAdmin):
     date_hierarchy = "publish_at"
 
     fieldsets = (
-        ("Content", {"fields": ("title", "body")}),
+        ("Content", {"fields": ("title", "body", "photo")}),
         ("Targeting (Group-Specific)", {"fields": ("audience", "ministry")}),
         ("Scheduling", {"fields": ("publish_at", "expire_at", "is_active")}),
         (

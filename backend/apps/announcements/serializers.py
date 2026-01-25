@@ -7,6 +7,7 @@ class AnnouncementSerializer(serializers.ModelSerializer):
     ministry_name = serializers.CharField(source="ministry.name", read_only=True)
     created_by_name = serializers.SerializerMethodField()
     is_published = serializers.SerializerMethodField()
+    photo = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Announcement
@@ -14,6 +15,7 @@ class AnnouncementSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "body",
+            "photo",  # added photo field
             "audience",
             "ministry",
             "ministry_name",

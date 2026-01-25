@@ -17,6 +17,7 @@ class PublicAnnouncementSerializer(serializers.ModelSerializer):
     """Lightweight serializer for public announcement display."""
 
     ministry_name = serializers.SerializerMethodField()
+    photo = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Announcement
@@ -24,6 +25,7 @@ class PublicAnnouncementSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "body",
+            "photo",  # Added photo field
             "audience",
             "ministry_name",
             "publish_at",

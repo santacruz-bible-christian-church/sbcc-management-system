@@ -28,7 +28,18 @@ const AnnouncementCard = ({ announcement, onEdit, onDelete, onDeactivate, onSend
   }, [showMenu]);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      {/* Photo */}
+      {announcement.photo && (
+        <div className="w-full h-48 overflow-hidden bg-gray-100">
+          <img
+            src={announcement.photo}
+            alt={announcement.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
       <div className="p-5">
         {/* Header */}
         <div className="flex justify-between items-start mb-3">

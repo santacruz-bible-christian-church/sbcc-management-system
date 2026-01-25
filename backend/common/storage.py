@@ -60,6 +60,9 @@ class R2Storage(Storage):
 
     def _save(self, name, content):
         """Save file to R2"""
+        # Normalize path separators to forward slashes for S3/R2
+        name = name.replace("\\", "/")
+
         try:
             self.s3_client.upload_fileobj(
                 content,
@@ -117,6 +120,10 @@ class R2Storage(Storage):
         import uuid
         from pathlib import Path
 
+        # Normalize to forward slashes first
+        name = name.replace("\\", "/")
         path = Path(name)
         unique_name = f"{path.stem}_{uuid.uuid4().hex[:8]}{path.suffix}"
-        return str(Path(path.parent) / unique_name)
+        # Convert back to forward slashes for S3/R2
+        result = str(Path(path.parent) / unique_name).replace("\\", "/")
+        return result
