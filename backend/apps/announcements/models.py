@@ -19,6 +19,14 @@ class Announcement(models.Model):
     title = models.CharField(max_length=255)
     body = models.TextField()
 
+    # Photo field - uses default storage configured in settings.STORAGES
+    photo = models.ImageField(
+        upload_to="announcements/",
+        null=True,
+        blank=True,
+        verbose_name="Photo",
+        help_text="Optional photo for this announcement",
+    )
     # Targeting (Feature #2: Group-specific messages)
     audience = models.CharField(
         max_length=20,

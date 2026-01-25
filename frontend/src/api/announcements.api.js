@@ -3,7 +3,6 @@ import apiClient from './client';
 export const announcementsApi = {
 
     list: async (params = {}) => {
-
         const response = await apiClient.get('/announcements/', { params });
         return response.data.results;
     },
@@ -20,12 +19,20 @@ export const announcementsApi = {
     },
 
     create: async (data) => {
-        const response = await apiClient.post('/announcements/', data);
+        // Set Content-Type header for FormData
+        const config = data instanceof FormData
+            ? { headers: { 'Content-Type': 'multipart/form-data' } }
+            : {};
+        const response = await apiClient.post('/announcements/', data, config);
         return response.data;
     },
 
     update: async (id, data) => {
-        const response = await apiClient.patch(`/announcements/${id}/`, data);
+        // Set Content-Type header for FormData
+        const config = data instanceof FormData
+            ? { headers: { 'Content-Type': 'multipart/form-data' } }
+            : {};
+        const response = await apiClient.patch(`/announcements/${id}/`, data, config);
         return response.data;
     },
 

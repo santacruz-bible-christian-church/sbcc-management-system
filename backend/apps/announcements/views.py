@@ -2,6 +2,7 @@ from django.db.models import Q
 from django.utils import timezone
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
 from apps.authentication.permissions import IsAdminOrSuperAdmin
@@ -20,6 +21,7 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
     queryset = Announcement.objects.select_related("ministry", "created_by").all()
     serializer_class = AnnouncementSerializer
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get_permissions(self):
         """Only admins/super_admins can create, update, or delete announcements."""

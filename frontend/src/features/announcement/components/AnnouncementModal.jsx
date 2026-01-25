@@ -1,8 +1,13 @@
-import { useState, useEffect } from 'react';
-import { HiX } from 'react-icons/hi';
-import { useMinistries } from '../../ministries/hooks/useMinistries';
-import { AUDIENCE_OPTIONS } from '../utils/constants';
+// import { useState, useEffect } from 'react';
+// import { HiX } from 'react-icons/hi';
+// import { useMinistries } from '../../ministries/hooks/useMinistries';
+// import { AUDIENCE_OPTIONS } from '../utils/constants';
 
+import { useState, useEffect, useRef } from 'react';
+import { HiX, HiPhotograph, HiX as HiXIcon } from 'react-icons/hi';
+import { useMinistries } from '../../ministries/hooks/useMinistries';
+import { usePhotoUpload } from '../hooks/usePhotoUpload';
+import { AUDIENCE_OPTIONS } from '../utils/constants';
 const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null, submitting = false }) => {
   const { ministries, loading: loadingMinistries } = useMinistries();
   const [formData, setFormData] = useState({
@@ -14,6 +19,9 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null, sub
     expire_at: '',
     is_active: true,
   });
+  const fileInputRef = useRef(null);
+  const { photoFile, photoPreview, photoError, handlePhotoChange, clearPhoto } = usePhotoUpload();
+  const [deleteExistingPhoto, setDeleteExistingPhoto] = useState(false);
 
   useEffect(() => {
     if (announcement) {
@@ -26,28 +34,52 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null, sub
         expire_at: announcement.expire_at ? new Date(announcement.expire_at).toISOString().slice(0, 16) : '',
         is_active: announcement.is_active ?? true,
       });
+      clearPhoto();
+      setDeleteExistingPhoto(false);
     } else {
-      // Default to current time for new announcements
       const now = new Date().toISOString().slice(0, 16);
       setFormData(prev => ({ ...prev, publish_at: now }));
+      clearPhoto();
+      setDeleteExistingPhoto(false);
     }
-  }, [announcement]);
+  }, [announcement, clearPhoto]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (submitting) return; // Prevent double submission
 
-    const submitData = {
-      title: formData.title,
-      body: formData.body,
-      audience: formData.audience,
-      ministry: formData.audience === 'ministry' ? parseInt(formData.ministry) : null,
-      publish_at: new Date(formData.publish_at).toISOString(),
-      expire_at: formData.expire_at ? new Date(formData.expire_at).toISOString() : null,
-      is_active: formData.is_active,
-    };
+    // Always use FormData for consistency
+    const formDataToSend = new FormData();
+    formDataToSend.append('title', formData.title);
+    formDataToSend.append('body', formData.body);
+    formDataToSend.append('audience', formData.audience);
 
-    onSubmit(submitData);
+    // Only append ministry if it's ministry audience and has a value
+    if (formData.audience === 'ministry' && formData.ministry) {
+      formDataToSend.append('ministry', parseInt(formData.ministry));
+    }
+
+    formDataToSend.append('publish_at', new Date(formData.publish_at).toISOString());
+
+    // Only append expire_at if it has a value
+    if (formData.expire_at) {
+      formDataToSend.append('expire_at', new Date(formData.expire_at).toISOString());
+    }
+
+    formDataToSend.append('is_active', formData.is_active);
+
+    // Handle photo upload/deletion
+    if (photoFile) {
+      // New photo selected
+      formDataToSend.append('photo', photoFile);
+    } else if (deleteExistingPhoto) {
+      // Delete existing photo
+      formDataToSend.append('photo', '');
+    }
+    // If no photoFile and not deleting, don't append photo field
+    // This tells Django to keep the existing photo (for updates) or leave it null (for creates)
+
+    onSubmit(formDataToSend);
   };
 
   if (!isOpen) return null;
@@ -193,6 +225,96 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null, sub
             <label htmlFor="is_active" className="text-sm font-medium text-gray-700">
               Active
             </label>
+          </div>
+
+          {/* Photo Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Photo (Optional)
+            </label>
+
+            {/* New photo preview */}
+            {photoPreview ? (
+              <div className="relative rounded-lg overflow-hidden border-2 border-gray-300 mb-2">
+                <img
+                  src={photoPreview}
+                  alt="Preview"
+                  className="w-full h-48 object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearPhoto();
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }}
+                  disabled={submitting}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 disabled:opacity-50 shadow-lg"
+                >
+                  <HiXIcon className="w-4 h-4" />
+                </button>
+              </div>
+            ) : announcement?.photo && !deleteExistingPhoto ? (
+              /* Existing photo thumbnail - no URL shown */
+              <div className="relative rounded-lg overflow-hidden border-2 border-gray-300 mb-2">
+                <img
+                  src={announcement.photo}
+                  alt="Current photo"
+                  className="w-full h-48 object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setDeleteExistingPhoto(true)}
+                  disabled={submitting}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 disabled:opacity-50 shadow-lg"
+                >
+                  <HiXIcon className="w-4 h-4" />
+                </button>
+                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs px-2 py-1">
+                  Current photo
+                </div>
+              </div>
+            ) : !deleteExistingPhoto ? (
+              /* Upload button */
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={submitting}
+                className="w-full py-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#FDB54A] hover:bg-yellow-50 transition flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <HiPhotograph className="w-8 h-8 text-gray-400" />
+                <span className="text-sm text-gray-600">Click to upload photo</span>
+                <span className="text-xs text-gray-500">JPG, PNG or WebP (Max 5MB)</span>
+              </button>
+            ) : null}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handlePhotoChange}
+              disabled={submitting}
+              className="hidden"
+            />
+
+            {photoError && (
+              <p className="text-red-500 text-sm mt-2">{photoError}</p>
+            )}
+
+            {deleteExistingPhoto && (
+              <div className="mt-2 p-3 bg-red-50 rounded-lg border border-red-200">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-red-700">Photo will be deleted on save</p>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteExistingPhoto(false)}
+                    disabled={submitting}
+                    className="text-sm text-gray-600 hover:text-gray-700 underline"
+                  >
+                    Undo
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Actions */}
