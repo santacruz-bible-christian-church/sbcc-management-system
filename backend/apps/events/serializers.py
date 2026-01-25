@@ -25,6 +25,7 @@ class EventSerializer(serializers.ModelSerializer):
     organizer_name = serializers.CharField(source="organizer.get_full_name", read_only=True)
     ministry_name = serializers.CharField(source="ministry.name", read_only=True, allow_null=True)
     registration_count = serializers.IntegerField(read_only=True)
+    is_occurrence = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Event
@@ -42,11 +43,23 @@ class EventSerializer(serializers.ModelSerializer):
             "ministry",
             "ministry_name",
             "max_attendees",
+            "recurrence_pattern",
+            "recurrence_end_date",
+            "parent_event",
             "is_recurring",
+            "is_occurrence",
             "registration_count",
             "is_full",
             "available_slots",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at", "is_full", "available_slots"]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "is_full",
+            "available_slots",
+            "is_recurring",
+            "is_occurrence",
+        ]
