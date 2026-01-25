@@ -6,6 +6,7 @@ import {
   HiOutlinePlusCircle,
   HiOutlineTrash,
   HiUserGroup,
+  HiRefresh,
 } from 'react-icons/hi';
 import { PrimaryButton } from '../../../components/ui/Button';
 import { STATUS_METADATA, EVENT_TYPE_METADATA } from '../utils/constants';
@@ -155,6 +156,9 @@ export const EventsBoard = ({
                     <div className="flex items-center text-xs text-gray-500">
                       <HiClock className="flex-shrink-0 mr-1.5 h-3.5 w-3.5 text-gray-400" />
                       <span>{format(startDate, 'h:mm a')}</span>
+                      {event.is_recurring && (
+                        <HiRefresh className="flex-shrink-0 ml-2 h-3.5 w-3.5 text-gray-400" title="Recurring Event" />
+                      )}
                     </div>
                     {event.location && (
                       <div className="flex items-center text-xs text-gray-500">
