@@ -23,6 +23,14 @@ class Event(models.Model):
         ("completed", "Completed"),
     ]
 
+    RECURRENCE_CHOICES = [
+        ("none", "None"),
+        ("daily", "Daily"),
+        ("weekly", "Weekly"),
+        ("biweekly", "Every 2 Weeks"),
+        ("monthly", "Monthly"),
+    ]
+
     # Basic Information
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -54,7 +62,27 @@ class Event(models.Model):
     max_attendees = models.PositiveIntegerField(
         null=True, blank=True, help_text="Maximum number of attendees (leave blank for unlimited)"
     )
-    is_recurring = models.BooleanField(default=False, help_text="Is this a recurring event?")
+
+    # Recurrence Settings
+    recurrence_pattern = models.CharField(
+        max_length=20,
+        choices=RECURRENCE_CHOICES,
+        default="none",
+        help_text="How often this event repeats",
+    )
+    recurrence_end_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Stop generating occurrences after this date",
+    )
+    parent_event = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="occurrences",
+        help_text="Parent event if this is a generated occurrence",
+    )
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -66,6 +94,16 @@ class Event(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.date.strftime('%Y-%m-%d %H:%M')}"
+
+    @property
+    def is_recurring(self):
+        """Check if this is a recurring event (computed from recurrence_pattern)."""
+        return self.recurrence_pattern != "none"
+
+    @property
+    def is_occurrence(self):
+        """Check if this event is a generated occurrence of a parent event."""
+        return self.parent_event is not None
 
     @property
     def is_full(self):
@@ -85,6 +123,84 @@ class Event(models.Model):
     def registered_count(self):
         """Number of members who registered (RSVP'd)"""
         return self.registrations.count()
+
+    def generate_occurrences(self, weeks_ahead=4):
+        """
+        Generate future occurrences for this recurring event.
+
+        Args:
+            weeks_ahead: How many weeks into the future to generate
+
+        Returns:
+            List of created Event occurrences
+        """
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        if not self.is_recurring:
+            return []
+
+        if self.parent_event is not None:
+            # This is already an occurrence, don't generate from it
+            return []
+
+        created = []
+        current_date = self.date
+        end_limit = timezone.now() + timedelta(weeks=weeks_ahead)
+
+        # Respect recurrence_end_date if set
+        if self.recurrence_end_date:
+            end_date_aware = timezone.make_aware(
+                timezone.datetime.combine(self.recurrence_end_date, timezone.datetime.min.time())
+            )
+            end_limit = min(end_limit, end_date_aware)
+
+        # Calculate interval based on pattern
+        intervals = {
+            "daily": timedelta(days=1),
+            "weekly": timedelta(weeks=1),
+            "biweekly": timedelta(weeks=2),
+            "monthly": timedelta(days=30),  # Approximate
+        }
+        interval = intervals.get(self.recurrence_pattern)
+        if not interval:
+            return []
+
+        # Get existing occurrence dates to avoid duplicates
+        existing_dates = set(self.occurrences.values_list("date__date", flat=True))
+        existing_dates.add(self.date.date())  # Include parent event date
+
+        # Generate occurrences
+        next_date = current_date + interval
+        while next_date <= end_limit:
+            if next_date.date() not in existing_dates:
+                # Calculate end_date offset if original has one
+                new_end_date = None
+                if self.end_date:
+                    duration = self.end_date - self.date
+                    new_end_date = next_date + duration
+
+                occurrence = Event.objects.create(
+                    title=self.title,
+                    description=self.description,
+                    event_type=self.event_type,
+                    status=self.status,
+                    date=next_date,
+                    end_date=new_end_date,
+                    location=self.location,
+                    organizer=self.organizer,
+                    ministry=self.ministry,
+                    max_attendees=self.max_attendees,
+                    recurrence_pattern="none",  # Occurrences don't recur
+                    parent_event=self,
+                )
+                created.append(occurrence)
+                existing_dates.add(next_date.date())
+
+            next_date += interval
+
+        return created
 
 
 class EventRegistration(models.Model):

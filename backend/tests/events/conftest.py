@@ -107,3 +107,14 @@ def event_registration(event, member_for_event):
         member=member_for_event,
         notes="Test registration",
     )
+
+
+@pytest.fixture
+def recurring_event(event_factory):
+    """Create a recurring weekly event."""
+    return event_factory(
+        title="Weekly Prayer Meeting",
+        days_offset=0,
+        event_type="prayer_meeting",
+        recurrence_pattern="weekly",
+    )

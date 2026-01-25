@@ -97,6 +97,44 @@ class EventViewSet(viewsets.ModelViewSet):
         serializer = EventRegistrationSerializer(registrations, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=["post"])
+    def generate_occurrences(self, request, pk=None):
+        """
+        Generate future occurrences for a recurring event.
+        POST /api/events/{id}/generate_occurrences/
+        Body: { "weeks_ahead": 4 }  (optional, default 4)
+        """
+        event = self.get_object()
+
+        if not event.is_recurring:
+            return Response(
+                {"detail": "This event is not recurring"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if event.parent_event is not None:
+            return Response(
+                {"detail": "Cannot generate from an occurrence. Use the parent event."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        weeks_ahead = request.data.get("weeks_ahead", 4)
+        try:
+            weeks_ahead = int(weeks_ahead)
+        except (ValueError, TypeError):
+            weeks_ahead = 4
+
+        created = event.generate_occurrences(weeks_ahead=weeks_ahead)
+
+        return Response(
+            {
+                "message": f"Generated {len(created)} occurrence(s)",
+                "created_count": len(created),
+                "occurrences": EventSerializer(created, many=True).data,
+            },
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
 
 class EventRegistrationViewSet(viewsets.ModelViewSet):
     queryset = EventRegistration.objects.select_related("event", "member").all()
