@@ -305,3 +305,98 @@ class TestPreviewRecipientsEndpoint:
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+# =============================================================================
+# Photo Validation Tests
+# =============================================================================
+@pytest.mark.django_db
+class TestAnnouncementPhotoValidation:
+    """Tests for announcement photo upload validation."""
+
+    def test_create_announcement_with_photo(self, admin_client):
+        """Test creating announcement with valid photo."""
+        from io import BytesIO
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+
+        # Create a real valid image using PIL
+        image = Image.new("RGB", (100, 100), color="red")
+        buffer = BytesIO()
+        image.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        photo = SimpleUploadedFile("test.png", buffer.read(), content_type="image/png")
+
+        url = reverse("announcement-list")
+        response = admin_client.post(
+            url,
+            {
+                "title": "Photo Announcement",
+                "body": "Announcement with photo",
+                "audience": "all",
+                "publish_at": timezone.now().isoformat(),
+                "photo_upload": photo,  # Use photo_upload for write
+            },
+            format="multipart",
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED, response.data
+        assert Announcement.objects.filter(title="Photo Announcement").exists()
+        # Verify photo field is returned as URL (not empty string)
+        assert response.data["photo"] is not None
+        assert "announcements/" in response.data["photo"]
+
+    def test_photo_invalid_extension_rejected(self, admin_client):
+        """Test that non-image file extensions are rejected."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        pdf_file = SimpleUploadedFile(
+            "document.pdf", b"fake pdf content", content_type="application/pdf"
+        )
+
+        url = reverse("announcement-list")
+        response = admin_client.post(
+            url,
+            {
+                "title": "PDF Announcement",
+                "body": "Trying to upload PDF",
+                "audience": "all",
+                "publish_at": timezone.now().isoformat(),
+                "photo_upload": pdf_file,
+            },
+            format="multipart",
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "photo_upload" in response.data
+
+    def test_photo_optional(self, admin_client):
+        """Test that photo field is not required."""
+        url = reverse("announcement-list")
+        response = admin_client.post(
+            url,
+            {
+                "title": "No Photo Announcement",
+                "body": "Announcement without photo",
+                "audience": "all",
+                "publish_at": timezone.now().isoformat(),
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        announcement = Announcement.objects.get(title="No Photo Announcement")
+        assert not announcement.photo
+        # Verify photo is null, not empty string
+        assert response.data["photo"] is None
+
+    def test_photo_returns_null_not_empty_string(self, admin_client, announcement):
+        """Test that photo field returns null when no photo is set."""
+        url = reverse("announcement-detail", kwargs={"pk": announcement.pk})
+        response = admin_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        # This is the key fix - should be None, not ""
+        assert response.data["photo"] is None
