@@ -17,7 +17,7 @@ class PublicAnnouncementSerializer(serializers.ModelSerializer):
     """Lightweight serializer for public announcement display."""
 
     ministry_name = serializers.SerializerMethodField()
-    photo = serializers.ImageField(required=False, allow_null=True)
+    photo = serializers.SerializerMethodField()
 
     class Meta:
         model = Announcement
@@ -25,13 +25,19 @@ class PublicAnnouncementSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "body",
-            "photo",  # Added photo field
+            "photo",
             "audience",
             "ministry_name",
             "publish_at",
             "expire_at",
             "created_at",
         ]
+
+    def get_photo(self, obj):
+        """Return photo URL or None (not empty string)."""
+        if obj.photo:
+            return obj.photo.url
+        return None
 
     def get_ministry_name(self, obj):
         return obj.ministry.name if obj.ministry else None

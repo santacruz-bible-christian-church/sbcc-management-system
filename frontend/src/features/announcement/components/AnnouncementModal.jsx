@@ -4,7 +4,7 @@
 // import { AUDIENCE_OPTIONS } from '../utils/constants';
 
 import { useState, useEffect, useRef } from 'react';
-import { HiX, HiPhotograph, HiX as HiXIcon } from 'react-icons/hi';
+import { HiX, HiPhotograph } from 'react-icons/hi';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
 import { usePhotoUpload } from '../hooks/usePhotoUpload';
 import { AUDIENCE_OPTIONS } from '../utils/constants';
@@ -70,13 +70,13 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null, sub
 
     // Handle photo upload/deletion
     if (photoFile) {
-      // New photo selected
-      formDataToSend.append('photo', photoFile);
+      // New photo selected - use photo_upload field (write-only on backend)
+      formDataToSend.append('photo_upload', photoFile);
     } else if (deleteExistingPhoto) {
-      // Delete existing photo
-      formDataToSend.append('photo', '');
+      // Delete existing photo - send empty value to photo_upload
+      formDataToSend.append('photo_upload', '');
     }
-    // If no photoFile and not deleting, don't append photo field
+    // If no photoFile and not deleting, don't append photo_upload field
     // This tells Django to keep the existing photo (for updates) or leave it null (for creates)
 
     onSubmit(formDataToSend);
@@ -250,7 +250,7 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null, sub
                   disabled={submitting}
                   className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 disabled:opacity-50 shadow-lg"
                 >
-                  <HiXIcon className="w-4 h-4" />
+                  <HiX className="w-4 h-4" />
                 </button>
               </div>
             ) : announcement?.photo && !deleteExistingPhoto ? (
@@ -267,7 +267,7 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null, sub
                   disabled={submitting}
                   className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 disabled:opacity-50 shadow-lg"
                 >
-                  <HiXIcon className="w-4 h-4" />
+                  <HiX className="w-4 h-4" />
                 </button>
                 <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs px-2 py-1">
                   Current photo
