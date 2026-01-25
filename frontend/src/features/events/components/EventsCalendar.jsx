@@ -7,6 +7,7 @@ import {
   HiCalendar,
   HiClock,
   HiLocationMarker,
+  HiRefresh,
 } from 'react-icons/hi';
 import { useCalendar } from '../hooks/useCalendar';
 
@@ -234,6 +235,9 @@ export const EventsCalendar = ({ events, onEventClick }) => {
                   <HiClock className="w-3.5 h-3.5" />
                   {format(new Date(event.start_date || event.date), 'h:mm a')}
                   {event.end_date && ` - ${format(new Date(event.end_date), 'h:mm a')}`}
+                  {event.is_recurring && (
+                    <HiRefresh className="ml-2 w-3.5 h-3.5 text-gray-400" title="Recurring Event" />
+                  )}
                 </span>
                 {event.location && (
                   <span className="flex items-center gap-1">
