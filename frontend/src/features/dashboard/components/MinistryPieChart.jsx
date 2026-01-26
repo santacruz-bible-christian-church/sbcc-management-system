@@ -38,7 +38,7 @@ export default function MinistryPieChart() {
     const unassignedCount = chartStats?.unassigned_members || 0;
     if (unassignedCount > 0) {
         ministryGroupData.push({
-            ministry: 'Unassigned',
+            ministry: 'Member',
             members: unassignedCount
         });
     }

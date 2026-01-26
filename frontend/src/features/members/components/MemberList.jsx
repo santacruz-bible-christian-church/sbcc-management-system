@@ -125,7 +125,7 @@ const MemberCard = ({
                     borderLeft: '3px solid #E5E7EB'
                 }}
             >
-                <span className="truncate">{member.ministry_name || 'Unassigned'}</span>
+                <span className="truncate">{member.ministry_name || 'Member'}</span>
             </div>
 
             {/* Actions */}
