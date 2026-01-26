@@ -296,7 +296,7 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
                 icon={HiOutlineOfficeBuilding}
                 iconBg="bg-[#FDB54A] bg-opacity-10 text-[#FDB54A]"
                 label="Current Ministry"
-                value={member.ministry_name || 'Unassigned'}
+                value={member.ministry_name || 'Member'}
               />
             </Section>
 
