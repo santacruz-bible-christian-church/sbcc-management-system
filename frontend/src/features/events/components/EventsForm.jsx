@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { HiCalendar, HiClock, HiLocationMarker, HiUserGroup, HiTag, HiDocumentText } from 'react-icons/hi';
-import { EVENT_TYPE_OPTIONS, STATUS_OPTIONS, DEFAULT_FORM_VALUES } from '../utils/constants';
+import { EVENT_TYPE_OPTIONS, STATUS_OPTIONS, RECURRENCE_OPTIONS, DEFAULT_FORM_VALUES } from '../utils/constants';
 
 // Helper to parse datetime-local value into separate date and time
 const parseDateTime = (dateTimeStr) => {
@@ -80,10 +80,25 @@ export const EventsForm = ({
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
-    setValues((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+
+    setValues((prev) => {
+      const newValues = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      };
+
+      // Special handling for recurrence toggle
+      if (name === 'is_recurring') {
+        if (checked && prev.recurrence_pattern === 'none') {
+          newValues.recurrence_pattern = 'weekly'; // Default to weekly when checked
+        } else if (!checked) {
+          newValues.recurrence_pattern = 'none'; // Reset to none when unchecked
+          newValues.recurrence_end_date = null;
+        }
+      }
+
+      return newValues;
+    });
   };
 
   const handleSubmit = (event) => {
@@ -100,7 +115,9 @@ export const EventsForm = ({
       location: values.location,
       ministry: values.ministry || null,
       max_attendees: values.max_attendees ? parseInt(values.max_attendees) : null, // Backend uses 'max_attendees'
-      is_recurring: values.is_recurring,
+      // Backend ignores is_recurring (read-only), relies on recurrence_pattern != 'none'
+      recurrence_pattern: values.is_recurring ? values.recurrence_pattern : 'none',
+      recurrence_end_date: values.is_recurring ? values.recurrence_end_date : null,
     };
 
     onSubmit(payload);
@@ -289,6 +306,44 @@ export const EventsForm = ({
             />
             <span>This is a recurring event</span>
           </label>
+
+          {/* Recurrence Settings - Conditional */}
+          {values.is_recurring && (
+            <div className="pl-7 grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div>
+                <label className={labelClass} htmlFor="recurrence-pattern">Repeats</label>
+                <select
+                  id="recurrence-pattern"
+                  name="recurrence_pattern"
+                  className={selectClass}
+                  value={values.recurrence_pattern}
+                  onChange={handleChange}
+                >
+                  {RECURRENCE_OPTIONS.filter(opt => opt.value !== 'none').map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={labelClass} htmlFor="recurrence-end-date">Ends On (Optional)</label>
+                <div className="relative">
+                  <HiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    id="recurrence-end-date"
+                    name="recurrence_end_date"
+                    type="date"
+                    className={`${inputClass} pl-10`}
+                    value={values.recurrence_end_date || ''}
+                    onChange={handleChange}
+                    min={values.startDate}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

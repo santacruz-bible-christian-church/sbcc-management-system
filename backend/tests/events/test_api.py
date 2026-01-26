@@ -300,3 +300,118 @@ class TestEventIntegration:
         assert member1.id not in member_ids
         assert member2.id in member_ids
         assert member3.id in member_ids
+
+
+# =============================================================================
+# Recurring Events Tests
+# =============================================================================
+@pytest.mark.django_db
+class TestRecurringEvents:
+    """Tests for recurring event functionality."""
+
+    def test_create_recurring_event(self, admin_client, admin_user, ministry):
+        """Test creating a recurring event."""
+        date = timezone.now() + timedelta(days=7)
+        response = admin_client.post(
+            reverse("event-list"),
+            {
+                "title": "Weekly Bible Study",
+                "event_type": "bible_study",
+                "status": "published",
+                "date": date.isoformat(),
+                "location": "Room 101",
+                "organizer": admin_user.id,
+                "recurrence_pattern": "weekly",
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["recurrence_pattern"] == "weekly"
+        assert response.data["is_recurring"] is True
+
+    def test_is_recurring_computed_property(self, auth_client, recurring_event):
+        """Test that is_recurring is computed from recurrence_pattern."""
+        url = reverse("event-detail", kwargs={"pk": recurring_event.pk})
+        response = auth_client.get(url)
+
+        assert response.data["recurrence_pattern"] == "weekly"
+        assert response.data["is_recurring"] is True
+
+    def test_non_recurring_event(self, auth_client, event):
+        """Test that non-recurring event has is_recurring=False."""
+        url = reverse("event-detail", kwargs={"pk": event.pk})
+        response = auth_client.get(url)
+
+        assert response.data["recurrence_pattern"] == "none"
+        assert response.data["is_recurring"] is False
+
+    def test_generate_occurrences_action(self, admin_client, recurring_event):
+        """Test the generate_occurrences API action."""
+        url = reverse("event-generate-occurrences", kwargs={"pk": recurring_event.pk})
+        response = admin_client.post(url, {"weeks_ahead": 4}, format="json")
+
+        assert response.status_code in [status.HTTP_200_OK, status.HTTP_201_CREATED]
+        assert "created_count" in response.data
+        assert response.data["created_count"] >= 0
+
+    def test_generate_occurrences_non_recurring_fails(self, admin_client, event):
+        """Test that generating occurrences for non-recurring event fails."""
+        url = reverse("event-generate-occurrences", kwargs={"pk": event.pk})
+        response = admin_client.post(url, {}, format="json")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "not recurring" in response.data["detail"].lower()
+
+    def test_occurrences_linked_to_parent(self, admin_client, recurring_event):
+        """Test that generated occurrences link back to parent."""
+        # Generate occurrences
+        url = reverse("event-generate-occurrences", kwargs={"pk": recurring_event.pk})
+        response = admin_client.post(url, {"weeks_ahead": 2}, format="json")
+
+        if response.data["created_count"] > 0:
+            # Check first occurrence
+            occurrence_data = response.data["occurrences"][0]
+            assert occurrence_data["parent_event"] == recurring_event.pk
+            assert occurrence_data["is_occurrence"] is True
+
+    def test_generate_from_occurrence_fails(self, admin_client, recurring_event):
+        """Test that generating from an occurrence fails."""
+        # First generate some occurrences
+        url = reverse("event-generate-occurrences", kwargs={"pk": recurring_event.pk})
+        response = admin_client.post(url, {"weeks_ahead": 2}, format="json")
+
+        if response.data["created_count"] > 0:
+            # Try to generate from an occurrence (which has recurrence_pattern='none')
+            occurrence_id = response.data["occurrences"][0]["id"]
+            occurrence_url = reverse("event-generate-occurrences", kwargs={"pk": occurrence_id})
+            response = admin_client.post(occurrence_url, {}, format="json")
+
+            # Occurrences have recurrence_pattern='none', so they fail as "not recurring"
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_recurrence_end_date(self, admin_client, admin_user, ministry):
+        """Test that recurrence respects end date."""
+        date = timezone.now()
+        end_date = (timezone.now() + timedelta(days=7)).date()
+
+        event = Event.objects.create(
+            title="Limited Recurring",
+            event_type="prayer_meeting",
+            status="published",
+            date=date,
+            location="Room A",
+            organizer=admin_user,
+            ministry=ministry,
+            recurrence_pattern="daily",
+            recurrence_end_date=end_date,
+        )
+
+        url = reverse("event-generate-occurrences", kwargs={"pk": event.pk})
+        response = admin_client.post(url, {"weeks_ahead": 4}, format="json")
+
+        # Should not create occurrences beyond end_date
+        if response.data["created_count"] > 0:
+            for occ in response.data["occurrences"]:
+                occ_date = occ["date"][:10]  # Get date part
+                assert occ_date <= str(end_date)

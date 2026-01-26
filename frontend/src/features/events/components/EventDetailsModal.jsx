@@ -5,6 +5,7 @@ import {
   HiLocationMarker,
   HiUserGroup,
   HiOutlinePencil,
+  HiRefresh,
 } from 'react-icons/hi';
 import { format } from 'date-fns';
 import { SecondaryButton } from '../../../components/ui/Button';
@@ -99,6 +100,22 @@ export const EventDetailsModal = ({
             label="Time"
             value={endTime ? `${formattedTime} - ${endTime}` : formattedTime}
           />
+          {event.is_recurring && (
+            <DetailItem
+              icon={HiRefresh}
+              label="Repeats"
+              value={
+                <span>
+                  <span className="capitalize">{event.recurrence_pattern}</span>
+                  {event.recurrence_end_date && (
+                    <span className="text-gray-400 font-normal ml-1">
+                      (until {format(new Date(event.recurrence_end_date), 'MMM d, yyyy')})
+                    </span>
+                  )}
+                </span>
+              }
+            />
+          )}
           <DetailItem
             icon={HiLocationMarker}
             label="Location"

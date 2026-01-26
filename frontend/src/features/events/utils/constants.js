@@ -17,6 +17,15 @@ export const EVENT_TYPE_OPTIONS = [
   { value: 'other', label: 'Other' },
 ];
 
+
+export const RECURRENCE_OPTIONS = [
+  { value: 'none', label: 'None' },
+  { value: 'daily', label: 'Daily' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'biweekly', label: 'Every 2 Weeks' },
+  { value: 'monthly', label: 'Monthly' },
+];
+
 export const STATUS_OPTIONS = [
   { value: 'draft', label: 'Draft' },
   { value: 'published', label: 'Published' },
@@ -45,6 +54,8 @@ export const DEFAULT_FORM_VALUES = {
   ministry: '',
   max_attendees: '',
   is_recurring: false,
+  recurrence_pattern: 'none',
+  recurrence_end_date: '',
 };
 
 export const STATUS_METADATA = {
