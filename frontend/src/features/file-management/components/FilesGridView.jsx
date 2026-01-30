@@ -1,8 +1,17 @@
 import PropTypes from 'prop-types';
 import { HiDownload, HiTrash, HiPencil } from 'react-icons/hi';
 
-export const FilesGridView = ({ files, selectedFiles, onToggleSelection, onDelete, onFileClick }) => {
+export const FilesGridView = ({
+  files,
+  selectedFiles,
+  onToggleSelection,
+  onDelete,
+  onFileClick,
+  canWrite = true,
+}) => {
   if (files.length === 0) return null;
+  const canEdit = canWrite && typeof onFileClick === 'function';
+  const canDelete = canWrite && typeof onDelete === 'function';
 
   const handleEdit = (file, e) => {
     e.stopPropagation();
@@ -11,7 +20,7 @@ export const FilesGridView = ({ files, selectedFiles, onToggleSelection, onDelet
 
   const handleDelete = (file, e) => {
     e.stopPropagation();
-    onDelete(file);
+    onDelete && onDelete(file);
   };
 
   return (
@@ -52,13 +61,15 @@ export const FilesGridView = ({ files, selectedFiles, onToggleSelection, onDelet
             {/* Quick Actions */}
             <div className="flex items-center justify-center gap-1 pt-3 border-t border-gray-100">
               {/* Edit Button */}
-              <button
-                onClick={(e) => handleEdit(file, e)}
-                className="flex-1 p-2 hover:bg-gray-50 rounded-lg transition-colors"
-                title="Edit"
-              >
-                <HiPencil className="w-4 h-4 text-gray-600 mx-auto" />
-              </button>
+              {canEdit && (
+                <button
+                  onClick={(e) => handleEdit(file, e)}
+                  className="flex-1 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                  title="Edit"
+                >
+                  <HiPencil className="w-4 h-4 text-gray-600 mx-auto" />
+                </button>
+              )}
 
               {/* Download Button - Only show if file has URL */}
               {file.fileUrl && (
@@ -76,13 +87,15 @@ export const FilesGridView = ({ files, selectedFiles, onToggleSelection, onDelet
               )}
 
               {/* Delete Button */}
-              <button
-                onClick={(e) => handleDelete(file, e)}
-                className="flex-1 p-2 hover:bg-red-50 rounded-lg transition-colors"
-                title="Delete"
-              >
-                <HiTrash className="w-4 h-4 text-red-500 mx-auto" />
-              </button>
+              {canDelete && (
+                <button
+                  onClick={(e) => handleDelete(file, e)}
+                  className="flex-1 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete"
+                >
+                  <HiTrash className="w-4 h-4 text-red-500 mx-auto" />
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -106,6 +119,7 @@ FilesGridView.propTypes = {
   ).isRequired,
   selectedFiles: PropTypes.array.isRequired,
   onToggleSelection: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
+  onDelete: PropTypes.func,
   onFileClick: PropTypes.func,
+  canWrite: PropTypes.bool,
 };

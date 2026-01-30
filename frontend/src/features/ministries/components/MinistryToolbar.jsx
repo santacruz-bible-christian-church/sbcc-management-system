@@ -52,7 +52,7 @@ export const MinistryToolbar = ({
   searchTerm,
   onSearchChange,
   onCreateClick,
-  canManage,
+  canCreate,
 }) => {
   // Local search state for immediate UI feedback
   const [localSearch, setLocalSearch] = useState(searchTerm);
@@ -78,7 +78,7 @@ export const MinistryToolbar = ({
       <div className="flex items-center justify-between gap-4 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm flex-wrap">
         <MinistryStats stats={stats} loading={statsLoading} />
 
-        {canManage && (
+        {canCreate && (
           <button
             onClick={onCreateClick}
             className="flex items-center gap-2 px-4 py-2 bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] transition-colors"

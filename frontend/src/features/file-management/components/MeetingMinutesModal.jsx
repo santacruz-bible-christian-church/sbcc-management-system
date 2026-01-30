@@ -30,6 +30,9 @@ export const MeetingMinutesModal = ({
   const fileInputRef = useRef(null);
 
   const isEditing = !!meeting;
+  const canSave = typeof onSave === 'function';
+  const canUpload = typeof onUploadAttachment === 'function';
+  const canDeleteAttachment = typeof onDeleteAttachment === 'function';
 
   // Populate form when editing
   useEffect(() => {
@@ -93,6 +96,7 @@ export const MeetingMinutesModal = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!canSave) return;
     if (!validate()) return;
 
     try {
@@ -106,7 +110,7 @@ export const MeetingMinutesModal = ({
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file || !meeting?.id) return;
+    if (!file || !meeting?.id || !canUpload) return;
 
     try {
       setUploadingFile(true);
@@ -297,17 +301,19 @@ export const MeetingMinutesModal = ({
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <label className="block text-sm font-medium text-gray-700">Attachments</label>
-                      <label className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer transition-colors">
-                        <HiUpload className="w-4 h-4" />
-                        <span className="text-sm">{uploadingFile ? 'Uploading...' : 'Upload File'}</span>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          className="hidden"
-                          onChange={handleFileUpload}
-                          disabled={uploadingFile}
-                        />
-                      </label>
+                      {canUpload && (
+                        <label className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer transition-colors">
+                          <HiUpload className="w-4 h-4" />
+                          <span className="text-sm">{uploadingFile ? 'Uploading...' : 'Upload File'}</span>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            className="hidden"
+                            onChange={handleFileUpload}
+                            disabled={uploadingFile}
+                          />
+                        </label>
+                      )}
                     </div>
 
                     {meeting.attachments?.length > 0 ? (
@@ -346,14 +352,16 @@ export const MeetingMinutesModal = ({
                                 </a>
                               )}
                               {/* Delete Button */}
-                              <button
-                                type="button"
-                                onClick={() => onDeleteAttachment(attachment.id)}
-                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Delete attachment"
-                              >
-                                <HiTrash className="w-4 h-4" />
-                              </button>
+                              {canDeleteAttachment && (
+                                <button
+                                  type="button"
+                                  onClick={() => onDeleteAttachment(attachment.id)}
+                                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Delete attachment"
+                                >
+                                  <HiTrash className="w-4 h-4" />
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -386,7 +394,7 @@ export const MeetingMinutesModal = ({
             >
               Cancel
             </button>
-            {activeTab === 'details' && (
+            {activeTab === 'details' && canSave && (
               <button
                 onClick={handleSubmit}
                 disabled={loading}
@@ -406,7 +414,7 @@ MeetingMinutesModal.propTypes = {
   open: PropTypes.bool.isRequired,
   meeting: PropTypes.object,
   categories: PropTypes.array,
-  onSave: PropTypes.func.isRequired,
+  onSave: PropTypes.func,
   onCancel: PropTypes.func.isRequired,
   onUploadAttachment: PropTypes.func,
   onDeleteAttachment: PropTypes.func,

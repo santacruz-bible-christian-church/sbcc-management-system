@@ -1,6 +1,7 @@
 import { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAttendanceSheets } from '../hooks/useAttendanceSheets';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 import {
   AttendanceSheetInput,
   AttendanceSheetList,
@@ -23,6 +24,7 @@ const formatDate = (dateString) => {
 
 export default function AttendanceSheetPage() {
   const navigate = useNavigate();
+  const { canWrite } = usePermissionWarning('attendance', { label: 'Attendance' });
   const {
     sheets,
     loading,
@@ -148,15 +150,18 @@ export default function AttendanceSheetPage() {
           eventFilter={filters.event}
           onEventFilterChange={handleEventFilterChange}
           events={events}
-          onCreateClick={() => setShowModal(true)}
+          onCreateClick={canWrite ? () => setShowModal(true) : undefined}
+          canWrite={canWrite}
         />
 
         {/* Create Modal */}
-        <AttendanceSheetInput
-          open={showModal}
-          onClose={() => setShowModal(false)}
-          onCreate={handleCreate}
-        />
+        {canWrite && (
+          <AttendanceSheetInput
+            open={showModal}
+            onClose={() => setShowModal(false)}
+            onCreate={handleCreate}
+          />
+        )}
 
         {/* Error Message */}
         {error && (
@@ -172,8 +177,8 @@ export default function AttendanceSheetPage() {
           ) : sheets.length === 0 ? (
             <EmptyState
               message="No attendance sheets found"
-              actionLabel="Create Your First Sheet"
-              onAction={() => setShowModal(true)}
+              actionLabel={canWrite ? "Create Your First Sheet" : undefined}
+              onAction={canWrite ? () => setShowModal(true) : undefined}
             />
           ) : (
             <>
@@ -182,9 +187,10 @@ export default function AttendanceSheetPage() {
                 <AttendanceSheetList
                   sheets={sheets}
                   onDownload={handleDownload}
-                  onEdit={handleEdit}
-                  onDelete={openDeleteModal}
+                  onEdit={canWrite ? handleEdit : undefined}
+                  onDelete={canWrite ? openDeleteModal : undefined}
                   formatDate={formatDate}
+                  canWrite={canWrite}
                 />
               </div>
 

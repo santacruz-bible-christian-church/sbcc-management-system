@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ConfirmationModal } from '../../../components/ui/Modal';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 import { FoldersListView } from '../components/FoldersListView';
 import { FilesListView } from '../components/FilesListView';
@@ -18,6 +19,7 @@ import { useFileActions } from '../hooks/useFileActions';
 import { useDebounce } from '../../../hooks/useDebounce';
 
 export const FileManagementPage = () => {
+  const { canWrite } = usePermissionWarning('documents', { label: 'Documents' });
   const {
     meetings,
     categories,
@@ -165,7 +167,8 @@ export const FileManagementPage = () => {
         onRefresh={refetch}
         viewMode={viewMode}
         onViewModeToggle={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-        onAddNew={openCreateModal}
+        onAddNew={canWrite ? openCreateModal : undefined}
+        canWrite={canWrite}
       />
 
       {/* Content Area */}
@@ -197,8 +200,9 @@ export const FileManagementPage = () => {
                 files={allFiles}
                 onFolderClick={handleFolderClick}
                 onFileClick={onFileClick}
-                onFileDelete={openDeleteModal}
+                onFileDelete={canWrite ? openDeleteModal : undefined}
                 onExportPdf={exportPdf}
+                canWrite={canWrite}
               />
             )}
 
@@ -209,8 +213,9 @@ export const FileManagementPage = () => {
                   folders={folders}
                   selectedFiles={selectedFiles}
                   onToggleSelection={toggleFileSelection}
-                  onDelete={openDeleteModal}
+                  onDelete={canWrite ? openDeleteModal : undefined}
                   onFolderClick={handleFolderClick}
+                  canWrite={canWrite}
                 />
               </div>
             )}
@@ -224,8 +229,9 @@ export const FileManagementPage = () => {
                       files={files}
                       selectedFiles={selectedFiles}
                       onToggleSelection={toggleFileSelection}
-                      onDelete={openDeleteModal}
+                      onDelete={canWrite ? openDeleteModal : undefined}
                       onFileClick={onFileClick}
+                      canWrite={canWrite}
                     />
                   </div>
                 ) : (
@@ -234,9 +240,10 @@ export const FileManagementPage = () => {
                       files={files}
                       selectedFiles={selectedFiles}
                       onToggleSelection={toggleFileSelection}
-                      onDelete={openDeleteModal}
+                      onDelete={canWrite ? openDeleteModal : undefined}
                       onFileClick={onFileClick}
                       onExportPdf={exportPdf}
+                      canWrite={canWrite}
                     />
                   </div>
                 )}
@@ -247,7 +254,8 @@ export const FileManagementPage = () => {
             {files.length === 0 && folders.length === 0 && (
               <FileEmptyState
                 viewingMeeting={viewingMeeting}
-                onCreateNew={openCreateModal}
+                onCreateNew={canWrite ? openCreateModal : undefined}
+                canWrite={canWrite}
               />
             )}
           </>
@@ -259,12 +267,12 @@ export const FileManagementPage = () => {
         open={modalState.open}
         meeting={modalState.meeting}
         categories={categories}
-        onSave={handleSave}
+        onSave={canWrite ? handleSave : undefined}
         onCancel={closeModal}
-        onUploadAttachment={handleUploadAttachment}
-        onDeleteAttachment={handleDeleteAttachmentFromModal}
+        onUploadAttachment={canWrite ? handleUploadAttachment : undefined}
+        onDeleteAttachment={canWrite ? handleDeleteAttachmentFromModal : undefined}
         onFetchVersions={handleFetchVersions}
-        onRestoreVersion={handleRestoreVersion}
+        onRestoreVersion={canWrite ? handleRestoreVersion : undefined}
         loading={saving}
       />
 

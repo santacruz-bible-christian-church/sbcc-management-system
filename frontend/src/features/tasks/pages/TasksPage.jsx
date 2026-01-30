@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Spinner } from 'flowbite-react';
 import { HiOutlineFilter, HiOutlinePlusCircle, HiOutlineSearch } from 'react-icons/hi';
-import { useAuth } from '../../auth/hooks/useAuth';
 import { useTasks } from '../hooks/useTasks';
 import { useSnackbar } from '../../../hooks/useSnackbar';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 import {
   TaskModal,
   KanbanBoard,
@@ -16,12 +16,10 @@ import { ConfirmationModal } from '../../../components/ui/Modal';
 import Snackbar from '../../../components/ui/Snackbar';
 import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 
-const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
-
 export const TasksPage = () => {
-  const { user } = useAuth();
-  const canManageTasks = MANAGER_ROLES.includes(user?.role);
-  const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
+  const { canWrite } = usePermissionWarning('tasks', { label: 'Tasks' });
+  const canManageTasks = canWrite;
+  const { snackbar, hideSnackbar, showSuccess, showError, showWarning } = useSnackbar();
   const {
     tasks,
     loading,
@@ -68,19 +66,30 @@ export const TasksPage = () => {
     setSearch(searchDraft.trim());
   };
 
+  const requireWritePermission = useCallback(() => {
+    if (!canManageTasks) {
+      showWarning("You don't have permission to perform this action.");
+      return false;
+    }
+    return true;
+  }, [canManageTasks, showWarning]);
+
   const openCreateModal = useCallback(() => {
+    if (!requireWritePermission()) return;
     setFormState({ open: true, mode: 'create', task: null });
-  }, []);
+  }, [requireWritePermission]);
 
   const openEditModal = useCallback((task) => {
+    if (!requireWritePermission()) return;
     setFormState({ open: true, mode: 'edit', task });
-  }, []);
+  }, [requireWritePermission]);
 
   const closeFormModal = useCallback(() => {
     setFormState({ open: false, mode: 'create', task: null });
   }, []);
 
   const handleFormSubmit = async (payload) => {
+    if (!requireWritePermission()) return;
     setSubmitting(true);
     try {
       if (formState.mode === 'create') {
@@ -101,8 +110,9 @@ export const TasksPage = () => {
   };
 
   const openDeleteModal = useCallback((task) => {
+    if (!requireWritePermission()) return;
     setDeleteState({ open: true, task });
-  }, []);
+  }, [requireWritePermission]);
 
   const closeDeleteModal = useCallback(() => {
     setDeleteState({ open: false, task: null });
@@ -110,6 +120,7 @@ export const TasksPage = () => {
 
   const handleDeleteConfirm = async () => {
     if (!deleteState.task) return;
+    if (!requireWritePermission()) return;
 
     setSubmitting(true);
     try {
@@ -126,6 +137,7 @@ export const TasksPage = () => {
   };
 
   const handleStatusChange = async (taskId, newStatus) => {
+    if (!requireWritePermission()) return;
     const statusLabels = {
       pending: 'To Do',
       in_progress: 'In Progress',
@@ -166,6 +178,7 @@ export const TasksPage = () => {
   };
 
   const handleReopen = async (task) => {
+    if (!requireWritePermission()) return;
     try {
       await reopenTask(task.id);
       showSuccess(`Task "${task.title}" has been reopened`);

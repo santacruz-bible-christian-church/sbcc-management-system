@@ -6,8 +6,6 @@ import {
   HiRefresh,
 } from 'react-icons/hi';
 
-export const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
-
 export const EVENT_TYPE_OPTIONS = [
   { value: 'service', label: 'Sunday Service' },
   { value: 'bible_study', label: 'Bible Study' },

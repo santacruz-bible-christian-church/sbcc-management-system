@@ -11,10 +11,12 @@ import {
 import { useAttendanceTracker } from '../hooks/useAttendanceTracker';
 import { useAttendanceFilters } from '../hooks/useAttendanceFilters';
 import { useMultiSelect } from '../hooks/useMultiSelect';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 
 export default function AttendanceTracker() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { canWrite } = usePermissionWarning('attendance', { label: 'Attendance Tracker' });
   const attendanceId = location.state?.attendanceId;
 
   // Main data hook
@@ -128,11 +130,12 @@ export default function AttendanceTracker() {
           <AttendanceTrackerHeader
             sheet={sheet}
             isMultiSelectMode={isMultiSelectMode}
-            onToggleMultiSelectMode={toggleMultiSelectMode}
+            onToggleMultiSelectMode={canWrite ? toggleMultiSelectMode : undefined}
+            canWrite={canWrite}
           />
 
           {/* Bulk Actions Bar */}
-          {isMultiSelectMode && (
+          {canWrite && isMultiSelectMode && (
             <AttendanceBulkActionsBar
               selectedCount={selectedRecords.size}
               onMarkPresent={handleBulkMarkPresent}
@@ -151,9 +154,10 @@ export default function AttendanceTracker() {
               onMinistryChange={handleMinistryChange}
               ministries={ministries}
               onClearFilters={handleClearFilters}
-              onSave={onSave}
+              onSave={canWrite ? onSave : undefined}
               hasChanges={hasChanges}
               saving={saving}
+              canWrite={canWrite}
             />
           </div>
 
@@ -197,14 +201,15 @@ export default function AttendanceTracker() {
             totalCount={filtered.length}
             pageSize={pageSize}
             onPageChange={setPage}
-            onToggleAttendance={handleToggleAttendance}
+            onToggleAttendance={canWrite ? handleToggleAttendance : undefined}
             saving={saving}
             isMultiSelectMode={isMultiSelectMode}
             selectedRecords={selectedRecords}
-            onToggleSelection={toggleRecordSelection}
+            onToggleSelection={canWrite ? toggleRecordSelection : undefined}
             isAllPageSelected={isAllPageSelected}
             isSomePageSelected={isSomePageSelected}
-            onToggleAllPage={toggleAllPageSelection}
+            onToggleAllPage={canWrite ? toggleAllPageSelection : undefined}
+            canWrite={canWrite}
           />
         </div>
       </div>

@@ -9,6 +9,15 @@ const AnnouncementCard = ({ announcement, onEdit, onDelete, onDeactivate, onSend
   const status = getAnnouncementStatus(announcement);
   const statusConfig = STATUS_CONFIG[status];
   const StatusIcon = statusConfig.icon;
+  const canPreview = typeof onPreview === 'function';
+  const canEdit = typeof onEdit === 'function';
+  const canDelete = typeof onDelete === 'function';
+  const canDeactivate = typeof onDeactivate === 'function';
+  const canSendNow = typeof onSendNow === 'function';
+  const showSendNow = canSendNow && !announcement.sent && status === 'published' && announcement.is_active;
+  const showDeactivate = canDeactivate && announcement.is_active;
+  const hasActions =
+    canPreview || canEdit || canDelete || showSendNow || showDeactivate;
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -60,71 +69,83 @@ const AnnouncementCard = ({ announcement, onEdit, onDelete, onDeactivate, onSend
           </div>
 
           {/* Actions Menu */}
-          <div className="relative" ref={menuRef}>
-            <button
-              onClick={() => setShowMenu(!showMenu)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <HiDotsVertical className="w-5 h-5 text-gray-600" />
-            </button>
+          {hasActions && (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <HiDotsVertical className="w-5 h-5 text-gray-600" />
+              </button>
 
-            {showMenu && (
-              <div className="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border z-10 py-1">
-                {/* Preview Recipients */}
-                <button
-                  onClick={() => { onPreview(announcement); setShowMenu(false); }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
-                >
-                  <HiEye className="w-4 h-4" />
-                  Preview Recipients
-                </button>
+              {showMenu && (
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border z-10 py-1">
+                  {/* Preview Recipients */}
+                  {canPreview && (
+                    <button
+                      onClick={() => { onPreview(announcement); setShowMenu(false); }}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                    >
+                      <HiEye className="w-4 h-4" />
+                      Preview Recipients
+                    </button>
+                  )}
 
-                <div className="border-t my-1" />
+                  {canPreview && (canEdit || showSendNow || showDeactivate || canDelete) && (
+                    <div className="border-t my-1" />
+                  )}
 
-                {/* Edit */}
-                <button
-                  onClick={() => { onEdit(announcement); setShowMenu(false); }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
-                >
-                  <HiPencil className="w-4 h-4" />
-                  Edit Announcement
-                </button>
+                  {/* Edit */}
+                  {canEdit && (
+                    <button
+                      onClick={() => { onEdit(announcement); setShowMenu(false); }}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                    >
+                      <HiPencil className="w-4 h-4" />
+                      Edit Announcement
+                    </button>
+                  )}
 
-                {/* Send Now - only if published and not sent */}
-                {!announcement.sent && status === 'published' && announcement.is_active && (
-                  <button
-                    onClick={() => { onSendNow(announcement); setShowMenu(false); }}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-blue-600"
-                  >
-                    <HiMail className="w-4 h-4" />
-                    Send Email Now
-                  </button>
-                )}
+                  {/* Send Now - only if published and not sent */}
+                  {showSendNow && (
+                    <button
+                      onClick={() => { onSendNow(announcement); setShowMenu(false); }}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-blue-600"
+                    >
+                      <HiMail className="w-4 h-4" />
+                      Send Email Now
+                    </button>
+                  )}
 
-                <div className="border-t my-1" />
+                  {(canEdit || showSendNow) && (showDeactivate || canDelete) && (
+                    <div className="border-t my-1" />
+                  )}
 
-                {/* Deactivate - only if active */}
-                {announcement.is_active && (
-                  <button
-                    onClick={() => { onDeactivate(announcement); setShowMenu(false); }}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-orange-600"
-                  >
-                    <HiBan className="w-4 h-4" />
-                    Deactivate
-                  </button>
-                )}
+                  {/* Deactivate - only if active */}
+                  {showDeactivate && (
+                    <button
+                      onClick={() => { onDeactivate(announcement); setShowMenu(false); }}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-orange-600"
+                    >
+                      <HiBan className="w-4 h-4" />
+                      Deactivate
+                    </button>
+                  )}
 
-                {/* Delete */}
-                <button
-                  onClick={() => { onDelete(announcement); setShowMenu(false); }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600"
-                >
-                  <HiTrash className="w-4 h-4" />
-                  Delete Permanently
-                </button>
-              </div>
-            )}
-          </div>
+                  {/* Delete */}
+                  {canDelete && (
+                    <button
+                      onClick={() => { onDelete(announcement); setShowMenu(false); }}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                    >
+                      <HiTrash className="w-4 h-4" />
+                      Delete Permanently
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Metadata */}

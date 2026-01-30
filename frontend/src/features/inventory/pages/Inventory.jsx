@@ -8,6 +8,7 @@ import {
 import Snackbar from '../../../components/ui/Snackbar';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 import { useSnackbar } from '../../../hooks/useSnackbar';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 import { useInventory } from '../hooks/useInventory';
 import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 import { printStickersPDF } from '../utils/stickersPDF';
@@ -24,6 +25,7 @@ import DateRangeExportModal from '../components/DateRangeExportModal';
 import InventoryPagination from '../components/InventoryPagination';
 
 const InventoryPage = () => {
+  const { canWrite } = usePermissionWarning('inventory', { label: 'Inventory' });
   const {
     filteredItems,
     paginatedItems,
@@ -153,13 +155,15 @@ const InventoryPage = () => {
               <HiOutlinePrinter className="w-4 h-4" />
               Print Labels
             </button>
-            <button
-              onClick={openCreate}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#FDB54A] hover:bg-[#e5a43b] rounded-lg transition-colors"
-            >
-              <HiOutlinePlusCircle className="w-4 h-4" />
-              Add Asset
-            </button>
+            {canWrite && (
+              <button
+                onClick={openCreate}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#FDB54A] hover:bg-[#e5a43b] rounded-lg transition-colors"
+              >
+                <HiOutlinePlusCircle className="w-4 h-4" />
+                Add Asset
+              </button>
+            )}
           </div>
         </div>
 
@@ -206,8 +210,9 @@ const InventoryPage = () => {
                 <InventoryTable
                   items={paginatedItems}
                   loading={loading}
-                  onEdit={openEdit}
-                  onDelete={openDelete}
+                  onEdit={canWrite ? openEdit : undefined}
+                  onDelete={canWrite ? openDelete : undefined}
+                  canWrite={canWrite}
                 />
 
                 {/* Pagination Controls - inside table container */}

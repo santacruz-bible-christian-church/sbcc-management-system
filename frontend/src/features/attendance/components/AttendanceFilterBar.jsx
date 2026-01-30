@@ -78,18 +78,20 @@ export default function AttendanceFilterBar({
       </div>
 
       {/* Save Changes */}
-      <div>
-        <button
-          onClick={onSave}
-          disabled={!hasChanges || saving || disabled}
-          className={`px-4 py-2 text-white text-sm font-medium rounded-lg shadow-md transition-opacity ${
-            !hasChanges || saving || disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
-          }`}
-          style={{ backgroundColor: ACCENT }}
-        >
-          {saving ? 'Saving...' : hasChanges ? 'Save Changes *' : 'Save Changes'}
-        </button>
-      </div>
+      {typeof onSave === 'function' && (
+        <div>
+          <button
+            onClick={onSave}
+            disabled={!hasChanges || saving || disabled}
+            className={`px-4 py-2 text-white text-sm font-medium rounded-lg shadow-md transition-opacity ${
+              !hasChanges || saving || disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+            }`}
+            style={{ backgroundColor: ACCENT }}
+          >
+            {saving ? 'Saving...' : hasChanges ? 'Save Changes *' : 'Save Changes'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -101,7 +103,7 @@ AttendanceFilterBar.propTypes = {
   onMinistryChange: PropTypes.func.isRequired,
   ministries: PropTypes.arrayOf(PropTypes.string).isRequired,
   onClearFilters: PropTypes.func.isRequired,
-  onSave: PropTypes.func.isRequired,
+  onSave: PropTypes.func,
   hasChanges: PropTypes.bool.isRequired,
   saving: PropTypes.bool.isRequired,
   disabled: PropTypes.bool,

@@ -6,9 +6,9 @@ import { useMembers } from '../hooks/useMembers';
 import { useMembersPageModals } from '../hooks/useMembersPageModals';
 import { useMembersPageActions } from '../hooks/useMembersPageActions';
 import { useMembersBulkActions } from '../hooks/useMembersBulkActions';
-import { useAuth } from '../../auth/hooks/useAuth';
 import { useCallback, useState, useEffect } from 'react';
 import { useDebounce } from '../../../hooks/useDebounce';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 import ArchiveIllustration from '../../../assets/Archive-Illustration.svg';
@@ -19,12 +19,10 @@ import { MemberEditModal } from '../components/MemberEditModal';
 import CSVImportModal from '../components/CSVImportModal';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
 
-const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
-
 export const MembershipListPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { user } = useAuth();
-  const canManage = MANAGER_ROLES.includes(user?.role);
+  const { canWrite } = usePermissionWarning('members', { label: 'Members' });
+  const canManage = canWrite;
   const { ministries } = useMinistries();
 
   const {

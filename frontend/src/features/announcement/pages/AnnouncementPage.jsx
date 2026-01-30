@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { HiPlus } from 'react-icons/hi';
 import { useAnnouncements } from '../hooks/useAnnouncements';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 import StatsCards from '../components/StatsCards';
 import AnnouncementFilters from '../components/AnnouncementFilters';
 import AnnouncementCard from '../components/AnnouncementCard';
@@ -13,6 +14,7 @@ import { getAnnouncementStatus } from '../utils/constants';
 import { showSuccess, showError } from '../../../utils/toast';
 
 const AnnouncementPage = () => {
+  const { canWrite } = usePermissionWarning('announcements', { label: 'Announcements' });
   const {
     announcements,
     loading,
@@ -145,13 +147,15 @@ const AnnouncementPage = () => {
         {/* Unified Toolbar */}
         <div className="flex items-center justify-between gap-4 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm mb-4">
           <StatsCards announcements={announcements} inline />
-          <button
-            onClick={handleCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] font-medium whitespace-nowrap"
-          >
-            <HiPlus className="w-5 h-5" />
-            New Announcement
-          </button>
+          {canWrite && (
+            <button
+              onClick={handleCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] font-medium whitespace-nowrap"
+            >
+              <HiPlus className="w-5 h-5" />
+              New Announcement
+            </button>
+          )}
         </div>
 
         {/* Filters */}
@@ -185,11 +189,12 @@ const AnnouncementPage = () => {
               <AnnouncementCard
                 key={announcement.id}
                 announcement={announcement}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onDeactivate={handleDeactivateClick}
-                onSendNow={handleSendNowClick}
+                onEdit={canWrite ? handleEdit : undefined}
+                onDelete={canWrite ? handleDelete : undefined}
+                onDeactivate={canWrite ? handleDeactivateClick : undefined}
+                onSendNow={canWrite ? handleSendNowClick : undefined}
                 onPreview={handlePreview}
+                canWrite={canWrite}
               />
             ))}
           </div>

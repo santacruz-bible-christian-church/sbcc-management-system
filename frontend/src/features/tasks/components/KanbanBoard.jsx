@@ -140,6 +140,7 @@ export const KanbanBoard = ({
               onReopen(task);
             } : undefined}
             onClose={closeDetailsModal}
+            canWrite={!!onEdit && !!onDelete}
           />
         )}
       </TaskModal>
