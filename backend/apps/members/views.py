@@ -18,6 +18,8 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
+from common.permissions import IsAdminOrPastorReadOnly
+
 from .models import Member
 from .serializers import MemberSerializer
 from .services import (
@@ -33,7 +35,7 @@ class MemberViewSet(viewsets.ModelViewSet):
 
     queryset = Member.objects.select_related("ministry").all()  # Remove "user"
     serializer_class = MemberSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["ministry", "status", "gender"]
     search_fields = ["first_name", "last_name", "email", "phone"]
@@ -81,7 +83,11 @@ class MemberViewSet(viewsets.ModelViewSet):
         kwargs["partial"] = True
         return self.update(request, *args, **kwargs)
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def archive(self, request, pk=None):
         """Soft-archive a member (set status to 'archived', set archived_at and deactivate)."""
         member = self.get_object()
@@ -91,7 +97,11 @@ class MemberViewSet(viewsets.ModelViewSet):
         member.save(update_fields=["status", "archived_at", "is_active", "updated_at"])
         return Response({"detail": "Member archived."}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def restore(self, request, pk=None):
         """Restore a previously archived member (set status back to 'active')."""
         member = self.get_object()
@@ -105,7 +115,11 @@ class MemberViewSet(viewsets.ModelViewSet):
         member.save(update_fields=["status", "archived_at", "is_active", "updated_at"])
         return Response({"detail": "Member restored."}, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=["post"], permission_classes=[permissions.IsAuthenticated])
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def bulk_archive(self, request):
         """
         Bulk archive members.
@@ -119,7 +133,11 @@ class MemberViewSet(viewsets.ModelViewSet):
         updated = qs.update(status="archived", archived_at=now, is_active=False, updated_at=now)
         return Response({"archived_count": updated}, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=["post"], permission_classes=[permissions.IsAuthenticated])
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def set_status(self, request):
         """
         Set status for one or more members.
@@ -622,7 +640,11 @@ class MemberViewSet(viewsets.ModelViewSet):
         except (ValueError, TypeError):
             return None
 
-    @action(detail=False, methods=["post"], permission_classes=[permissions.IsAuthenticated])
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def bulk_delete(self, request):
         """
         Bulk delete members.

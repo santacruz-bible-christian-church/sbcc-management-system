@@ -11,6 +11,8 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from common.throttling import AuthSensitiveThrottle
+
 from .permissions import IsAdminOrSuperAdmin, IsSuperAdmin
 from .serializers import (
     ChangePasswordSerializer,
@@ -57,6 +59,7 @@ class LoginView(TokenObtainPairView):
     """
 
     serializer_class = CustomTokenObtainPairSerializer
+    throttle_classes = [AuthSensitiveThrottle]
 
 
 class LogoutView(APIView):
@@ -153,6 +156,7 @@ class ForgotPasswordView(generics.GenericAPIView):
 
     permission_classes = [permissions.AllowAny]
     serializer_class = ForgotPasswordSerializer
+    throttle_classes = [AuthSensitiveThrottle]
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -182,6 +186,7 @@ class VerifyResetTokenView(generics.GenericAPIView):
 
     permission_classes = [permissions.AllowAny]
     serializer_class = VerifyResetTokenSerializer
+    throttle_classes = [AuthSensitiveThrottle]
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -198,6 +203,7 @@ class ResetPasswordView(generics.GenericAPIView):
 
     permission_classes = [permissions.AllowAny]
     serializer_class = ResetPasswordSerializer
+    throttle_classes = [AuthSensitiveThrottle]
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)

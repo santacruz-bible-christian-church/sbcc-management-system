@@ -10,6 +10,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
 from apps.members.models import Member
+from common.permissions import IsAdminOrPastorReadOnly
 
 from .models import Attendance, AttendanceSheet
 from .serializers import (
@@ -33,7 +34,7 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
         .prefetch_related("attendance_records__member")
         .all()
     )
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["event", "date"]
     search_fields = ["event__title", "notes"]
@@ -58,7 +59,11 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
         ]
         Attendance.objects.bulk_create(attendance_records, ignore_conflicts=True)
 
-    @action(detail=True, methods=["post"])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def update_attendances(self, request, pk=None):
         """
         Bulk update attendance status for multiple members
@@ -89,7 +94,11 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
 
         return Response({"updated_count": updated_count, "sheet": serializer.data})
 
-    @action(detail=True, methods=["post"])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def mark_present(self, request, pk=None):
         """
         Mark a single member as present
@@ -197,11 +206,23 @@ class AttendanceSheetViewSet(viewsets.ModelViewSet):
         # Only send email if explicitly requested (default: false)
         notify = request.query_params.get("notify", "false").lower() == "true"
 
+        if notify and not (
+            request.user.is_superuser or request.user.role in ["super_admin", "admin", "pastor"]
+        ):
+            return Response(
+                {"detail": "You do not have permission to send notifications."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         problem_members = check_frequent_absences(threshold=threshold, days=days, notify=notify)
 
         return Response({"threshold": threshold, "days": days, "problem_members": problem_members})
 
-    @action(detail=False, methods=["post"])
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def notify_inactive(self, request):
         """
         Send pastoral care emails to members with frequent absences.
@@ -231,7 +252,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         "member", "member__ministry", "sheet", "sheet__event"
     ).all()
     serializer_class = AttendanceSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["sheet", "member", "attended", "sheet__event"]
     search_fields = ["member__first_name", "member__last_name", "sheet__event__title"]

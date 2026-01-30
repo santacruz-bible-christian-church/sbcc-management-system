@@ -9,6 +9,8 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
 from common.pagination import CustomPageNumberPagination
+from common.permissions import IsAdminOrPastorReadOnly
+from common.throttling import PublicPostThrottle
 
 from .models import PrayerRequest, PrayerRequestFollowUp
 from .serializers import (
@@ -33,7 +35,7 @@ class PrayerRequestViewSet(viewsets.ModelViewSet):
     - CSV export
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
     pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["status", "priority", "category", "assigned_to", "is_public"]
@@ -68,11 +70,17 @@ class PrayerRequestViewSet(viewsets.ModelViewSet):
             return PrayerRequestAssignSerializer
         return PrayerRequestSerializer
 
-    @action(detail=False, methods=["post"], permission_classes=[permissions.AllowAny])
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[permissions.AllowAny],
+        throttle_classes=[PublicPostThrottle],
+    )
     def submit(self, request):
         """
         Public endpoint for submitting prayer requests.
         Optionally link to a member if member_id is provided.
+        Rate limited to prevent abuse.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -95,7 +103,11 @@ class PrayerRequestViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    @action(detail=True, methods=["post"])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def assign(self, request, pk=None):
         """Assign a prayer request to a pastor or elder"""
         prayer_request = self.get_object()
@@ -113,7 +125,11 @@ class PrayerRequestViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
-    @action(detail=True, methods=["post"])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def add_follow_up(self, request, pk=None):
         """Add a follow-up log to a prayer request"""
         prayer_request = self.get_object()
@@ -133,7 +149,11 @@ class PrayerRequestViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["post"])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def mark_completed(self, request, pk=None):
         """Mark a prayer request as completed"""
         prayer_request = self.get_object()
@@ -233,7 +253,7 @@ class PrayerRequestFollowUpViewSet(viewsets.ModelViewSet):
     """ViewSet for managing prayer request follow-ups"""
 
     serializer_class = PrayerRequestFollowUpSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
     pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ["prayer_request", "action_type", "created_by"]

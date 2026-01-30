@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -7,6 +8,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
 from apps.members.models import Member
+from common.permissions import IsAdminOrPastorReadOnly
 
 from .models import Event, EventRegistration
 from .serializers import EventRegistrationSerializer, EventSerializer
@@ -14,7 +16,7 @@ from .serializers import EventRegistrationSerializer, EventSerializer
 
 class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     search_fields = ["title", "description", "location"]
     filterset_fields = ["status", "event_type", "ministry"]
@@ -28,14 +30,23 @@ class EventViewSet(viewsets.ModelViewSet):
             .order_by("-date")
         )
 
-    @action(detail=True, methods=["post"])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     @transaction.atomic
     def register(self, request, pk=None):
         """
         Register a member for this event.
         Body: { "member_id": 123, "notes": "optional" }
+
+        Uses select_for_update to prevent race conditions during capacity check.
         """
-        event = self.get_object()
+        # Lock the event row to prevent concurrent registrations from overbooking
+        # Use get_object_or_404 to preserve DRF 404 behavior
+        event = get_object_or_404(self.get_queryset().select_for_update(), pk=pk)
+        self.check_object_permissions(request, event)
 
         if event.is_full:
             return Response({"detail": "Event is full"}, status=status.HTTP_400_BAD_REQUEST)
@@ -65,7 +76,11 @@ class EventViewSet(viewsets.ModelViewSet):
         serializer = EventRegistrationSerializer(registration)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["delete"])
+    @action(
+        detail=True,
+        methods=["delete"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def unregister(self, request, pk=None):
         """
         Unregister a member from this event.
@@ -97,7 +112,11 @@ class EventViewSet(viewsets.ModelViewSet):
         serializer = EventRegistrationSerializer(registrations, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["post"])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def generate_occurrences(self, request, pk=None):
         """
         Generate future occurrences for a recurring event.
@@ -139,4 +158,4 @@ class EventViewSet(viewsets.ModelViewSet):
 class EventRegistrationViewSet(viewsets.ModelViewSet):
     queryset = EventRegistration.objects.select_related("event", "member").all()
     serializer_class = EventRegistrationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
