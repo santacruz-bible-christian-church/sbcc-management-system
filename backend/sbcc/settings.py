@@ -142,7 +142,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Manila"
 
 USE_I18N = True
 
@@ -252,6 +252,10 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_PAGINATION_CLASS": "common.pagination.CustomPageNumberPagination",
+    "DEFAULT_THROTTLE_RATES": {
+        "auth_sensitive": "5/minute",
+        "public_post": "10/minute",
+    },
 }
 
 # JWT Settings
