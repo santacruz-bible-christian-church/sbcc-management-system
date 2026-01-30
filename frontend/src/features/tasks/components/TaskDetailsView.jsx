@@ -16,7 +16,7 @@ const statusColors = {
   cancelled: 'bg-gray-100 text-gray-800',
 };
 
-export const TaskDetailsView = ({ task, onEdit, onDelete, onReopen, onClose }) => {
+export const TaskDetailsView = ({ task, onEdit, onDelete, onReopen, onClose, canWrite = true }) => {
   const effectiveStatus = task.effective_status || task.status;
   const canReopen = ['completed', 'cancelled'].includes(effectiveStatus);
 
@@ -36,7 +36,7 @@ export const TaskDetailsView = ({ task, onEdit, onDelete, onReopen, onClose }) =
           </div>
         </div>
         <div className="flex gap-2 ml-4">
-          {canReopen && onReopen && (
+          {canWrite && canReopen && onReopen && (
             <button
               onClick={() => onReopen(task)}
               className="p-2 text-sbcc-gray hover:text-green-600 transition-colors"
@@ -45,20 +45,24 @@ export const TaskDetailsView = ({ task, onEdit, onDelete, onReopen, onClose }) =
               <HiRefresh className="h-6 w-6" />
             </button>
           )}
-          <button
-            onClick={onEdit}
-            className="p-2 text-sbcc-gray hover:text-sbcc-orange transition-colors"
-            title="Edit task"
-          >
-            <HiPencil className="h-6 w-6" />
-          </button>
-          <button
-            onClick={onDelete}
-            className="p-2 text-sbcc-gray hover:text-red-600 transition-colors"
-            title="Delete task"
-          >
-            <HiTrash className="h-6 w-6" />
-          </button>
+          {canWrite && (
+            <>
+              <button
+                onClick={onEdit}
+                className="p-2 text-sbcc-gray hover:text-sbcc-orange transition-colors"
+                title="Edit task"
+              >
+                <HiPencil className="h-6 w-6" />
+              </button>
+              <button
+                onClick={onDelete}
+                className="p-2 text-sbcc-gray hover:text-red-600 transition-colors"
+                title="Delete task"
+              >
+                <HiTrash className="h-6 w-6" />
+              </button>
+            </>
+          )}
         </div>
       </div>
 

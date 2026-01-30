@@ -24,6 +24,16 @@ def ministry_leader_user(create_user):
 
 
 @pytest.fixture
+def readonly_user(create_user):
+    """Create a read-only user (non-management role)."""
+    return create_user(
+        username="readonly_user",
+        email="readonly@example.com",
+        role="member",
+    )
+
+
+@pytest.fixture
 def make_auth_client(api_client):
     """Factory to create authenticated client for any user."""
 
@@ -43,3 +53,8 @@ def pastor_client(make_auth_client, pastor_user):
 @pytest.fixture
 def ministry_leader_client(make_auth_client, ministry_leader_user):
     return make_auth_client(ministry_leader_user)
+
+
+@pytest.fixture
+def readonly_client(make_auth_client, readonly_user):
+    return make_auth_client(readonly_user)

@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect } from 'react';
-import { useAuth } from '../../auth/hooks/useAuth';
 import { useMinistries } from '../hooks/useMinistries';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 import { MinistryCard } from '../components/MinistryCard';
 import { MinistryFormModal } from '../components/MinistryFormModal';
 import { MinistryToolbar } from '../components/MinistryToolbar';
@@ -11,11 +11,9 @@ import { useNavigate } from 'react-router-dom';
 import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 import { ministriesApi } from '../../../api/ministries.api';
 
-const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
-
 export const MinistriesPage = () => {
-  const { user } = useAuth();
-  const canManage = MANAGER_ROLES.includes(user?.role);
+  const { canWrite } = usePermissionWarning('ministries', { label: 'Ministries' });
+  const canCreate = canWrite;
   const navigate = useNavigate();
 
   const {
@@ -63,6 +61,8 @@ export const MinistriesPage = () => {
     setSearchTerm(value);
     setSearch(value);
   }, [setSearch]);
+
+  const canManageMinistry = useCallback(() => canWrite, [canWrite]);
 
   const openCreateModal = useCallback(() => {
     setFormModal({ open: true, ministry: null });
@@ -119,7 +119,7 @@ export const MinistriesPage = () => {
           searchTerm={searchTerm}
           onSearchChange={handleSearchChange}
           onCreateClick={openCreateModal}
-          canManage={canManage}
+          canCreate={canCreate}
         />
 
         {/* Error Message */}
@@ -135,8 +135,8 @@ export const MinistriesPage = () => {
         ) : ministries.length === 0 ? (
           <EmptyState
             message="No ministries found"
-            actionLabel={canManage ? "Create Your First Ministry" : undefined}
-            onAction={canManage ? openCreateModal : undefined}
+            actionLabel={canCreate ? "Create Your First Ministry" : undefined}
+            onAction={canCreate ? openCreateModal : undefined}
           />
         ) : (
           <>
@@ -147,7 +147,7 @@ export const MinistriesPage = () => {
                   <MinistryCard
                     key={ministry.id}
                     ministry={ministry}
-                    canManage={canManage}
+                    canManage={canManageMinistry(ministry)}
                     onEdit={openEditModal}
                     onDelete={openDeleteModal}
                     onViewDetails={handleViewDetails}

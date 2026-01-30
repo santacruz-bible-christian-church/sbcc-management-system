@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Tabs } from 'flowbite-react';
 import { HiOutlineCog, HiOutlineInformationCircle, HiOutlinePhone, HiOutlineUser, HiOutlineUserGroup } from 'react-icons/hi';
-import { useAuth } from '../../auth/hooks/useAuth';
 import { useSettings } from '../hooks/useSettings';
 import { useSnackbar } from '../../../hooks/useSnackbar';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 import { BrandingTab } from '../components/BrandingTab';
 import { AboutTab } from '../components/AboutTab';
 import { ContactTab } from '../components/ContactTab';
@@ -14,13 +14,13 @@ import { SettingsSkeleton } from '../components/SettingsSkeleton';
 import Snackbar from '../../../components/ui/Snackbar';
 
 export const SettingsPage = () => {
-  const { user } = useAuth();
+  const { canWrite, user } = usePermissionWarning('settings', { label: 'Settings' });
   const { settings, loading, saving, refresh, updateSettings, uploadImage, removeImage } = useSettings();
   const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
   const [activeTab, setActiveTab] = useState(0);
 
   // Check if user can modify system settings (branding, about, contact)
-  const canEditSystemSettings = ['super_admin', 'admin'].includes(user?.role);
+  const canEditSystemSettings = canWrite;
 
   const handleSave = async (data, isImage = false) => {
     try {

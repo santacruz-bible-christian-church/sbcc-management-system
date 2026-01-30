@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
-from apps.authentication.permissions import IsAdminOrSuperAdmin
+from common.permissions import IsAdminOrPastorReadOnly
 
 from .models import Announcement
 from .serializers import AnnouncementSerializer
@@ -24,9 +24,9 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get_permissions(self):
-        """Only admins/super_admins can create, update, or delete announcements."""
+        """Only admins/super_admins and pastors can create, update, or delete announcements."""
         if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [IsAdminOrSuperAdmin()]
+            return [IsAdminOrPastorReadOnly()]
         return super().get_permissions()
 
     def perform_create(self, serializer):
@@ -59,7 +59,7 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["post"], permission_classes=[IsAdminOrSuperAdmin])
+    @action(detail=True, methods=["post"], permission_classes=[IsAdminOrPastorReadOnly])
     def send_now(self, request, pk=None):
         """
         Send announcement email to target audience (Feature #2)

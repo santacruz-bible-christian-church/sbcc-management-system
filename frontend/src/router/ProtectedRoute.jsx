@@ -1,9 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { Spinner } from 'flowbite-react';
 import { useAuth } from '../features/auth/hooks/useAuth';
-
-// Roles allowed to access the dashboard
-const DASHBOARD_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
+import { DASHBOARD_ROLES } from '../utils/permissions';
 
 export const ProtectedRoute = ({ children, requiredRole = null, requiredRoles = null }) => {
   const { user, isAuthenticated, loading } = useAuth();

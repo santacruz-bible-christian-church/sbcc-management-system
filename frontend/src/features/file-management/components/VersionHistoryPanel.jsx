@@ -117,16 +117,18 @@ export const VersionHistoryPanel = ({
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleRestore(version.version_number)}
-                    disabled={restoringVersion === version.version_number}
-                    className="flex items-center gap-2 px-3 py-2 bg-[#FDB54A] text-white text-sm rounded-lg hover:bg-[#e5a43b] disabled:opacity-50 transition-colors"
-                  >
-                    <HiRefresh className={`w-4 h-4 ${restoringVersion === version.version_number ? 'animate-spin' : ''}`} />
-                    {restoringVersion === version.version_number ? 'Restoring...' : 'Restore this version'}
-                  </button>
-                </div>
+                {onRestore && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleRestore(version.version_number)}
+                      disabled={restoringVersion === version.version_number}
+                      className="flex items-center gap-2 px-3 py-2 bg-[#FDB54A] text-white text-sm rounded-lg hover:bg-[#e5a43b] disabled:opacity-50 transition-colors"
+                    >
+                      <HiRefresh className={`w-4 h-4 ${restoringVersion === version.version_number ? 'animate-spin' : ''}`} />
+                      {restoringVersion === version.version_number ? 'Restoring...' : 'Restore this version'}
+                    </button>
+                  </div>
+                )}
 
                 {/* Diff indicator */}
                 {currentContent && version.content !== currentContent && (

@@ -7,6 +7,9 @@ export const AttendanceSheetCard = ({
   onDelete,
   formatDate
 }) => {
+  const canEdit = typeof onEdit === 'function';
+  const canDelete = typeof onDelete === 'function';
+
   return (
     <div
       className="bg-white rounded-xl shadow-md py-4 px-6 grid grid-cols-12 items-center gap-4"
@@ -32,20 +35,24 @@ export const AttendanceSheetCard = ({
         >
           <Download className="w-4 h-4 text-[#FDB54A]" />
         </button>
-        <button
-          title="Open tracker"
-          onClick={() => onEdit(sheet)}
-          className="p-2 rounded-lg hover:bg-gray-50"
-        >
-          <Edit2 className="w-4 h-4 text-[#FDB54A]" />
-        </button>
-        <button
-          title="Delete"
-          onClick={() => onDelete(sheet)}
-          className="p-2 rounded-lg hover:bg-gray-50"
-        >
-          <Trash2 className="w-4 h-4 text-red-400" />
-        </button>
+        {canEdit && (
+          <button
+            title="Open tracker"
+            onClick={() => onEdit(sheet)}
+            className="p-2 rounded-lg hover:bg-gray-50"
+          >
+            <Edit2 className="w-4 h-4 text-[#FDB54A]" />
+          </button>
+        )}
+        {canDelete && (
+          <button
+            title="Delete"
+            onClick={() => onDelete(sheet)}
+            className="p-2 rounded-lg hover:bg-gray-50"
+          >
+            <Trash2 className="w-4 h-4 text-red-400" />
+          </button>
+        )}
       </div>
     </div>
   );

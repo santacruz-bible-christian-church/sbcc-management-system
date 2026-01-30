@@ -95,8 +95,8 @@ class TestMeetingMinutesPermissions:
         response = ministry_leader_client.get(url)
         assert response.status_code == status.HTTP_200_OK
 
-    def test_ministry_leader_can_create_for_ministry(self, ministry_leader_client, ministry):
-        """Test ministry leader can create meetings for their ministry."""
+    def test_ministry_leader_cannot_create_for_ministry(self, ministry_leader_client, ministry):
+        """Test ministry leader cannot create meetings outside admin/pastor."""
         url = reverse("meeting-minutes-list")
         data = {
             "title": "Ministry Meeting",
@@ -106,7 +106,7 @@ class TestMeetingMinutesPermissions:
             "ministry": ministry.id,
         }
         response = ministry_leader_client.post(url, data, format="json")
-        assert response.status_code == status.HTTP_201_CREATED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_pastor_can_manage_all(self, pastor_client, meeting_minutes):
         """Test pastor can manage all meeting minutes."""

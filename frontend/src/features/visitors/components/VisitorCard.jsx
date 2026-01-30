@@ -19,6 +19,16 @@ export function VisitorCard({
 }) {
   const statusColors = STATUS_COLORS[visitor.status] || STATUS_COLORS.visitor;
   const isConverted = visitor.status === 'member';
+  const canCheckIn = typeof onCheckIn === 'function';
+  const canConvert = typeof onConvert === 'function';
+  const canEdit = typeof onEdit === 'function';
+  const canDelete = typeof onDelete === 'function';
+  const showConvertedInfo = isConverted && visitor.converted_to_member_id;
+  const showActions =
+    (!isConverted && (canCheckIn || canConvert)) ||
+    showConvertedInfo ||
+    canEdit ||
+    canDelete;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 hover:shadow-md transition-shadow">
@@ -82,9 +92,9 @@ export function VisitorCard({
       )}
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
-        {!isConverted && (
-          <>
+      {showActions && (
+        <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
+          {!isConverted && canCheckIn && (
             <button
               onClick={() => onCheckIn(visitor)}
               className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
@@ -92,6 +102,8 @@ export function VisitorCard({
               <HiCheckCircle className="w-4 h-4" />
               Check In
             </button>
+          )}
+          {!isConverted && canConvert && (
             <button
               onClick={() => onConvert(visitor)}
               className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
@@ -99,29 +111,33 @@ export function VisitorCard({
               <HiUserAdd className="w-4 h-4" />
               Convert
             </button>
-          </>
-        )}
-        {isConverted && visitor.converted_to_member_id && (
-          <span className="flex items-center gap-1 px-3 py-1.5 text-sm text-purple-600">
-            <HiCheckCircle className="w-4 h-4" />
-            Converted to Member #{visitor.converted_to_member_id}
-          </span>
-        )}
-        <button
-          onClick={() => onEdit(visitor)}
-          className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <HiPencil className="w-4 h-4" />
-          Edit
-        </button>
-        <button
-          onClick={() => onDelete(visitor)}
-          className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-        >
-          <HiTrash className="w-4 h-4" />
-          Delete
-        </button>
-      </div>
+          )}
+          {showConvertedInfo && (
+            <span className="flex items-center gap-1 px-3 py-1.5 text-sm text-purple-600">
+              <HiCheckCircle className="w-4 h-4" />
+              Converted to Member #{visitor.converted_to_member_id}
+            </span>
+          )}
+          {canEdit && (
+            <button
+              onClick={() => onEdit(visitor)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <HiPencil className="w-4 h-4" />
+              Edit
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => onDelete(visitor)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+            >
+              <HiTrash className="w-4 h-4" />
+              Delete
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

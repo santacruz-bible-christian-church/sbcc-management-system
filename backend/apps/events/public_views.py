@@ -94,8 +94,21 @@ class PublicEventsView(APIView):
         except (ValueError, TypeError):
             limit = 10
 
-        # Order: upcoming events first (ascending date), then past events
-        queryset = queryset.order_by("-date")[:limit]
+        # Order: upcoming events ascending (soonest first), past events descending (most recent first)
+        if time_filter == "upcoming":
+            queryset = queryset.order_by("date")[:limit]
+        elif time_filter == "past":
+            queryset = queryset.order_by("-date")[:limit]
+        else:
+            # For 'all': show upcoming first (ascending), then past (descending)
+            # Split and recombine for proper ordering
+            upcoming = list(queryset.filter(date__gte=now).order_by("date")[:limit])
+            remaining = limit - len(upcoming)
+            if remaining > 0:
+                past = list(queryset.filter(date__lt=now).order_by("-date")[:remaining])
+                queryset = upcoming + past
+            else:
+                queryset = upcoming
 
         serializer = PublicEventSerializer(queryset, many=True)
         return Response(

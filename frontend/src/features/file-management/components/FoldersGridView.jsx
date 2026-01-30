@@ -46,7 +46,7 @@ FoldersGridView.propTypes = {
     })
   ).isRequired,
   selectedFiles: PropTypes.array.isRequired,
-  onToggleSelection: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
+  onToggleSelection: PropTypes.func,
+  onDelete: PropTypes.func,
   onFolderClick: PropTypes.func,
 };

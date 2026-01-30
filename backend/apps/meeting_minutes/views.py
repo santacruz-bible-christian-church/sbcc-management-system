@@ -13,6 +13,8 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
+from common.permissions import IsAdminOrPastorReadOnly
+
 from .models import MeetingMinutes, MeetingMinutesAttachment
 from .serializers import (
     MeetingMinutesAttachmentSerializer,
@@ -32,8 +34,7 @@ class IsMeetingMinutesEditor(permissions.BasePermission):
     """
     Permission for meeting minutes editing.
     - Super Admin, Admin, Pastor: full access
-    - Ministry Leader: can create/edit for their ministry
-    - Member: read only
+    - Others: read only
     """
 
     def has_permission(self, request, view):
@@ -44,12 +45,11 @@ class IsMeetingMinutesEditor(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Write access for super_admin, admin, pastor, ministry_leader
+        # Write access for super_admin, admin, and pastor
         return request.user.is_superuser or request.user.role in [
             "super_admin",
             "admin",
             "pastor",
-            "ministry_leader",
         ]
 
     def has_object_permission(self, request, view, obj):
@@ -60,19 +60,12 @@ class IsMeetingMinutesEditor(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Super admin, admin and pastor have full access
-        if request.user.is_superuser or request.user.role in ["super_admin", "admin", "pastor"]:
-            return True
-
-        # Ministry leaders can edit their ministry's meetings
-        if request.user.role == "ministry_leader":
-            if obj.ministry and obj.ministry.leader == request.user:
-                return True
-            # Can also edit if they created it
-            if obj.created_by == request.user:
-                return True
-
-        return False
+        # Super admin, admin, and pastor have full access
+        return request.user.is_superuser or request.user.role in [
+            "super_admin",
+            "admin",
+            "pastor",
+        ]
 
 
 class MeetingMinutesViewSet(viewsets.ModelViewSet):
@@ -362,7 +355,7 @@ class MeetingMinutesAttachmentViewSet(viewsets.ModelViewSet):
 
     queryset = MeetingMinutesAttachment.objects.select_related("meeting_minutes", "uploaded_by")
     serializer_class = MeetingMinutesAttachmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["meeting_minutes"]
 

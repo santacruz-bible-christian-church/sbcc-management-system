@@ -66,12 +66,11 @@ export const generateMembershipFormPDF = (formData) => {
 
   doc.setFontSize(11);
   doc.setFont(undefined, 'bold');
-  doc.text('PASIG BIBLE CHRISTIAN MISSION INC.', pageCenterX, yPos + 6, { align: 'center' });
+  doc.text('SANTA CRUZ BIBLE CHRISTIAN CHURCH', pageCenterX, yPos + 6, { align: 'center' });
 
   doc.setFontSize(9);
   doc.setFont(undefined, 'normal');
-  doc.text('No. 43 B-Tatco Street, Bagong Ilog, Pasig City', pageCenterX, yPos + 11, { align: 'center' });
-  doc.text('Tel No. 671-0486', pageCenterX, yPos + 15, { align: 'center' });
+  doc.text('Santa Cruz, Laguna', pageCenterX, yPos + 11, { align: 'center' });
 
   // Move position down after header
   yPos += 32;

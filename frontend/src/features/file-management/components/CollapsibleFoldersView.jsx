@@ -14,8 +14,12 @@ const CollapsibleCategory = ({
   onFileClick,
   onFileDelete,
   onExportPdf,
+  canWrite = true,
 }) => {
   const categoryFiles = files.filter((f) => f._original?.category === folder.id);
+  const canEdit = canWrite && typeof onFileClick === 'function';
+  const canDelete = canWrite && typeof onFileDelete === 'function';
+  const canExport = typeof onExportPdf === 'function';
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
@@ -65,40 +69,46 @@ const CollapsibleCategory = ({
                   <td className="w-32 px-4 py-3">
                     <div className="flex items-center gap-1 justify-end">
                       {/* Edit */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onFileClick && onFileClick(file.id);
-                        }}
-                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <HiPencil className="w-4 h-4 text-gray-500" />
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onFileClick && onFileClick(file.id);
+                          }}
+                          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <HiPencil className="w-4 h-4 text-gray-500" />
+                        </button>
+                      )}
 
                       {/* Export PDF */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onExportPdf && onExportPdf(file._original?.id || file.id);
-                        }}
-                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                        title="Download PDF"
-                      >
-                        <HiDownload className="w-4 h-4 text-gray-500" />
-                      </button>
+                      {canExport && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onExportPdf && onExportPdf(file._original?.id || file.id);
+                          }}
+                          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Download PDF"
+                        >
+                          <HiDownload className="w-4 h-4 text-gray-500" />
+                        </button>
+                      )}
 
                       {/* Delete */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onFileDelete && onFileDelete(file);
-                        }}
-                        className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <HiTrash className="w-4 h-4 text-red-500" />
-                      </button>
+                      {canDelete && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onFileDelete && onFileDelete(file);
+                          }}
+                          className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <HiTrash className="w-4 h-4 text-red-500" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -128,6 +138,7 @@ export const CollapsibleFoldersView = ({
   onFileClick,
   onFileDelete,
   onExportPdf,
+  canWrite = true,
 }) => {
   const [expandedFolders, setExpandedFolders] = useState({});
 
@@ -187,6 +198,7 @@ export const CollapsibleFoldersView = ({
             onFileClick={onFileClick}
             onFileDelete={onFileDelete}
             onExportPdf={onExportPdf}
+            canWrite={canWrite}
           />
         ))}
       </div>
@@ -201,6 +213,7 @@ CollapsibleFoldersView.propTypes = {
   onFileClick: PropTypes.func,
   onFileDelete: PropTypes.func,
   onExportPdf: PropTypes.func,
+  canWrite: PropTypes.bool,
 };
 
 export default CollapsibleFoldersView;

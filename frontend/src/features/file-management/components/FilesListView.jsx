@@ -1,8 +1,18 @@
 import PropTypes from 'prop-types';
 import { HiDownload, HiTrash, HiPencil } from 'react-icons/hi';
 
-export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelete, onFileClick, onExportPdf }) => {
+export const FilesListView = ({
+  files,
+  selectedFiles,
+  onToggleSelection,
+  onDelete,
+  onFileClick,
+  onExportPdf,
+  canWrite = true,
+}) => {
   if (files.length === 0) return null;
+  const canEdit = canWrite && typeof onFileClick === 'function';
+  const canDelete = canWrite && typeof onDelete === 'function';
 
   const handleEdit = (file, e) => {
     e.stopPropagation();
@@ -11,7 +21,7 @@ export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelet
 
   const handleDelete = (file, e) => {
     e.stopPropagation();
-    onDelete(file);
+    onDelete && onDelete(file);
   };
 
   const handleExportPdf = (file, e) => {
@@ -52,13 +62,15 @@ export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelet
                 <td className="w-32 px-6 py-4">
                   <div className="flex items-center gap-1">
                     {/* Edit Button */}
-                    <button
-                      onClick={(e) => handleEdit(file, e)}
-                      className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                      title="Edit"
-                    >
-                      <HiPencil className="w-4 h-4 text-gray-500" />
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={(e) => handleEdit(file, e)}
+                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <HiPencil className="w-4 h-4 text-gray-500" />
+                      </button>
+                    )}
 
                     {/* Download/Export PDF Button */}
                     {file.fileUrl ? (
@@ -86,13 +98,15 @@ export const FilesListView = ({ files, selectedFiles, onToggleSelection, onDelet
                     ) : null}
 
                     {/* Delete Button */}
-                    <button
-                      onClick={(e) => handleDelete(file, e)}
-                      className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete"
-                    >
-                      <HiTrash className="w-4 h-4 text-red-500" />
-                    </button>
+                    {canDelete && (
+                      <button
+                        onClick={(e) => handleDelete(file, e)}
+                        className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <HiTrash className="w-4 h-4 text-red-500" />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -119,7 +133,8 @@ FilesListView.propTypes = {
   ).isRequired,
   selectedFiles: PropTypes.array.isRequired,
   onToggleSelection: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
+  onDelete: PropTypes.func,
   onFileClick: PropTypes.func,
   onExportPdf: PropTypes.func,
+  canWrite: PropTypes.bool,
 };

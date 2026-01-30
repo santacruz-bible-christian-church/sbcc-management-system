@@ -34,6 +34,21 @@ def close_db_connections():
         conn.close()
 
 
+@pytest.fixture(autouse=True)
+def relax_throttling(settings):
+    """Relax throttling limits in tests to avoid rate-limit flakiness."""
+    rest_framework = dict(settings.REST_FRAMEWORK or {})
+    throttle_rates = dict(rest_framework.get("DEFAULT_THROTTLE_RATES", {}))
+    throttle_rates.update(
+        {
+            "auth_sensitive": "1000/minute",
+            "public_post": "1000/minute",
+        }
+    )
+    rest_framework["DEFAULT_THROTTLE_RATES"] = throttle_rates
+    settings.REST_FRAMEWORK = rest_framework
+
+
 @pytest.fixture
 def api_client():
     """Return an API client instance."""

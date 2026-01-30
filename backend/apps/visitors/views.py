@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.members.models import Member
+from common.permissions import IsAdminOrPastorReadOnly
 
 from .models import Visitor, VisitorAttendance
 from .serializers import VisitorAttendanceSerializer, VisitorSerializer
@@ -32,14 +33,16 @@ class VisitorViewSet(viewsets.ModelViewSet):
 
     queryset = Visitor.objects.select_related("converted_to_member").all()
     serializer_class = VisitorSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrPastorReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["status", "follow_up_status"]
     search_fields = ["full_name", "email", "phone"]
     ordering_fields = ["full_name", "date_added", "status"]
     ordering = ["-date_added"]
 
-    @action(detail=True, methods=["post"])
+    @action(
+        detail=True, methods=["post"], permission_classes=[IsAuthenticated, IsAdminOrPastorReadOnly]
+    )
     def check_in(self, request, pk=None):
         """
         Check in a visitor for a service.
@@ -62,7 +65,9 @@ class VisitorViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    @action(detail=True, methods=["post"])
+    @action(
+        detail=True, methods=["post"], permission_classes=[IsAuthenticated, IsAdminOrPastorReadOnly]
+    )
     @transaction.atomic
     def convert_to_member(self, request, pk=None):
         """
@@ -139,7 +144,11 @@ class VisitorViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    @action(detail=True, methods=["patch"])
+    @action(
+        detail=True,
+        methods=["patch"],
+        permission_classes=[IsAuthenticated, IsAdminOrPastorReadOnly],
+    )
     def update_follow_up(self, request, pk=None):
         """
         Update follow-up status for a visitor.
@@ -212,7 +221,7 @@ class VisitorAttendanceViewSet(viewsets.ModelViewSet):
 
     queryset = VisitorAttendance.objects.select_related("visitor", "added_by").all()
     serializer_class = VisitorAttendanceSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrPastorReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(added_by=self.request.user)

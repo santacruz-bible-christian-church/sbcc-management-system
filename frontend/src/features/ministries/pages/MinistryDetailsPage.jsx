@@ -3,9 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Spinner, Tabs } from 'flowbite-react';
 import { HiOutlinePencil, HiOutlineTrash, HiOutlineUsers, HiOutlineClock, HiRefresh } from 'react-icons/hi';
 import { ChevronLeft } from 'lucide-react';
-import { useAuth } from '../../auth/hooks/useAuth';
 import { useMinistryDetails } from '../hooks/useMinistryDetails';
 import { useSnackbar } from '../../../hooks/useSnackbar';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 import { MinistryFormModal } from '../components/MinistryFormModal';
 import { MinistryMembersTab } from '../components/MinistryMembersTab';
 import { MinistryShiftsTab } from '../components/MinistryShiftsTab';
@@ -15,15 +15,13 @@ import { SecondaryButton } from '../../../components/ui/Button';
 import { ShiftRotationModal } from '../components/ShiftRotationModal';
 import Snackbar from '../../../components/ui/Snackbar';
 
-const MANAGER_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
-
 export const MinistryDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { canWrite } = usePermissionWarning('ministry_details', { label: 'Ministry Details' });
   const { ministry, loading, refresh, updateMinistry, deleteMinistry } = useMinistryDetails(id);
   const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
-  const canManage = MANAGER_ROLES.includes(user?.role);
+  const canManage = canWrite;
 
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);

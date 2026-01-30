@@ -30,6 +30,8 @@ const StatusPill = ({ status }) => {
 };
 
 export const InventoryTable = ({ items, loading, onEdit, onDelete }) => {
+  const hasActions = typeof onEdit === 'function' || typeof onDelete === 'function';
+
   return (
     <div className="print:hidden">
       <div className="flex items-center justify-between border-b border-sbcc-gray/10 px-6 py-4">
@@ -49,7 +51,9 @@ export const InventoryTable = ({ items, loading, onEdit, onDelete }) => {
               <th className="px-6 py-4 text-left font-semibold">Lifecycle</th>
               <th className="px-6 py-4 text-left font-semibold">Financials</th>
               <th className="px-6 py-4 text-left font-semibold">Notes</th>
-              <th className="px-6 py-4 text-left font-semibold">Actions</th>
+              {hasActions && (
+                <th className="px-6 py-4 text-left font-semibold">Actions</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-sbcc-gray/10">
@@ -100,26 +104,32 @@ export const InventoryTable = ({ items, loading, onEdit, onDelete }) => {
                   </p>
                   <p className="text-xs text-sbcc-gray">{item.remarks || 'No remarks'}</p>
                 </td>
-                <td className="px-6 py-4 align-top">
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => onEdit?.(item)}
-                      className="rounded-full border border-sbcc-gray/40 bg-white p-2 text-sbcc-dark transition hover:border-[color:var(--sbcc-primary)] hover:text-sbcc-dark"
-                      aria-label={`Edit ${item.item_name}`}
-                    >
-                      <HiOutlinePencilAlt className="h-5 w-5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDelete?.(item)}
-                      className="rounded-full border border-sbcc-gray/40 bg-white p-2 text-[color:var(--sbcc-danger)] transition hover:border-[color:var(--sbcc-danger)]"
-                      aria-label={`Delete ${item.item_name}`}
-                    >
-                      <HiOutlineTrash className="h-5 w-5" />
-                    </button>
-                  </div>
-                </td>
+                {hasActions && (
+                  <td className="px-6 py-4 align-top">
+                    <div className="flex items-center gap-3">
+                      {typeof onEdit === 'function' && (
+                        <button
+                          type="button"
+                          onClick={() => onEdit(item)}
+                          className="rounded-full border border-sbcc-gray/40 bg-white p-2 text-sbcc-dark transition hover:border-[color:var(--sbcc-primary)] hover:text-sbcc-dark"
+                          aria-label={`Edit ${item.item_name}`}
+                        >
+                          <HiOutlinePencilAlt className="h-5 w-5" />
+                        </button>
+                      )}
+                      {typeof onDelete === 'function' && (
+                        <button
+                          type="button"
+                          onClick={() => onDelete(item)}
+                          className="rounded-full border border-sbcc-gray/40 bg-white p-2 text-[color:var(--sbcc-danger)] transition hover:border-[color:var(--sbcc-danger)]"
+                          aria-label={`Delete ${item.item_name}`}
+                        >
+                          <HiOutlineTrash className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

@@ -1,4 +1,9 @@
 /**
+ * Philippines timezone for date formatting
+ */
+const PH_TIMEZONE = 'Asia/Manila';
+
+/**
  * Safely parse a date value
  * @param {string|Date} value - Date value to parse
  * @returns {Date|null} Parsed date or null if invalid
@@ -10,7 +15,7 @@ export const safeDate = (value) => {
 };
 
 /**
- * Format a date/datetime for display
+ * Format a date/datetime for display (Philippines timezone)
  * @param {string|Date} value - Date value to format
  * @returns {string} Formatted date string
  */
@@ -18,7 +23,8 @@ export const formatDateTime = (value) => {
   const date = safeDate(value);
   if (!date) return 'N/A';
 
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString('en-PH', {
+    timeZone: PH_TIMEZONE,
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -28,7 +34,7 @@ export const formatDateTime = (value) => {
 };
 
 /**
- * Format a date (without time) for display
+ * Format a date (without time) for display (Philippines timezone)
  * @param {string|Date} value - Date value to format
  * @returns {string} Formatted date string
  */
@@ -36,7 +42,8 @@ export const formatDate = (value) => {
   const date = safeDate(value);
   if (!date) return 'N/A';
 
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString('en-PH', {
+    timeZone: PH_TIMEZONE,
     year: 'numeric',
     month: 'short',
     day: 'numeric',

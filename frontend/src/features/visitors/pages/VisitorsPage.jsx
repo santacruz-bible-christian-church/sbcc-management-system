@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { HiPlus, HiRefresh, HiChevronLeft, HiChevronRight } from 'react-icons/hi';
 import { useVisitors } from '../hooks/useVisitors';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 import { StatsCards } from '../components/StatsCards';
 import { VisitorsFilters } from '../components/VisitorsFilters';
 import { VisitorsList } from '../components/VisitorsList';
@@ -12,6 +13,7 @@ import { useSnackbar } from '../../../hooks/useSnackbar';
 import Snackbar from '../../../components/ui/Snackbar';
 
 export function VisitorsPage() {
+  const { canWrite } = usePermissionWarning('visitors', { label: 'Visitors' });
   const {
     visitors,
     statistics,
@@ -142,13 +144,15 @@ export function VisitorsPage() {
             >
               <HiRefresh className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
             </button>
-            <button
-              onClick={handleAddNew}
-              className="flex items-center gap-2 px-4 py-2 bg-[#FDB54A] hover:bg-[#e5a43b] text-white font-medium rounded-lg transition-colors"
-            >
-              <HiPlus className="w-5 h-5" />
-              Add Visitor
-            </button>
+            {canWrite && (
+              <button
+                onClick={handleAddNew}
+                className="flex items-center gap-2 px-4 py-2 bg-[#FDB54A] hover:bg-[#e5a43b] text-white font-medium rounded-lg transition-colors"
+              >
+                <HiPlus className="w-5 h-5" />
+                Add Visitor
+              </button>
+            )}
           </div>
         </div>
 
@@ -163,10 +167,11 @@ export function VisitorsPage() {
       <VisitorsList
         visitors={visitors}
         loading={loading}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onCheckIn={handleCheckIn}
-        onConvert={handleConvert}
+        onEdit={canWrite ? handleEdit : undefined}
+        onDelete={canWrite ? handleDelete : undefined}
+        onCheckIn={canWrite ? handleCheckIn : undefined}
+        onConvert={canWrite ? handleConvert : undefined}
+        canWrite={canWrite}
       />
 
       {/* Pagination */}

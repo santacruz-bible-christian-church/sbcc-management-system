@@ -8,6 +8,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.throttling import PublicPostThrottle
+
 from .models import PrayerRequest
 
 
@@ -53,6 +55,7 @@ class PublicPrayerRequestSubmitView(APIView):
 
     Public endpoint for submitting prayer requests.
     No authentication required.
+    Rate limited to prevent abuse.
 
     Request Body:
         title (str): Prayer request title (required)
@@ -65,6 +68,7 @@ class PublicPrayerRequestSubmitView(APIView):
     """
 
     permission_classes = [AllowAny]
+    throttle_classes = [PublicPostThrottle]
 
     def post(self, request):
         serializer = PublicPrayerRequestSubmitSerializer(data=request.data)

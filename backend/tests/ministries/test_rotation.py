@@ -160,7 +160,7 @@ class TestRotateShiftsAPI:
     def test_rotate_shifts_as_pastor(
         self, pastor_client, test_ministry, ministry_member_with_email, upcoming_shift
     ):
-        """Test that pastor can rotate shifts."""
+        """Test that pastor cannot rotate shifts."""
         url = reverse("ministry-rotate-shifts", kwargs={"pk": test_ministry.id})
         response = pastor_client.post(
             url,
@@ -168,8 +168,7 @@ class TestRotateShiftsAPI:
             format="json",
         )
 
-        assert response.status_code == status.HTTP_200_OK
-        assert "created" in response.data
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_rotate_shifts_returns_skipped_no_email(
         self, admin_client, test_ministry, ministry_member_without_email, upcoming_shift

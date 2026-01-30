@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HiClipboardList, HiDocumentText } from 'react-icons/hi';
 import usePrayerRequests from '../hooks/usePrayerRequests';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 import PrayerRequestsList from '../components/PrayerRequestsList';
 import AssignModal from '../components/AssignModal';
 import FollowUpModal from '../components/FollowUpModal';
@@ -14,7 +15,6 @@ import {
 } from '../../../api/prayer-requests.api';
 import { SUMMARY_CARDS } from '../utils/constants';
 import { useSnackbar } from '../../../hooks/useSnackbar';
-import { useAuth } from '../../auth/hooks/useAuth';
 import { usersApi } from '../../../api/users.api';
 
 const INITIAL_FOLLOW_UP_DATA = {
@@ -27,7 +27,7 @@ const INITIAL_FOLLOW_UP_DATA = {
 const PrayerRequestsPage = () => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
-  const { user } = useAuth();
+  const { canWrite } = usePermissionWarning('prayer_requests', { label: 'Prayer Requests' });
 
   // Fetch prayer requests
   const { requests, loading, error, totalCount, search, setSearch, refetch } =
@@ -233,30 +233,35 @@ const PrayerRequestsPage = () => {
           loading={loading}
           viewMode={viewMode}
           onView={(id) => navigate(`/prayer-requests/${id}`)}
-          onAssign={handleOpenAssign}
-          onFollowUp={handleOpenFollowUp}
+          onAssign={canWrite ? handleOpenAssign : undefined}
+          onFollowUp={canWrite ? handleOpenFollowUp : undefined}
+          canWrite={canWrite}
         />
 
         {/* Modals */}
-        <AssignModal
-          isOpen={showAssignModal}
-          onClose={closeAssignModal}
-          request={selectedRequest}
-          teamMembers={teamMembers}
-          selectedUserId={assignToUserId}
-          onSelectUser={setAssignToUserId}
-          onAssign={handleAssign}
-        />
+        {canWrite && (
+          <>
+            <AssignModal
+              isOpen={showAssignModal}
+              onClose={closeAssignModal}
+              request={selectedRequest}
+              teamMembers={teamMembers}
+              selectedUserId={assignToUserId}
+              onSelectUser={setAssignToUserId}
+              onAssign={handleAssign}
+            />
 
-        <FollowUpModal
-          isOpen={showFollowUpModal}
-          onClose={closeFollowUpModal}
-          request={selectedRequest}
-          formData={followUpData}
-          onChange={setFollowUpData}
-          onSubmit={handleAddFollowUp}
-          submitting={isSubmittingFollowUp}
-        />
+            <FollowUpModal
+              isOpen={showFollowUpModal}
+              onClose={closeFollowUpModal}
+              request={selectedRequest}
+              formData={followUpData}
+              onChange={setFollowUpData}
+              onSubmit={handleAddFollowUp}
+              submitting={isSubmittingFollowUp}
+            />
+          </>
+        )}
       </div>
     </main>
   );

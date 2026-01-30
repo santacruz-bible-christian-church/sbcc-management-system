@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Spinner } from 'flowbite-react';
-import { useAuth } from '../../auth/hooks/useAuth';
 import { useEvents } from '../hooks/useEvents';
 import { useEventsPageModals } from '../hooks/useEventsPageModals';
 import { useEventsPageActions } from '../hooks/useEventsPageActions';
 import { useSnackbar } from '../../../hooks/useSnackbar';
+import { usePermissionWarning } from '../../../hooks/usePermissionWarning';
 import {
   EventModal,
   EventsBoard,
@@ -19,7 +19,6 @@ import EventsSidebar from '../components/EventsSidebar';
 import EventsQuickAdd from '../components/EventsQuickAdd';
 import { EventsSkeleton } from '../components/EventsSkeleton';
 
-import { MANAGER_ROLES } from '../utils/constants';
 import { prepareEventFormValues } from '../utils/format';
 import { ConfirmationModal } from '../../../components/ui/Modal';
 import Snackbar from '../../../components/ui/Snackbar';
@@ -28,8 +27,8 @@ import '../../../styles/events.css';
 import '../../../styles/calendar.css';
 
 export const EventsPage = () => {
-  const { user } = useAuth();
-  const canManageEvents = MANAGER_ROLES.includes(user?.role);
+  const { canWrite, user } = usePermissionWarning('events', { label: 'Events' });
+  const canManageEvents = canWrite;
   const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
 
   const {

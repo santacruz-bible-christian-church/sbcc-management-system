@@ -13,6 +13,8 @@ from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 
+from common.permissions import IsAdminOrPastorReadOnly
+
 from .models import InventoryTracking
 from .serializers import InventoryTrackingSerializer
 
@@ -31,7 +33,7 @@ class InventoryTrackingViewSet(viewsets.ModelViewSet):
 
     queryset = InventoryTracking.objects.all()
     serializer_class = InventoryTrackingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
 
     # Filtering & Search
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
