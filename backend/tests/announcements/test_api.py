@@ -49,10 +49,10 @@ class TestAnnouncementPermissions:
         assert response.status_code == status.HTTP_201_CREATED
         assert Announcement.objects.filter(title="New Announcement").exists()
 
-    def test_create_announcement_as_regular_user(self, auth_client):
-        """Test regular users cannot create announcements."""
+    def test_create_announcement_as_regular_user(self, readonly_client):
+        """Test read-only users cannot create announcements."""
         url = reverse("announcement-list")
-        response = auth_client.post(
+        response = readonly_client.post(
             url,
             {
                 "title": "New Announcement",
@@ -78,10 +78,10 @@ class TestAnnouncementPermissions:
         announcement.refresh_from_db()
         assert announcement.title == "Updated Title"
 
-    def test_update_announcement_as_regular_user(self, auth_client, announcement):
-        """Test regular users cannot update announcements."""
+    def test_update_announcement_as_regular_user(self, readonly_client, announcement):
+        """Test read-only users cannot update announcements."""
         url = reverse("announcement-detail", kwargs={"pk": announcement.pk})
-        response = auth_client.patch(
+        response = readonly_client.patch(
             url,
             {"title": "Updated Title"},
             format="json",
@@ -97,10 +97,10 @@ class TestAnnouncementPermissions:
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not Announcement.objects.filter(pk=announcement.pk).exists()
 
-    def test_delete_announcement_as_regular_user(self, auth_client, announcement):
-        """Test regular users cannot delete announcements."""
+    def test_delete_announcement_as_regular_user(self, readonly_client, announcement):
+        """Test read-only users cannot delete announcements."""
         url = reverse("announcement-detail", kwargs={"pk": announcement.pk})
-        response = auth_client.delete(url)
+        response = readonly_client.delete(url)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -241,10 +241,10 @@ class TestPublishedEndpoint:
 class TestSendNowEndpoint:
     """Tests for the /send_now/ endpoint."""
 
-    def test_send_now_requires_admin(self, auth_client, announcement):
-        """Test send_now is admin-only."""
+    def test_send_now_requires_management(self, readonly_client, announcement):
+        """Test send_now is blocked for read-only users."""
         url = reverse("announcement-send-now", kwargs={"pk": announcement.pk})
-        response = auth_client.post(url)
+        response = readonly_client.post(url)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 

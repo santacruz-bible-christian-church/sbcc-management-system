@@ -338,7 +338,7 @@ class TestIntegration:
     def test_ministry_leader_workflow(
         self, ministry_leader_client, ministry_leader_user, ministry, user
     ):
-        """Test ministry leader can manage their ministry's tasks."""
+        """Test ministry leader can view but cannot update tasks."""
         today = timezone.now().date()
         task = Task.objects.create(
             title="Ministry Leader Task",
@@ -359,4 +359,4 @@ class TestIntegration:
             {"priority": "urgent"},
             format="json",
         )
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_403_FORBIDDEN
