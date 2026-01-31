@@ -107,6 +107,16 @@ def _notify_admins_about_absences(problem_members, threshold, days):
         fail_silently=True,
     )
 
+    # Also send in-app notification
+    from apps.notifications.services import notify_admins
+
+    notify_admins(
+        notification_type="attendance",
+        title=f"Attendance Alert: {len(problem_members)} Member(s)",
+        message="Members with frequent absences need follow-up",
+        link="/attendance",
+    )
+
 
 def send_pastoral_care_email(member, church_name="Santa Cruz Bible Christian Church"):
     """

@@ -73,6 +73,23 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
         result = send_announcement_email(announcement)
 
         if result["success"]:
+            # Also send in-app notification to all users
+            from apps.authentication.models import User
+            from apps.notifications.services import create_notification
+
+            all_users = User.objects.filter(is_active=True)
+            create_notification(
+                user=all_users,
+                notification_type="announcement",
+                title=f"📢 {announcement.title}",
+                message=(
+                    announcement.body[:100] + "..."
+                    if len(announcement.body) > 100
+                    else announcement.body
+                ),
+                link="/announcements",
+            )
+
             return Response(
                 {
                     "message": result["message"],

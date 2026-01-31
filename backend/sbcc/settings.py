@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "apps.announcements",
     "apps.inventory",
     "apps.meeting_minutes",
+    "apps.notifications",
     "apps.prayer_requests",
     "apps.tasks",
     "apps.visitors",
