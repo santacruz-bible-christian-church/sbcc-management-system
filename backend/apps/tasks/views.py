@@ -80,8 +80,20 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     def perform_create(self, serializer):
-        """Set created_by to current user"""
-        serializer.save(created_by=self.request.user)
+        """Set created_by to current user and notify assignee"""
+        task = serializer.save(created_by=self.request.user)
+
+        # Notify assigned user if task is assigned to someone
+        if task.assigned_to and task.assigned_to != self.request.user:
+            from apps.notifications.services import create_notification
+
+            create_notification(
+                user=task.assigned_to,
+                notification_type="system",
+                title=f"Task Assigned: {task.title}",
+                message=f"Priority: {task.get_priority_display()} • Due: {task.end_date.strftime('%b %d')}",
+                link=f"/tasks?id={task.id}",
+            )
 
     @action(
         detail=True,

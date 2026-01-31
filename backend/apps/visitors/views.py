@@ -40,6 +40,22 @@ class VisitorViewSet(viewsets.ModelViewSet):
     ordering_fields = ["full_name", "date_added", "status"]
     ordering = ["-date_added"]
 
+    def perform_create(self, serializer):
+        """Create visitor and notify admins"""
+        visitor = serializer.save()
+
+        # Notify admins about new visitor
+        from apps.notifications.services import notify_admins
+
+        notify_admins(
+            notification_type="system",
+            title=f"New Visitor: {visitor.full_name}",
+            message=(
+                "First-time visitor registered" if visitor.is_first_time else "Returning visitor"
+            ),
+            link="/visitors",
+        )
+
     @action(
         detail=True, methods=["post"], permission_classes=[IsAuthenticated, IsAdminOrPastorReadOnly]
     )

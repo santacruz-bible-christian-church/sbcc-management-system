@@ -34,6 +34,18 @@ Please log in to the system to view details and add follow-ups.
             recipient_list=[prayer_request.assigned_to.email],
             fail_silently=False,
         )
+
+        # Also send in-app notification
+        from apps.notifications.services import create_notification
+
+        create_notification(
+            user=prayer_request.assigned_to,
+            notification_type="prayer_request",
+            title=f"Prayer Request Assigned: {prayer_request.title}",
+            message=f"Category: {prayer_request.get_category_display()} • Priority: {prayer_request.get_priority_display()}",
+            link=f"/prayer-requests?id={prayer_request.id}",
+        )
+
         return True
     except Exception:
         logging.exception(
