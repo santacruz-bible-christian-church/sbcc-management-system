@@ -97,7 +97,7 @@ class TestNotifyAdmins:
             role="pastor",
         )
 
-        notifications = notify_admins(
+        _ = notify_admins(
             notification_type="attendance",
             title="Pastor Alert",
         )
