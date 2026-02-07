@@ -1,5 +1,6 @@
 import logging
 
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -10,6 +11,7 @@ from apps.events.models import Event
 from apps.inventory.models import InventoryTracking
 from apps.members.models import Member
 from apps.ministries.models import Ministry
+from apps.tasks.models import Task
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,8 @@ def dashboard_stats(request):
             "upcoming_events": Event.objects.filter(
                 date__gte=timezone.now(), status="published"
             ).count(),
-            "total_inventory": InventoryTracking.objects.count(),  # ✅ FIXED: Actually count inventory
+            "total_inventory": InventoryTracking.objects.count(),
+            "pending_tasks": get_pending_tasks_count(user),
         }
     except Exception as e:
         stats["overview"] = {
@@ -210,3 +213,20 @@ def health_check(request):
     Simple health check for uptime monitoring
     """
     return Response({"status": "ok"})
+
+
+def get_pending_tasks_count(user):
+    """Helper to get pending task count based on user role"""
+    base_query = Task.objects.filter(status__in=["pending", "in_progress"], is_active=True)
+
+    # Admin, super_admin, and pastors see all
+    if user.role in ["super_admin", "admin", "pastor"]:
+        return base_query.count()
+
+    # Ministry leaders see their ministry's tasks
+    if user.role == "ministry_leader":
+        led_ministries = user.led_ministries.values_list("id", flat=True)
+        return base_query.filter(Q(ministry_id__in=led_ministries) | Q(assigned_to=user)).count()
+
+    # Others see only tasks assigned to them
+    return base_query.filter(assigned_to=user).count()
