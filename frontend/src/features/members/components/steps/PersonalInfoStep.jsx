@@ -4,14 +4,14 @@ import { formatPhoneNumber } from '../../../../utils/phoneFormatter';
 const PersonalInfoStep = ({ formData, updateFormData, errors, setErrors, loading }) => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     if (name === 'phone') {
       const formatted = formatPhoneNumber(value);
       updateFormData({ phone: formatted });
     } else {
       updateFormData({ [name]: type === 'checkbox' ? checked : value });
     }
-    
+
     // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -68,7 +68,7 @@ const PersonalInfoStep = ({ formData, updateFormData, errors, setErrors, loading
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email <span className="text-red-500">*</span>
+              Email
             </label>
             <input
               type="email"
