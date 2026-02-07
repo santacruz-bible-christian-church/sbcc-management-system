@@ -44,6 +44,10 @@ const AnnouncementCard = ({ announcement, onEdit, onDelete, onDeactivate, onSend
           <img
             src={announcement.photo}
             alt={announcement.title}
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400 text-sm">Image unavailable</div>';
+            }}
             className="w-full h-full object-cover"
           />
         </div>

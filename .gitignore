@@ -64,6 +64,11 @@ dist/
 dist-ssr/
 *.local
 
+# Playwright Test Artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+
 # Editor directories and files
 .idea/
 .DS_Store

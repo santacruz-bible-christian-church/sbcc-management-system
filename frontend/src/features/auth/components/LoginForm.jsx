@@ -86,6 +86,7 @@ export const LoginForm = ({ onSuccess }) => {
         </label>
         <input
           id="username"
+          name="username"
           type="text"
           value={username}
           onChange={handleUsernameChange}
