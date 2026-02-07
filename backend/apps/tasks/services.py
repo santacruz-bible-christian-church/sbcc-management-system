@@ -17,7 +17,7 @@ def get_upcoming_tasks(days=7, ministry=None, assigned_to=None):
     queryset = Task.objects.filter(
         end_date__gte=today,
         end_date__lte=deadline,
-        status__in=["pending", "in_progress"],
+        status="pending",
         is_active=True,
     ).select_related("created_by", "assigned_to", "ministry")
 
