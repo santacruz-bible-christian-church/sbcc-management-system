@@ -1,9 +1,21 @@
 import { test, expect } from '@playwright/test';
 
+const PUBLIC_SETTINGS_RESPONSE = {
+  app_name: 'SBCC Management System',
+  church_name: 'Santa Cruz Bible Christian Church',
+  logo: null,
+};
+
 test.describe('Browser Compatibility - Images', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to login page which should have basic styling
-    await page.goto('/login');
+    // Keep tests deterministic by stubbing public settings in CI/local runs.
+    await page.route('**/public/settings/**', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(PUBLIC_SETTINGS_RESPONSE),
+      });
+    });
   });
 
   test('page renders without console errors', async ({ page }) => {
