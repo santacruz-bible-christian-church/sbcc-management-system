@@ -145,8 +145,8 @@ export const MemberEditModal = ({
     const newErrors = {};
     if (!formData.first_name?.trim()) newErrors.first_name = "First name is required";
     if (!formData.last_name?.trim()) newErrors.last_name = "Last name is required";
-    if (!formData.email?.trim()) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email is invalid";
+    // Email is optional, but if provided, must be valid
+    if (formData.email?.trim() && !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email is invalid";
     if (!formData.phone?.trim()) newErrors.phone = "Phone is required";
     if (!formData.date_of_birth) newErrors.date_of_birth = "Date of birth is required";
 
@@ -242,7 +242,7 @@ export const MemberEditModal = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <FormInput label="First Name" name="first_name" value={formData.first_name} onChange={handleChange} error={errors.first_name} required />
                   <FormInput label="Last Name" name="last_name" value={formData.last_name} onChange={handleChange} error={errors.last_name} required />
-                  <FormInput label="Email" name="email" type="email" value={formData.email} onChange={handleChange} error={errors.email} required />
+                  <FormInput label="Email" name="email" type="email" value={formData.email} onChange={handleChange} error={errors.email} />
                   <FormInput label="Phone" name="phone" value={formData.phone} onChange={handleChange} error={errors.phone} required />
                   <FormInput label="Date of Birth" name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleChange} error={errors.date_of_birth} required />
                   <FormSelect label="Gender" name="gender" value={formData.gender} onChange={handleChange} options={[
