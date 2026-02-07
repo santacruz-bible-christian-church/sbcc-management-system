@@ -73,6 +73,24 @@ jobs:
           echo "❌ Frontend CI failed"
           exit 1
 
+      # Wait for Frontend E2E CI
+      - name: Wait for Frontend E2E CI
+        if: steps.filter.outputs.frontend == 'true'
+        uses: fountainhead/action-wait-for-check@v1.2.0
+        id: wait-frontend-e2e
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: "E2E Smoke (Chromium)"
+          ref: ${{ github.event.pull_request.head.sha }}
+          timeoutSeconds: 600
+          intervalSeconds: 10
+
+      - name: Verify Frontend E2E CI
+        if: steps.filter.outputs.frontend == 'true' && steps.wait-frontend-e2e.outputs.conclusion != 'success'
+        run: |
+          echo "❌ Frontend E2E CI failed"
+          exit 1
+
       # Wait for Docker CI
       - name: Wait for Docker Backend Image
         if: steps.filter.outputs.docker == 'true'
@@ -108,6 +126,7 @@ jobs:
           echo "📊 CI Results:"
           echo "  Backend: ${{ steps.filter.outputs.backend == 'true' && '✅ Passed' || '⏭️ Skipped' }}"
           echo "  Frontend: ${{ steps.filter.outputs.frontend == 'true' && '✅ Passed' || '⏭️ Skipped' }}"
+          echo "  Frontend E2E: ${{ steps.filter.outputs.frontend == 'true' && '✅ Passed' || '⏭️ Skipped' }}"
           echo "  Docker: ${{ steps.filter.outputs.docker == 'true' && '✅ Passed' || '⏭️ Skipped' }}"
           echo ""
           echo "✅ All applicable CI checks passed!"
