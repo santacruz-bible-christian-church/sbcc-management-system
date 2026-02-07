@@ -138,9 +138,8 @@ export const MemberFormModal = ({
         if (!formData.last_name?.trim()) {
           newErrors.last_name = "Last name is required";
         }
-        if (!formData.email?.trim()) {
-          newErrors.email = "Email is required";
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        // Email is optional, but if provided, must be valid
+        if (formData.email?.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
           newErrors.email = "Email is invalid";
         }
         if (!formData.phone?.trim()) {

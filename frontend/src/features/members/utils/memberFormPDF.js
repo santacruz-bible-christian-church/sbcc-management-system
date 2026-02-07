@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-// ✅ Import your church logo (place PNG in src/assets/)
+// Import your church logo (place PNG in src/assets/)
 import churchLogo from '../../../assets/SBCCLogoHD.png';
 
 export const generateMembershipFormPDF = (formData) => {
