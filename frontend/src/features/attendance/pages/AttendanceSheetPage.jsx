@@ -75,12 +75,20 @@ export default function AttendanceSheetPage() {
     setSearchTerm(value);
     setSearch(value);
   }, [setSearch]);
+  
+  // Ensure clearing search from toolbar resets both UI and backend
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('');
+    setSearch('');
+  }, [setSearch]);
+
 
   const handleEventFilterChange = useCallback((value) => {
-    setFilters(prev => ({ ...prev, event: value }));
+    setFilters((prev) => ({ ...prev, event: value }));
   }, [setFilters]);
 
-  const handleCreate = useCallback(async (data) => {
+  // Handler for creating a new sheet (e.g. on form submit)
+  const handleCreateSheet = useCallback(async (data) => {
     try {
       if (!data.eventId || !data.date) {
         console.error('Missing required fields:', data);
@@ -147,8 +155,11 @@ export default function AttendanceSheetPage() {
           statsLoading={statsLoading}
           searchTerm={searchTerm}
           onSearchChange={handleSearchChange}
+          onClearSearch={handleClearSearch}
           eventFilter={filters.event}
           onEventFilterChange={handleEventFilterChange}
+          dateFilter={filters.date}
+          onDateFilterChange={value => setFilters(prev => ({ ...prev, date: value }))}
           events={events}
           onCreateClick={canWrite ? () => setShowModal(true) : undefined}
           canWrite={canWrite}
@@ -159,7 +170,7 @@ export default function AttendanceSheetPage() {
           <AttendanceSheetInput
             open={showModal}
             onClose={() => setShowModal(false)}
-            onCreate={handleCreate}
+            onCreate={handleCreateSheet}
           />
         )}
 
