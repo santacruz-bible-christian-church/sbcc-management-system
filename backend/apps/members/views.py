@@ -13,10 +13,12 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
+from django_filters.rest_framework import FilterSet, filters
 
 from common.permissions import IsAdminOrPastorReadOnly
 
@@ -30,6 +32,20 @@ from .services import (
 )
 
 
+
+# Custom filter for birthday_month
+class MemberFilter(FilterSet):
+    birthday_month = filters.NumberFilter(method="filter_birthday_month")
+
+    class Meta:
+        model = Member
+        fields = ["ministry", "status", "gender", "birthday_month"]
+
+    def filter_birthday_month(self, queryset, name, value):
+        # value is expected to be 1-12
+        return queryset.filter(date_of_birth__month=value)
+
+
 class MemberViewSet(viewsets.ModelViewSet):
     """ViewSet for Member model"""
 
@@ -37,7 +53,7 @@ class MemberViewSet(viewsets.ModelViewSet):
     serializer_class = MemberSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["ministry", "status", "gender"]
+    filterset_class = MemberFilter
     search_fields = ["first_name", "last_name", "email", "phone"]
     ordering_fields = ["first_name", "last_name", "membership_date"]
     ordering = ["last_name", "first_name"]
