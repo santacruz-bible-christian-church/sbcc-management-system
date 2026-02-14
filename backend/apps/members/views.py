@@ -7,18 +7,16 @@ from dateutil import parser as date_parser
 from django.db import models, transaction
 from django.http import HttpResponse
 from django.utils import timezone
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
-
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
-from django_filters.rest_framework import FilterSet, filters
 
 from common.permissions import IsAdminOrPastorReadOnly
 
