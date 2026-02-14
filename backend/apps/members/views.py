@@ -7,7 +7,7 @@ from dateutil import parser as date_parser
 from django.db import models, transaction
 from django.http import HttpResponse
 from django.utils import timezone
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -30,6 +30,19 @@ from .services import (
 )
 
 
+# Custom filter for birthday_month
+class MemberFilter(FilterSet):
+    birthday_month = filters.NumberFilter(method="filter_birthday_month")
+
+    class Meta:
+        model = Member
+        fields = ["ministry", "status", "gender", "birthday_month"]
+
+    def filter_birthday_month(self, queryset, name, value):
+        # value is expected to be 1-12
+        return queryset.filter(date_of_birth__month=value)
+
+
 class MemberViewSet(viewsets.ModelViewSet):
     """ViewSet for Member model"""
 
@@ -37,7 +50,7 @@ class MemberViewSet(viewsets.ModelViewSet):
     serializer_class = MemberSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["ministry", "status", "gender"]
+    filterset_class = MemberFilter
     search_fields = ["first_name", "last_name", "email", "phone"]
     ordering_fields = ["first_name", "last_name", "membership_date"]
     ordering = ["last_name", "first_name"]

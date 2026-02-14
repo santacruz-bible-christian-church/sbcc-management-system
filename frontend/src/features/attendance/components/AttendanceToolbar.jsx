@@ -11,6 +11,7 @@ import {
 } from 'react-icons/hi';
 import { useDebounce } from '../../../hooks/useDebounce';
 
+
 // Stats display component
 const AttendanceStats = ({ stats, loading }) => {
   const items = [
@@ -48,168 +49,199 @@ const AttendanceStats = ({ stats, loading }) => {
 };
 
 // Filter dropdown component
-const FilterDropdown = ({ label, value, options, onChange, dropdownRef, isOpen, setIsOpen }) => (
-  <div className="relative" ref={dropdownRef}>
-    <button
-      type="button"
-      onClick={() => setIsOpen(!isOpen)}
-      className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors min-w-[100px]"
-    >
-      <span className="text-gray-700 truncate">
-        {value ? options.find(o => o.value === value)?.label : label}
-      </span>
-      <HiChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-    </button>
-
-    {isOpen && (
-      <div className="absolute z-20 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[140px]">
-        <ul className="py-1">
-          <li>
-            <button
-              onClick={() => { onChange(''); setIsOpen(false); }}
-              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              {label}
-            </button>
-          </li>
-          {options.map((option) => (
-            <li key={option.value}>
+const FilterDropdown = ({ label, value, options, onChange, dropdownRef, isOpen, setIsOpen }) => {
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors min-w-[100px]"
+      >
+        <span className="text-gray-700 truncate">
+          {value ? options.find(o => o.value === value)?.label : label}
+        </span>
+        <HiChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {isOpen && (
+        <div className="absolute z-20 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[140px]">
+          <ul className="py-1">
+            <li>
               <button
-                onClick={() => { onChange(option.value); setIsOpen(false); }}
-                className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${
-                  value === option.value ? 'bg-amber-50 text-amber-700' : 'text-gray-700'
-                }`}
+                onClick={() => { onChange(''); setIsOpen(false); }}
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
               >
-                {option.label}
+                {label}
               </button>
             </li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </div>
-);
+            {options.map((option) => (
+              <li key={option.value}>
+                <button
+                  onClick={() => { onChange(option.value); setIsOpen(false); }}
+                  className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${
+                    value === option.value ? 'bg-amber-50 text-amber-700' : 'text-gray-700'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
 
-export const AttendanceToolbar = ({
+const AttendanceToolbar = ({
   stats,
   statsLoading,
   searchTerm,
   onSearchChange,
+  onClearSearch,
+  onClearAllFilters,
   eventFilter,
   onEventFilterChange,
+  dateFilter,
+  onDateFilterChange,
   events = [],
   onCreateClick,
 }) => {
-  // Dropdown states
-  const [eventOpen, setEventOpen] = useState(false);
-  const eventRef = useRef(null);
+    // Dropdown states
+    const [eventOpen, setEventOpen] = useState(false);
+    const eventRef = useRef(null);
 
-  // Local search state for immediate UI feedback
-  const [localSearch, setLocalSearch] = useState(searchTerm);
 
-  // Debounced search
-  const debouncedSearch = useDebounce(localSearch, 400);
 
-  // Sync local search with prop
-  useEffect(() => {
-    setLocalSearch(searchTerm);
-  }, [searchTerm]);
 
-  // Trigger search when debounced value changes
-  useEffect(() => {
-    if (debouncedSearch !== searchTerm) {
-      onSearchChange(debouncedSearch);
-    }
-  }, [debouncedSearch, searchTerm, onSearchChange]);
 
-  // Click outside handler
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (eventRef.current && !eventRef.current.contains(event.target)) setEventOpen(false);
+    // Local state for input value
+    const [inputValue, setInputValue] = useState(searchTerm);
+    useEffect(() => {
+      setInputValue(searchTerm);
+    }, [searchTerm]);
+
+    // Debounce the input value
+    const debouncedInput = useDebounce(inputValue, 400);
+    useEffect(() => {
+      if (debouncedInput !== searchTerm) {
+        onSearchChange(debouncedInput);
+      }
+    }, [debouncedInput, searchTerm, onSearchChange]);
+
+    // Click outside handler
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (eventRef.current && !eventRef.current.contains(event.target)) setEventOpen(false);
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const eventOptions = events.map(e => ({
+      value: e.id.toString(),
+      label: e.title,
+    }));
+
+    const handleClearFilters = () => {
+      onSearchChange('');
+      onEventFilterChange('');
+      onDateFilterChange('');
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    const hasActiveFilters = eventFilter || searchTerm || dateFilter;
 
-  const eventOptions = events.map(e => ({
-    value: e.id.toString(),
-    label: e.title,
-  }));
+    return (
+      <div className="space-y-3">
+        {/* Row 1: Stats + Actions */}
+        <div className="flex items-center justify-between gap-4 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm flex-wrap">
+          {/* Left: Stats */}
+          <AttendanceStats stats={stats} loading={statsLoading} />
 
-  const handleClearFilters = () => {
-    setLocalSearch('');
-    onSearchChange('');
-    onEventFilterChange('');
-  };
+          {/* Right: Create Button */}
+          <button
+            onClick={onCreateClick}
+            className="flex items-center gap-2 px-4 py-2 bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] transition-colors"
+          >
+            <HiOutlinePlus className="w-5 h-5" />
+            <span>New Sheet</span>
+          </button>
+        </div>
 
-  const hasActiveFilters = eventFilter || localSearch;
+        {/* Row 2: Search + Filters */}
+        <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm flex-wrap">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[200px]">
+            <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Search by event..."
+              className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FDB54A]/50 focus:border-[#FDB54A] transition-all"
+            />
+            {inputValue && (
+              <button
+                onClick={() => {
+                  setInputValue('');
+                  onSearchChange('');
+                  if (onClearSearch) onClearSearch();
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                title="Clear search"
+                type="button"
+              >
+                <HiX className="w-4 h-4" />
+              </button>
+            )}
+          </div>
 
-  return (
-    <div className="space-y-3">
-      {/* Row 1: Stats + Actions */}
-      <div className="flex items-center justify-between gap-4 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm flex-wrap">
-        {/* Left: Stats */}
-        <AttendanceStats stats={stats} loading={statsLoading} />
+          {/* Date Filter */}
+          <div className="relative">
+            <input
+              type="date"
+              value={dateFilter || ''}
+              onChange={e => onDateFilterChange(e.target.value)}
+              className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FDB54A]/50 focus:border-[#FDB54A] min-w-[140px]"
+              placeholder="Search by date"
+            />
+            {dateFilter && (
+              <button
+                onClick={() => onDateFilterChange('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                title="Clear date"
+                type="button"
+              >
+                <HiX className="w-4 h-4" />
+              </button>
+            )}
+          </div>
 
-        {/* Right: Create Button */}
-        <button
-          onClick={onCreateClick}
-          className="flex items-center gap-2 px-4 py-2 bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] transition-colors"
-        >
-          <HiOutlinePlus className="w-5 h-5" />
-          <span>New Sheet</span>
-        </button>
-      </div>
+          {/* Event Filter */}
+          {events.length > 0 && (
+            <FilterDropdown
+              label="All Events"
+              value={eventFilter}
+              options={eventOptions}
+              onChange={onEventFilterChange}
+              dropdownRef={eventRef}
+              isOpen={eventOpen}
+              setIsOpen={setEventOpen}
+            />
+          )}
 
-      {/* Row 2: Search + Filters */}
-      <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm flex-wrap">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px]">
-          <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="search"
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-            placeholder="Search by event..."
-            className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FDB54A]/50 focus:border-[#FDB54A] transition-all"
-          />
-          {localSearch && (
+          {/* Clear Filters */}
+          {hasActiveFilters && (
             <button
-              onClick={() => { setLocalSearch(''); onSearchChange(''); }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+              onClick={handleClearFilters}
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              title="Clear all filters"
             >
               <HiX className="w-4 h-4" />
             </button>
           )}
         </div>
-
-        {/* Event Filter */}
-        {events.length > 0 && (
-          <FilterDropdown
-            label="All Events"
-            value={eventFilter}
-            options={eventOptions}
-            onChange={onEventFilterChange}
-            dropdownRef={eventRef}
-            isOpen={eventOpen}
-            setIsOpen={setEventOpen}
-          />
-        )}
-
-        {/* Clear Filters */}
-        {hasActiveFilters && (
-          <button
-            onClick={handleClearFilters}
-            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-            title="Clear all filters"
-          >
-            <HiX className="w-4 h-4" />
-          </button>
-        )}
       </div>
-    </div>
-  );
+    );
 };
 
 export default AttendanceToolbar;

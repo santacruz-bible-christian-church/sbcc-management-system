@@ -103,3 +103,9 @@ Thumbs.db
 # Plan
 # ============================================
 .plan
+
+# ============================================
+# Local Certificates (keep untracked)
+# ============================================
+backend/cert.crt
+backend/cert.key
