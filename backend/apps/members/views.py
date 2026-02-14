@@ -32,7 +32,6 @@ from .services import (
 )
 
 
-
 # Custom filter for birthday_month
 class MemberFilter(FilterSet):
     birthday_month = filters.NumberFilter(method="filter_birthday_month")
