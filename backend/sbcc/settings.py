@@ -33,6 +33,15 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv(
 if not ALLOWED_HOSTS:
     ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
+RAILWAY_PUBLIC_DOMAIN = config("RAILWAY_PUBLIC_DOMAIN", default="")
+railway_hosts = ["healthcheck.railway.app"]
+if RAILWAY_PUBLIC_DOMAIN:
+    railway_hosts.append(RAILWAY_PUBLIC_DOMAIN)
+
+for host in railway_hosts:
+    if host and host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(host)
+
 # Frontend URL for password reset emails and other links
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:5173")
 
