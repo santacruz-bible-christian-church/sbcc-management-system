@@ -55,14 +55,42 @@ class MemberViewSet(viewsets.ModelViewSet):
     ordering_fields = ["first_name", "last_name", "membership_date"]
     ordering = ["last_name", "first_name"]
 
+    @staticmethod
+    def _to_bool(value):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            return value.strip().lower() in {"true", "1", "yes", "on"}
+        return bool(value)
+
+    @classmethod
+    def _sync_status_and_active(cls, data):
+        """Keep `status` and `is_active` aligned for active/inactive flows."""
+        has_status = data.get("status") not in [None, ""]
+        has_is_active = data.get("is_active") not in [None, ""]
+
+        if has_status:
+            status_value = str(data.get("status")).strip().lower()
+            if status_value == "active":
+                data["is_active"] = True
+            elif status_value in {"inactive", "archived", "pending"}:
+                data["is_active"] = False
+            return
+
+        if has_is_active:
+            is_active = cls._to_bool(data.get("is_active"))
+            data["is_active"] = is_active
+            data["status"] = "active" if is_active else "inactive"
+            return
+
+        data.setdefault("status", "active")
+        data.setdefault("is_active", True)
+
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """Create a member - simple data record, no User account."""
         data = request.data.copy()
-
-        # Default status to 'active' if not provided
-        if not data.get("status"):
-            data["status"] = "active"
+        self._sync_status_and_active(data)
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -76,14 +104,20 @@ class MemberViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         data = request.data.copy()
 
-        # Restrict changing status to admin/super_admin only
+        # Restrict changing non-active statuses to admin/super_admin only
         is_admin_or_above = (
             request.user.is_staff
             or request.user.is_superuser
             or request.user.role in ["super_admin", "admin"]
         )
-        if "status" in data and not is_admin_or_above:
+        if (
+            "status" in data
+            and not is_admin_or_above
+            and str(data.get("status")).lower() not in {"active", "inactive"}
+        ):
             data.pop("status")
+
+        self._sync_status_and_active(data)
 
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
@@ -163,7 +197,8 @@ class MemberViewSet(viewsets.ModelViewSet):
         if new_status not in dict(Member.STATUS_CHOICES):
             return Response({"detail": "Invalid status value."}, status=status.HTTP_400_BAD_REQUEST)
         qs = self.get_queryset().filter(id__in=ids)
-        updated = qs.update(status=new_status, updated_at=timezone.now())
+        is_active = new_status == "active"
+        updated = qs.update(status=new_status, is_active=is_active, updated_at=timezone.now())
         return Response({"updated_count": updated}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])

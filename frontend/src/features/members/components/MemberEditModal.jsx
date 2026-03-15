@@ -100,6 +100,7 @@ export const MemberEditModal = ({
         how_introduced: member.how_introduced || "",
         began_attending_since: member.began_attending_since || "",
         is_active: member.is_active !== undefined ? member.is_active : true,
+        status: member.status || (member.is_active ? "active" : "inactive"),
       });
       setErrors({});
     }
@@ -116,6 +117,14 @@ export const MemberEditModal = ({
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
   }, [errors]);
+
+  const handleActiveChange = useCallback((isActive) => {
+    setFormData((prev) => ({
+      ...prev,
+      is_active: isActive,
+      status: isActive ? "active" : "inactive",
+    }));
+  }, []);
 
   // Family member handlers
   const addFamilyMember = useCallback(() => {
@@ -182,6 +191,9 @@ export const MemberEditModal = ({
         sanitizedData[field] = isNaN(parsed) ? null : parsed;
       }
     });
+
+    sanitizedData.is_active = Boolean(sanitizedData.is_active);
+    sanitizedData.status = sanitizedData.is_active ? 'active' : 'inactive';
 
     // Clean family members
     if (sanitizedData.family_members) {
@@ -381,6 +393,30 @@ export const MemberEditModal = ({
                     { value: "other", label: "Other" },
                   ]} />
                   <FormInput label="Began Attending Since" name="began_attending_since" type="date" value={formData.began_attending_since} onChange={handleChange} />
+                </div>
+
+                <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-sm font-medium text-gray-700">Member Activity</p>
+                  <div className="mt-3 inline-flex rounded-lg border border-gray-300 bg-white p-1">
+                    <button
+                      type="button"
+                      onClick={() => handleActiveChange(true)}
+                      className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                        formData.is_active ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      Active
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleActiveChange(false)}
+                      className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                        formData.is_active ? 'text-gray-600 hover:bg-gray-100' : 'bg-gray-700 text-white'
+                      }`}
+                    >
+                      Inactive
+                    </button>
+                  </div>
                 </div>
               </section>
             </form>

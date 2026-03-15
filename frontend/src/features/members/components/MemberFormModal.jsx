@@ -226,6 +226,10 @@ export const MemberFormModal = ({
       }
     });
 
+    // Keep API status field aligned with active toggle.
+    sanitized.is_active = Boolean(sanitized.is_active);
+    sanitized.status = sanitized.is_active ? 'active' : 'inactive';
+
     // ✅ Sanitize and validate family members
     if (sanitized.family_members && Array.isArray(sanitized.family_members)) {
       sanitized.family_members = sanitized.family_members
