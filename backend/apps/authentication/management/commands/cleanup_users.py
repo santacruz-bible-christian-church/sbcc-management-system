@@ -5,7 +5,7 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
-    help = "Remove non-management users from the User table (keeps admin, pastor, ministry_leader)"
+    help = "Remove non-management users from the User table (keeps admin, pastor, ministry_leader, multimedia)"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -18,7 +18,7 @@ class Command(BaseCommand):
         dry_run = options["dry_run"]
 
         # Roles to keep
-        management_roles = ["admin", "pastor", "ministry_leader"]
+        management_roles = ["admin", "pastor", "ministry_leader", "multimedia"]
 
         # Find users to delete
         users_to_delete = User.objects.exclude(role__in=management_roles)

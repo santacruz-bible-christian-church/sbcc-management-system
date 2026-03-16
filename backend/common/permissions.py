@@ -48,6 +48,36 @@ class IsAdminOrPastorReadOnly(permissions.BasePermission):
         )
 
 
+class IsAdminPastorOrMultimediaReadOnly(permissions.BasePermission):
+    """
+    Allow read for all authenticated users.
+    Write for admins/super_admins, pastors, and multimedia.
+    """
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user and request.user.is_authenticated
+        return (
+            request.user
+            and request.user.is_authenticated
+            and (
+                request.user.is_superuser
+                or request.user.role in ["super_admin", "admin", "pastor", "multimedia"]
+            )
+        )
+
+
+class IsAdminOrPastor(permissions.BasePermission):
+    """Allow access only to admin/super_admin/pastor users."""
+
+    def has_permission(self, request, view):
+        return (
+            request.user
+            and request.user.is_authenticated
+            and (request.user.is_superuser or request.user.role in ["super_admin", "admin", "pastor"])
+        )
+
+
 def _user_is_admin(user):
     return user and (user.is_superuser or user.role in ["super_admin", "admin"])
 

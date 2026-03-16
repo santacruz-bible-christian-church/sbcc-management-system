@@ -105,7 +105,7 @@ const CollapsibleSection = ({ title, children, defaultOpen = false }) => {
   );
 };
 
-export const MemberDetailsModal = ({ open, onClose, member }) => {
+export const MemberDetailsModal = ({ open, onClose, member, canExport = true }) => {
   const [exporting, setExporting] = useState(false);
   const [exportingForm, setExportingForm] = useState(false);
 
@@ -474,48 +474,52 @@ export const MemberDetailsModal = ({ open, onClose, member }) => {
 
           {/* Footer */}
           <div className="sticky bottom-0 bg-white flex justify-end gap-3 p-6 border-t border-gray-200">
-            <button
-              onClick={handleExportMembershipForm}
-              disabled={exportingForm}
-              className={`px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 ${
-                exportingForm ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {exportingForm ? (
-                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-              ) : (
-                <HiOutlineDocumentDownload className="w-4 h-4" />
-              )}
-              Export Membership Form
-            </button>
-            <button
-              onClick={handleExportProfile}
-              disabled={exporting}
-              className={`px-4 py-2 border border-[#FDB54A] text-[#FDB54A] rounded-lg hover:bg-[#FDB54A] hover:text-white transition-colors flex items-center gap-2 ${
-                exporting ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {exporting ? (
-                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-              ) : (
-                <HiOutlineDocumentDownload className="w-4 h-4" />
-              )}
-              Export Member Report
-            </button>
+            {canExport && (
+              <>
+                <button
+                  onClick={handleExportMembershipForm}
+                  disabled={exportingForm}
+                  className={`px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 ${
+                    exportingForm ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {exportingForm ? (
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                  ) : (
+                    <HiOutlineDocumentDownload className="w-4 h-4" />
+                  )}
+                  Export Membership Form
+                </button>
+                <button
+                  onClick={handleExportProfile}
+                  disabled={exporting}
+                  className={`px-4 py-2 border border-[#FDB54A] text-[#FDB54A] rounded-lg hover:bg-[#FDB54A] hover:text-white transition-colors flex items-center gap-2 ${
+                    exporting ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {exporting ? (
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                  ) : (
+                    <HiOutlineDocumentDownload className="w-4 h-4" />
+                  )}
+                  Export Member Report
+                </button>
+              </>
+            )}
             <button
               onClick={onClose}
               className="px-6 py-2 bg-[#FDB54A] text-white rounded-lg hover:bg-[#e5a43b] transition-colors"
@@ -533,6 +537,7 @@ MemberDetailsModal.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   member: PropTypes.object,
+  canExport: PropTypes.bool,
 };
 
 export default MemberDetailsModal;

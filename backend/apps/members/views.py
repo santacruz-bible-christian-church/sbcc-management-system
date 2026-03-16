@@ -312,6 +312,12 @@ class MemberViewSet(viewsets.ModelViewSet):
 
         Supports the same filters as the list endpoint.
         """
+        if request.user.role == "multimedia" and not request.user.is_superuser:
+            return Response(
+                {"detail": "You do not have permission to export member data."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         # Apply filters from query params
         qs = self.get_queryset()
 

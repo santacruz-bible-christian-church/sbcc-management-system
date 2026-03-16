@@ -21,8 +21,9 @@ import { useMinistries } from '../../ministries/hooks/useMinistries';
 
 export const MembershipListPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { canWrite } = usePermissionWarning('members', { label: 'Members' });
+  const { canWrite, role } = usePermissionWarning('members', { label: 'Members' });
   const canManage = canWrite;
+  const canExportMembersData = role !== 'multimedia';
   const { ministries } = useMinistries();
 
   const {
@@ -204,6 +205,7 @@ export const MembershipListPage = () => {
         open={modals.detailsModalState.open}
         onClose={modals.closeDetailsModal}
         member={modals.detailsModalState.member}
+        canExport={canExportMembersData}
       />
 
       {/* CSV Import Modal */}
