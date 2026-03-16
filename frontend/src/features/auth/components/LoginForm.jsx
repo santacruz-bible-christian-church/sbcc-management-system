@@ -46,7 +46,7 @@ export const LoginForm = ({ onSuccess }) => {
     const result = await login(username.trim(), password.trim());
 
     if (result.success) {
-      onSuccess();
+      onSuccess(result.user);
     }
   };
 
