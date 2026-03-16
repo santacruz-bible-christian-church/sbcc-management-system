@@ -3,7 +3,7 @@ import { Spinner } from 'flowbite-react';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { DASHBOARD_ROLES } from '../utils/permissions';
 
-const MULTIMEDIA_ALLOWED_PREFIXES = ['/announcements', '/members'];
+const MULTIMEDIA_ALLOWED_PREFIXES = ['/announcements', '/members', '/settings'];
 const DENIED_ACCESS_MESSAGE = 'Denied Access, contact admin or superadmin for concerns';
 
 export const ProtectedRoute = ({ children, requiredRole = null, requiredRoles = null }) => {
