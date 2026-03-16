@@ -15,7 +15,7 @@ import Snackbar from '../../../components/ui/Snackbar';
 
 export const SettingsPage = () => {
   const { canWrite, user } = usePermissionWarning('settings', { label: 'Settings' });
-  const { settings, loading, saving, refresh, updateSettings, uploadImage, removeImage } = useSettings();
+  const { settings, loading, saving, refresh, updateSettings, uploadImage, removeImage } = useSettings(canWrite);
   const { snackbar, hideSnackbar, showSuccess, showError } = useSnackbar();
   const [activeTab, setActiveTab] = useState(0);
 
