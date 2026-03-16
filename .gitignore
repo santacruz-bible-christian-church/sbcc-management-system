@@ -1,5 +1,5 @@
 # AI Agent Configuration
-.agent/
+.agents/
 
 # VS Code
 .vscode/.env
