@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
-from common.permissions import IsAdminOrPastorReadOnly, IsAdminPastorOrMultimediaReadOnly
+from common.permissions import IsAdminPastorOrMultimediaReadOnly
 
 from .models import Announcement
 from .serializers import AnnouncementSerializer
@@ -24,10 +24,8 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get_permissions(self):
-        """Multimedia can create/update announcements, but only admin/pastor can delete."""
-        if self.action == "destroy":
-            return [IsAdminOrPastorReadOnly()]
-        if self.action in ["create", "update", "partial_update"]:
+        """Multimedia has full write access to announcements."""
+        if self.action in ["create", "update", "partial_update", "destroy"]:
             return [IsAdminPastorOrMultimediaReadOnly()]
         return super().get_permissions()
 
