@@ -74,7 +74,9 @@ class IsAdminOrPastor(permissions.BasePermission):
         return (
             request.user
             and request.user.is_authenticated
-            and (request.user.is_superuser or request.user.role in ["super_admin", "admin", "pastor"])
+            and (
+                request.user.is_superuser or request.user.role in ["super_admin", "admin", "pastor"]
+            )
         )
 
 
