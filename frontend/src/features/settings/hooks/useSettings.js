@@ -2,13 +2,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { settingsApi } from '../../../api/settings.api';
 
-export const useSettings = () => {
+export const useSettings = (enabled = true) => {
   const [settings, setSettings] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const fetchSettings = useCallback(async () => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -21,11 +26,18 @@ export const useSettings = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      setSettings(null);
+      setError(null);
+      return;
+    }
+
     fetchSettings();
-  }, [fetchSettings]);
+  }, [enabled, fetchSettings]);
 
   const updateSettings = useCallback(async (data) => {
     setSaving(true);
