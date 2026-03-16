@@ -24,11 +24,26 @@ import FAQsDirectory from '../features/help/components/FAQsDirectory';
 import { UserManagementPage } from '../features/user-management/pages/UserManagementPage';
 import { UnauthorizedPage } from '../components/ui/UnauthorizedPage';
 import { VisitorsPage } from '../features/visitors/pages/VisitorsPage';
+import { useAuth } from '../features/auth/hooks/useAuth';
+
+const RoleLandingRedirect = () => {
+  const { user, isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Navigate to={user?.role === 'multimedia' ? '/announcements' : '/dashboard'} replace />;
+};
 
 export const routes = [
   {
     path: '/',
-    element: <Navigate to="/dashboard" replace />,
+    element: <RoleLandingRedirect />,
   },
   {
     path: '/login',
@@ -216,6 +231,6 @@ export const routes = [
   },
   {
     path: '*',
-    element: <Navigate to="/dashboard" replace />,
+    element: <RoleLandingRedirect />,
   },
 ];
