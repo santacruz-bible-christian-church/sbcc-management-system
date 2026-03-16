@@ -14,7 +14,8 @@ import { getAnnouncementStatus } from '../utils/constants';
 import { showSuccess, showError } from '../../../utils/toast';
 
 const AnnouncementPage = () => {
-  const { canWrite } = usePermissionWarning('announcements', { label: 'Announcements' });
+  const { canWrite, role } = usePermissionWarning('announcements', { label: 'Announcements' });
+  const canDelete = canWrite && role !== 'multimedia';
   const {
     announcements,
     loading,
@@ -190,7 +191,7 @@ const AnnouncementPage = () => {
                 key={announcement.id}
                 announcement={announcement}
                 onEdit={canWrite ? handleEdit : undefined}
-                onDelete={canWrite ? handleDelete : undefined}
+                onDelete={canDelete ? handleDelete : undefined}
                 onDeactivate={canWrite ? handleDeactivateClick : undefined}
                 onSendNow={canWrite ? handleSendNowClick : undefined}
                 onPreview={handlePreview}

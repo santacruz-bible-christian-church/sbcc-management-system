@@ -1,5 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { LoginForm } from '../components/LoginForm';
+import { useAuthStore } from '../../../store/auth.store';
 import { usePublicSettings } from '../../settings/hooks/usePublicSettings';
 import ChurchImage from '../../../assets/ChurchImage.jpeg';
 import SBCCLogoDefault from '../../../assets/SBCCLogoHD.svg';
@@ -13,6 +14,11 @@ export const LoginPage = () => {
   const appName = settings?.app_name || 'SBCC Management System';
 
   const handleLoginSuccess = () => {
+    const currentUser = useAuthStore.getState().user;
+    if (currentUser?.role === 'multimedia') {
+      navigate('/announcements');
+      return;
+    }
     navigate('/dashboard');
   };
 

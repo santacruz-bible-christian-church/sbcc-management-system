@@ -15,6 +15,7 @@ const getRoleBadgeColor = (role) => {
     admin: 'bg-blue-100 text-blue-800',
     pastor: 'bg-green-100 text-green-800',
     ministry_leader: 'bg-amber-100 text-amber-800',
+    multimedia: 'bg-pink-100 text-pink-800',
     member: 'bg-gray-100 text-gray-600',
   };
   return colors[role] || 'bg-gray-100 text-gray-800';
@@ -30,6 +31,7 @@ const ROLE_HIERARCHY = {
   admin: 4,
   pastor: 3,
   ministry_leader: 2,
+  multimedia: 2,
   member: 1,
 };
 
@@ -313,6 +315,7 @@ export const UserManagementPage = () => {
           <li><strong>Admin:</strong> Full access except user management</li>
           <li><strong>Pastor:</strong> Full access to ministry features</li>
           <li><strong>Ministry Leader:</strong> Limited to their assigned ministry</li>
+          <li><strong>Multimedia:</strong> Announcements create/update access and membership read/filter only</li>
         </ul>
       </div>
 

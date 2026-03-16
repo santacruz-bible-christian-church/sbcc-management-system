@@ -6,6 +6,7 @@ const ROLE_OPTIONS = [
   { value: 'admin', label: 'Admin' },
   { value: 'pastor', label: 'Pastor' },
   { value: 'ministry_leader', label: 'Ministry Leader' },
+  { value: 'multimedia', label: 'Multimedia' },
 ];
 
 const STATUS_OPTIONS = [

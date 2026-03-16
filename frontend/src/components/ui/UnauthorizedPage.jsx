@@ -1,10 +1,13 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ShieldX, ArrowLeft, LogOut } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 
 export const UnauthorizedPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
+  const deniedMessage =
+    location.state?.deniedMessage || 'Denied Access, contact admin or superadmin for concerns';
 
   const handleLogout = async () => {
     await logout();
@@ -24,7 +27,7 @@ export const UnauthorizedPage = () => {
           </h1>
 
           <p className="text-gray-600 mb-6">
-            Sorry, you don't have permission to access this page.
+            {deniedMessage}
             {user && (
               <span className="block mt-2 text-sm text-gray-500">
                 Your current role: <span className="font-medium capitalize">{user.role?.replace('_', ' ')}</span>

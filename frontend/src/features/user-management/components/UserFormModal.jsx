@@ -7,6 +7,7 @@ const ROLES = [
   { value: 'admin', label: 'Admin' },
   { value: 'pastor', label: 'Pastor' },
   { value: 'ministry_leader', label: 'Ministry Leader' },
+  { value: 'multimedia', label: 'Multimedia' },
 ];
 
 export const UserFormModal = ({ isOpen, onClose, onSubmit, user = null, isSubmitting = false }) => {

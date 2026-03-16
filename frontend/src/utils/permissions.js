@@ -9,11 +9,13 @@
 export const WRITE_ROLES = ['super_admin', 'admin', 'pastor'];
 
 /** Roles that have read access to the dashboard */
-export const DASHBOARD_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader'];
+export const DASHBOARD_ROLES = ['super_admin', 'admin', 'pastor', 'ministry_leader', 'multimedia'];
 
 /** Module-specific write roles (override default WRITE_ROLES) */
 export const MODULE_WRITE_ROLES = {
+  announcements: ['super_admin', 'admin', 'pastor', 'multimedia'],
   prayer_requests: ['super_admin', 'admin', 'pastor'],
+  members: ['super_admin', 'admin', 'pastor'],
   ministries: ['super_admin', 'admin', 'ministry_leader'],
   ministry_details: ['super_admin', 'admin', 'ministry_leader'],
   settings: ['super_admin', 'admin'],
