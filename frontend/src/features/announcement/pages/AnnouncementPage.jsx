@@ -10,6 +10,8 @@ import AnnouncementModal from '../components/AnnouncementModal';
 import PreviewRecipientsModal from '../components/PreviewRecipientsModal';
 import SendNowModal from '../components/SendNowModal';
 import DeactivateModal from '../components/DeactivateModal';
+import { ConfirmationModal } from '../../../components/ui/Modal';
+import TrashIllustration from '../../../assets/Trash-WarmTone.svg';
 import { getAnnouncementStatus } from '../utils/constants';
 import { showSuccess, showError } from '../../../utils/toast';
 
@@ -33,6 +35,7 @@ const AnnouncementPage = () => {
   const [previewModal, setPreviewModal] = useState({ isOpen: false, data: null, announcement: null });
   const [sendNowModal, setSendNowModal] = useState({ isOpen: false, announcement: null });
   const [deactivateModal, setDeactivateModal] = useState({ isOpen: false, announcement: null });
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, announcement: null });
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -86,14 +89,20 @@ const AnnouncementPage = () => {
     }
   };
 
-  const handleDelete = async (announcement) => {
-    if (window.confirm(`Are you sure you want to delete "${announcement.title}"?`)) {
-      try {
-        await deleteAnnouncement(announcement.id);
-      } catch (error) {
-        console.error('Error deleting announcement:', error);
-        showError('Failed to delete announcement. Please try again.');
-      }
+  const handleDelete = (announcement) => {
+    setDeleteModal({ isOpen: true, announcement });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.announcement) return;
+
+    try {
+      await deleteAnnouncement(deleteModal.announcement.id);
+      setDeleteModal({ isOpen: false, announcement: null });
+    } catch (error) {
+      console.error('Error deleting announcement:', error);
+      showError('Failed to delete announcement. Please try again.');
+      setDeleteModal({ isOpen: false, announcement: null });
     }
   };
 
@@ -231,6 +240,18 @@ const AnnouncementPage = () => {
           onClose={() => setDeactivateModal({ isOpen: false, announcement: null })}
           onConfirm={handleDeactivateConfirm}
           announcement={deactivateModal.announcement}
+        />
+
+        <ConfirmationModal
+          open={deleteModal.isOpen}
+          title="Delete Announcement?"
+          message={`Are you sure you want to permanently delete "${deleteModal.announcement?.title || 'this announcement'}"? This action cannot be undone.`}
+          illustration={TrashIllustration}
+          confirmText="Delete"
+          confirmVariant="danger"
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteModal({ isOpen: false, announcement: null })}
+          loading={loading}
         />
       </div>
     </main>
