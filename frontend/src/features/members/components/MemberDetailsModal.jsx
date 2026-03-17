@@ -51,6 +51,15 @@ const formatMaritalStatus = (status) => {
   return status.charAt(0).toUpperCase() + status.slice(1);
 };
 
+const getMemberMinistryLabel = (member) => {
+  if (Array.isArray(member.ministries) && member.ministries.length > 0) {
+    return member.ministries.map((item) => item.name).filter(Boolean).join(', ') || 'Member';
+  }
+
+  const names = [member.ministry_name, member.ministry_2_name, member.ministry_3_name].filter(Boolean);
+  return names.length > 0 ? [...new Set(names)].join(', ') : 'Member';
+};
+
 // Reusable info display component
 const InfoItem = ({ icon: Icon, iconBg, label, value }) => (
   <div className="flex items-center gap-3">
@@ -295,8 +304,8 @@ export const MemberDetailsModal = ({ open, onClose, member, canExport = true }) 
               <InfoItem
                 icon={HiOutlineOfficeBuilding}
                 iconBg="bg-[#FDB54A] bg-opacity-10 text-[#FDB54A]"
-                label="Current Ministry"
-                value={member.ministry_name || 'Member'}
+                label="Ministries"
+                value={getMemberMinistryLabel(member)}
               />
             </Section>
 

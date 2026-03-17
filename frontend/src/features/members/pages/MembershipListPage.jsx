@@ -24,7 +24,7 @@ export const MembershipListPage = () => {
   const { canWrite, role } = usePermissionWarning('members', { label: 'Members' });
   const canManage = canWrite;
   const canExportMembersData = role !== 'multimedia';
-  const { ministries } = useMinistries();
+  const { ministries } = useMinistries({ fetchAll: true });
 
   const {
     members,

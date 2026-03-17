@@ -1,7 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ministriesApi } from '../../../api/ministries.api';
 
-export const useMinistries = () => {
+const extractPageFromNext = (nextUrl) => {
+  if (!nextUrl) return null;
+
+  const match = nextUrl.match(/[?&]page=(\d+)/);
+  if (!match) return null;
+
+  const page = parseInt(match[1], 10);
+  return Number.isNaN(page) ? null : page;
+};
+
+export const useMinistries = ({ fetchAll = false } = {}) => {
   const [ministries, setMinistries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -18,6 +28,45 @@ export const useMinistries = () => {
     setLoading(true);
     setError(null);
     try {
+      if (fetchAll) {
+        const allResults = [];
+        let nextPage = page;
+
+        while (nextPage) {
+          const params = {
+            search: search || undefined,
+            page: nextPage,
+          };
+
+          Object.keys(params).forEach(key => {
+            if (params[key] === '' || params[key] === null || params[key] === undefined) {
+              delete params[key];
+            }
+          });
+
+          const data = await ministriesApi.listMinistries(params);
+          const pageResults = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
+          allResults.push(...pageResults);
+
+          if (!data.results || !data.next) {
+            nextPage = null;
+          } else {
+            nextPage = extractPageFromNext(data.next);
+          }
+        }
+
+        const uniqueById = Array.from(new Map(allResults.map((m) => [m.id, m])).values());
+        setMinistries(uniqueById);
+        setPagination({
+          count: uniqueById.length,
+          next: null,
+          previous: null,
+          currentPage: 1,
+          totalPages: 1,
+        });
+        return;
+      }
+
       const params = {
         search: search || undefined,
         page,
@@ -66,11 +115,11 @@ export const useMinistries = () => {
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [fetchAll, search]);
 
   useEffect(() => {
     fetchMinistries(1);
-  }, [search]);
+  }, [fetchMinistries]);
 
   const goToPage = useCallback((page) => {
     if (page < 1 || page > pagination.totalPages) return;

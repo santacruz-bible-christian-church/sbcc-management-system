@@ -1,9 +1,32 @@
+import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
+const MINISTRY_FIELDS = ['ministry', 'ministry_2', 'ministry_3'];
+
 const ChurchBackgroundStep = ({ formData, updateFormData, ministries, loading }) => {
+  const [visibleMinistrySlots, setVisibleMinistrySlots] = useState(1);
+
+  useEffect(() => {
+    if (formData.ministry_3) {
+      setVisibleMinistrySlots(3);
+      return;
+    }
+    if (formData.ministry_2) {
+      setVisibleMinistrySlots((prev) => Math.max(prev, 2));
+      return;
+    }
+    setVisibleMinistrySlots((prev) => Math.max(prev, 1));
+  }, [formData.ministry_2, formData.ministry_3]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     updateFormData({ [name]: type === 'checkbox' ? checked : value });
+  };
+
+  const selectedMinistryValues = MINISTRY_FIELDS.map((field) => String(formData[field] || ''));
+
+  const handleAddMinistrySlot = () => {
+    setVisibleMinistrySlots((prev) => Math.min(3, prev + 1));
   };
 
   return (
@@ -17,24 +40,58 @@ const ChurchBackgroundStep = ({ formData, updateFormData, ministries, loading })
       {/* Ministry Assignment */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Ministry Assignment
+          Ministry Assignment (Up to 3)
         </label>
-        <select
-          name="ministry"
-          value={formData.ministry}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FDB54A] focus:border-transparent text-gray-900"
-          disabled={loading}
-        >
-          <option value="" className="text-gray-400">Select Ministry (Optional)</option>
-          {ministries?.map((ministry) => (
-            <option key={ministry.id} value={ministry.id}>
-              {ministry.name}
-            </option>
-          ))}
-        </select>
+        <div className="space-y-3">
+          {MINISTRY_FIELDS.slice(0, visibleMinistrySlots).map((field, index) => {
+            const currentValue = String(formData[field] || '');
+            const options = (ministries || []).filter((ministry) => {
+              const ministryId = String(ministry.id);
+              return !selectedMinistryValues.includes(ministryId) || currentValue === ministryId;
+            });
+
+            return (
+              <div key={field}>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Ministry {index + 1}
+                </label>
+                <select
+                  name={field}
+                  value={formData[field] || ''}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-[#FDB54A]"
+                  disabled={loading}
+                >
+                  <option value="" className="text-gray-400">Select Ministry (Optional)</option>
+                  {options.map((ministry) => (
+                    <option key={ministry.id} value={ministry.id}>
+                      {ministry.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
+
+          {visibleMinistrySlots < 3 && (
+            <button
+              type="button"
+              onClick={handleAddMinistrySlot}
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-lg border border-[#FDB54A] px-3 py-2 text-sm font-medium text-[#FDB54A] transition-colors hover:bg-[#FDB54A] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              + Add Ministry
+            </button>
+          )}
+
+          {visibleMinistrySlots === 3 && (
+            <p className="text-xs font-medium text-amber-600">
+              Maximum of 3 ministries reached.
+            </p>
+          )}
+        </div>
         <p className="text-xs text-gray-500 mt-1">
-          Which ministry would you like to serve in?
+          You can assign up to three ministry roles for this member.
         </p>
       </div>
 

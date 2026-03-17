@@ -74,6 +74,8 @@ export const MemberFormModal = ({
     baptism_date: "",
     willing_to_be_baptized: null,
     ministry: "",
+    ministry_2: "",
+    ministry_3: "",
     previous_church: "",
     how_introduced: "",
     began_attending_since: "",
@@ -111,6 +113,8 @@ export const MemberFormModal = ({
         baptism_date: "",
         willing_to_be_baptized: null,
         ministry: "",
+        ministry_2: "",
+        ministry_3: "",
         previous_church: "",
         how_introduced: "",
         began_attending_since: "",
@@ -173,7 +177,9 @@ export const MemberFormModal = ({
       'salvation_testimony',
       'previous_church',
       'how_introduced',
-      'ministry'
+      'ministry',
+      'ministry_2',
+      'ministry_3'
     ];
 
     textFields.forEach(field => {
@@ -362,6 +368,8 @@ export const MemberFormModal = ({
       baptism_date: "",
       willing_to_be_baptized: null,
       ministry: "",
+      ministry_2: "",
+      ministry_3: "",
       previous_church: "",
       how_introduced: "",
       began_attending_since: "",
