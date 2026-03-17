@@ -11,8 +11,12 @@ class FamilyMemberSerializer(serializers.ModelSerializer):
 
 class MemberSerializer(serializers.ModelSerializer):
     ministry_name = serializers.CharField(source="ministry.name", read_only=True, allow_null=True)
-    ministry_2_name = serializers.CharField(source="ministry_2.name", read_only=True, allow_null=True)
-    ministry_3_name = serializers.CharField(source="ministry_3.name", read_only=True, allow_null=True)
+    ministry_2_name = serializers.CharField(
+        source="ministry_2.name", read_only=True, allow_null=True
+    )
+    ministry_3_name = serializers.CharField(
+        source="ministry_3.name", read_only=True, allow_null=True
+    )
     ministries = serializers.SerializerMethodField(read_only=True)
     family_members = FamilyMemberSerializer(many=True, required=False)
 

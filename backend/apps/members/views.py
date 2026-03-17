@@ -54,7 +54,9 @@ class MemberFilter(FilterSet):
 class MemberViewSet(viewsets.ModelViewSet):
     """ViewSet for Member model"""
 
-    queryset = Member.objects.select_related("ministry", "ministry_2", "ministry_3").all()  # Remove "user"
+    queryset = Member.objects.select_related(
+        "ministry", "ministry_2", "ministry_3"
+    ).all()  # Remove "user"
     serializer_class = MemberSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -429,7 +431,9 @@ class MemberViewSet(viewsets.ModelViewSet):
             ministry_names = [
                 m.name for m in [member.ministry, member.ministry_2, member.ministry_3] if m
             ]
-            ministry_name = ", ".join(dict.fromkeys(ministry_names)) if ministry_names else "Unassigned"
+            ministry_name = (
+                ", ".join(dict.fromkeys(ministry_names)) if ministry_names else "Unassigned"
+            )
             membership_date = (
                 member.membership_date.strftime("%b %d, %Y") if member.membership_date else "N/A"
             )
