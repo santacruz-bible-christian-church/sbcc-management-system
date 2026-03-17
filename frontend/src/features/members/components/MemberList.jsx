@@ -111,7 +111,7 @@ const MemberCard = ({
             )}
 
             {/* Name */}
-            <p className={`font-bold text-[#383838] text-left items-center ${showCheckbox ? 'w-[15%]' : 'w-[18%]'}`}>
+            <p className={`font-bold text-[#383838] text-left flex items-center ${showCheckbox ? 'w-[15%]' : 'w-[18%]'}`}>
                 {member.full_name || `${member.first_name} ${member.last_name}`}
             </p>
 
