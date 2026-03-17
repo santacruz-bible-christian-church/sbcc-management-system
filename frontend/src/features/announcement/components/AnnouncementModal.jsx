@@ -8,6 +8,7 @@ import { HiX, HiPhotograph } from 'react-icons/hi';
 import { useMinistries } from '../../ministries/hooks/useMinistries';
 import { usePhotoUpload } from '../hooks/usePhotoUpload';
 import { AUDIENCE_OPTIONS } from '../utils/constants';
+import { formatDateTimeInput } from '../../../utils/format';
 const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null, submitting = false }) => {
   const { ministries, loading: loadingMinistries } = useMinistries();
   const [formData, setFormData] = useState({
@@ -30,14 +31,14 @@ const AnnouncementModal = ({ isOpen, onClose, onSubmit, announcement = null, sub
         body: announcement.body || '',
         audience: announcement.audience || 'all',
         ministry: announcement.ministry || '',
-        publish_at: announcement.publish_at ? new Date(announcement.publish_at).toISOString().slice(0, 16) : '',
-        expire_at: announcement.expire_at ? new Date(announcement.expire_at).toISOString().slice(0, 16) : '',
+        publish_at: formatDateTimeInput(announcement.publish_at),
+        expire_at: formatDateTimeInput(announcement.expire_at),
         is_active: announcement.is_active ?? true,
       });
       clearPhoto();
       setDeleteExistingPhoto(false);
     } else {
-      const now = new Date().toISOString().slice(0, 16);
+      const now = formatDateTimeInput(new Date());
       setFormData(prev => ({ ...prev, publish_at: now }));
       clearPhoto();
       setDeleteExistingPhoto(false);
