@@ -79,6 +79,17 @@ class MemberSerializer(serializers.ModelSerializer):
             "attendance_rate",
             "consecutive_absences",
         ]
+        read_only_fields = [
+            "id",
+            "full_name",
+            "membership_date",
+            "created_at",
+            "updated_at",
+            "archived_at",
+            "last_attended",
+            "attendance_rate",
+            "consecutive_absences",
+        ]
 
     def get_ministries(self, obj):
         ministries = []
@@ -107,17 +118,6 @@ class MemberSerializer(serializers.ModelSerializer):
             )
 
         return attrs
-        read_only_fields = [
-            "id",
-            "full_name",
-            "membership_date",
-            "created_at",
-            "updated_at",
-            "archived_at",
-            "last_attended",
-            "attendance_rate",
-            "consecutive_absences",
-        ]
 
     def create(self, validated_data):
         family_members_data = validated_data.pop("family_members", [])
