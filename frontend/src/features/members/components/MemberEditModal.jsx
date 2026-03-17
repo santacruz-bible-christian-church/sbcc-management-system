@@ -90,6 +90,8 @@ const ActivityToggle = ({ isActive, onChange }) => (
   </div>
 );
 
+const MINISTRY_FIELDS = ['ministry', 'ministry_2', 'ministry_3'];
+
 export const MemberEditModal = ({
   open,
   onClose,
@@ -100,6 +102,7 @@ export const MemberEditModal = ({
 }) => {
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
+  const [visibleMinistrySlots, setVisibleMinistrySlots] = useState(1);
 
   // Initialize form data when member changes or modal opens
   useEffect(() => {
@@ -130,12 +133,21 @@ export const MemberEditModal = ({
         baptism_date: member.baptism_date || "",
         willing_to_be_baptized: member.willing_to_be_baptized ?? null,
         ministry: member.ministry?.id || member.ministry || "",
+        ministry_2: member.ministry_2?.id || member.ministry_2 || "",
+        ministry_3: member.ministry_3?.id || member.ministry_3 || "",
         previous_church: member.previous_church || "",
         how_introduced: member.how_introduced || "",
         began_attending_since: member.began_attending_since || "",
         is_active: member.is_active !== undefined ? member.is_active : true,
         status: member.status || (member.is_active ? "active" : "inactive"),
       });
+      if (member.ministry_3) {
+        setVisibleMinistrySlots(3);
+      } else if (member.ministry_2) {
+        setVisibleMinistrySlots(2);
+      } else {
+        setVisibleMinistrySlots(1);
+      }
       setErrors({});
     }
   }, [member, open]);
@@ -158,6 +170,10 @@ export const MemberEditModal = ({
       is_active: isActive,
       status: isActive ? "active" : "inactive",
     }));
+  }, []);
+
+  const handleAddMinistrySlot = useCallback(() => {
+    setVisibleMinistrySlots((prev) => Math.min(3, prev + 1));
   }, []);
 
   // Family member handlers
@@ -208,7 +224,7 @@ export const MemberEditModal = ({
     const optionalFields = [
       'gender', 'complete_address', 'occupation', 'marital_status',
       'elementary_school', 'secondary_school', 'vocational_school', 'college',
-      'salvation_testimony', 'previous_church', 'how_introduced', 'ministry',
+      'salvation_testimony', 'previous_church', 'how_introduced', 'ministry', 'ministry_2', 'ministry_3',
       'wedding_anniversary', 'spiritual_birthday', 'baptism_date', 'began_attending_since'
     ];
     optionalFields.forEach(field => {
@@ -420,7 +436,54 @@ export const MemberEditModal = ({
               <section>
                 <SectionHeader title="Church Background" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormSelect label="Ministry" name="ministry" value={formData.ministry} onChange={handleChange} options={(ministries || []).map(m => ({ value: m.id.toString(), label: m.name }))} />
+                  <div className="md:col-span-2 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-gray-700">Ministry Assignment (Up to 3)</p>
+                      {visibleMinistrySlots < 3 && (
+                        <button
+                          type="button"
+                          onClick={handleAddMinistrySlot}
+                          className="rounded-lg border border-[#FDB54A] px-3 py-1.5 text-xs font-medium text-[#FDB54A] transition-colors hover:bg-[#FDB54A] hover:text-white"
+                        >
+                          + Add Ministry
+                        </button>
+                      )}
+                    </div>
+
+                    {MINISTRY_FIELDS.slice(0, visibleMinistrySlots).map((field, index) => {
+                      const currentValue = String(formData[field] || '');
+                      const selectedValues = MINISTRY_FIELDS.map((f) => String(formData[f] || ''));
+                      const options = (ministries || []).filter((ministryOption) => {
+                        const optionId = String(ministryOption.id);
+                        return !selectedValues.includes(optionId) || currentValue === optionId;
+                      });
+
+                      return (
+                        <div key={field}>
+                          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            Ministry {index + 1}
+                          </label>
+                          <select
+                            name={field}
+                            value={formData[field] || ''}
+                            onChange={handleChange}
+                            className="w-full cursor-pointer rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#FDB54A] focus:outline-none focus:ring-2 focus:ring-[#FDB54A]/50"
+                          >
+                            <option value="">Select...</option>
+                            {options.map((ministryOption) => (
+                              <option key={ministryOption.id} value={ministryOption.id.toString()}>
+                                {ministryOption.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      );
+                    })}
+
+                    {visibleMinistrySlots === 3 && (
+                      <p className="text-xs font-medium text-amber-600">Maximum of 3 ministries reached.</p>
+                    )}
+                  </div>
                   <FormInput label="Previous Church" name="previous_church" value={formData.previous_church} onChange={handleChange} />
                   <FormSelect label="How were you introduced?" name="how_introduced" value={formData.how_introduced} onChange={handleChange} options={[
                     { value: "friend", label: "Friend/Family" },

@@ -32,11 +32,19 @@ from .services import (
 
 # Custom filter for birthday_month
 class MemberFilter(FilterSet):
+    ministry = filters.NumberFilter(method="filter_ministry")
     birthday_month = filters.NumberFilter(method="filter_birthday_month")
 
     class Meta:
         model = Member
         fields = ["ministry", "status", "gender", "birthday_month"]
+
+    def filter_ministry(self, queryset, name, value):
+        return queryset.filter(
+            models.Q(ministry_id=value)
+            | models.Q(ministry_2_id=value)
+            | models.Q(ministry_3_id=value)
+        )
 
     def filter_birthday_month(self, queryset, name, value):
         # value is expected to be 1-12
@@ -46,7 +54,7 @@ class MemberFilter(FilterSet):
 class MemberViewSet(viewsets.ModelViewSet):
     """ViewSet for Member model"""
 
-    queryset = Member.objects.select_related("ministry").all()  # Remove "user"
+    queryset = Member.objects.select_related("ministry", "ministry_2", "ministry_3").all()  # Remove "user"
     serializer_class = MemberSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminOrPastorReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -332,7 +340,11 @@ class MemberViewSet(viewsets.ModelViewSet):
         # Filter by ministry
         ministry_filter = request.query_params.get("ministry")
         if ministry_filter:
-            qs = qs.filter(ministry_id=ministry_filter)
+            qs = qs.filter(
+                models.Q(ministry_id=ministry_filter)
+                | models.Q(ministry_2_id=ministry_filter)
+                | models.Q(ministry_3_id=ministry_filter)
+            )
 
         # Filter by gender
         gender_filter = request.query_params.get("gender")
@@ -378,8 +390,11 @@ class MemberViewSet(viewsets.ModelViewSet):
         if status_filter:
             filter_parts.append(f"Status: {status_filter.title()}")
         if ministry_filter:
+            from apps.ministries.models import Ministry
+
             ministry_name = (
-                qs.first().ministry.name if qs.exists() and qs.first().ministry else "Unknown"
+                Ministry.objects.filter(id=ministry_filter).values_list("name", flat=True).first()
+                or "Unknown"
             )
             filter_parts.append(f"Ministry: {ministry_name}")
         if gender_filter:
@@ -411,7 +426,10 @@ class MemberViewSet(viewsets.ModelViewSet):
         # Table rows
         for member in qs:
             birthday = member.date_of_birth.strftime("%b %d, %Y") if member.date_of_birth else "N/A"
-            ministry_name = member.ministry.name if member.ministry else "Unassigned"
+            ministry_names = [
+                m.name for m in [member.ministry, member.ministry_2, member.ministry_3] if m
+            ]
+            ministry_name = ", ".join(dict.fromkeys(ministry_names)) if ministry_names else "Unassigned"
             membership_date = (
                 member.membership_date.strftime("%b %d, %Y") if member.membership_date else "N/A"
             )

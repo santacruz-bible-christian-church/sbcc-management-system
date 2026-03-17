@@ -8,7 +8,7 @@ import {
     HiOutlinePhone,
 } from 'react-icons/hi';
 import { HiArrowPath } from 'react-icons/hi2';
-import { generateColorFromId, getContrastColor, generateHexFromId } from '../../../utils/colorUtils';
+import { generateHexFromId } from '../../../utils/colorUtils';
 import { Pagination } from '../../../components/ui/Pagination';
 import { MembersSkeleton } from './MembersSkeleton';
 
@@ -21,6 +21,25 @@ const formatDate = (dateString) => {
         day: 'numeric',
         year: 'numeric'
     });
+};
+
+const getMemberMinistryItems = (member) => {
+    if (Array.isArray(member.ministries) && member.ministries.length > 0) {
+        return member.ministries
+            .filter((item) => item && item.name)
+            .map((item) => ({ id: item.id, name: item.name }));
+    }
+
+    const fallback = [
+        { id: member.ministry, name: member.ministry_name },
+        { id: member.ministry_2, name: member.ministry_2_name },
+        { id: member.ministry_3, name: member.ministry_3_name },
+    ].filter((item) => item.name);
+
+    return fallback.filter(
+        (item, index, arr) =>
+            index === arr.findIndex((entry) => String(entry.id || entry.name) === String(item.id || item.name))
+    );
 };
 
 // Column Headers
@@ -70,6 +89,8 @@ const MemberCard = ({
     onSelect,
     highlightBirthday = false
 }) => {
+    const memberMinistries = getMemberMinistryItems(member);
+
     return (
         <div className={`flex justify-between pr-3 pl-3 pt-6 pb-6 rounded-[20px] shadow-[2px_2px_10px_rgba(0,0,0,0.2)] transition-all ${
             isSelected ? 'ring-2 ring-[#FDB54A] bg-[#FFF8E7]' : ''
@@ -113,19 +134,37 @@ const MemberCard = ({
             </p>
 
             {/* Ministry */}
-            <div
-                className="flex w-[20%] text-sm font-medium rounded-lg px-3 py-1.5 items-center justify-center"
-                style={member.ministry ? {
-                    backgroundColor: `${generateHexFromId(member.ministry)}15`,
-                    color: generateHexFromId(member.ministry),
-                    borderLeft: `3px solid ${generateHexFromId(member.ministry)}`
-                } : {
-                    backgroundColor: '#F9FAFB',
-                    color: '#9CA3AF',
-                    borderLeft: '3px solid #E5E7EB'
-                }}
-            >
-                <span className="truncate">{member.ministry_name || 'Member'}</span>
+            <div className="flex w-[20%] items-center justify-center">
+                <div className="w-full space-y-1">
+                    {memberMinistries.length > 0 ? memberMinistries.map((ministryItem, index) => {
+                        const colorSeed = ministryItem.id || ministryItem.name || index;
+                        const accentColor = generateHexFromId(colorSeed);
+                        return (
+                            <div
+                                key={`${ministryItem.id || ministryItem.name}-${index}`}
+                                className="truncate rounded-md px-2 py-1 text-xs font-medium"
+                                style={{
+                                    backgroundColor: `${accentColor}15`,
+                                    color: accentColor,
+                                    borderLeft: `3px solid ${accentColor}`,
+                                }}
+                            >
+                                {ministryItem.name}
+                            </div>
+                        );
+                    }) : (
+                        <div
+                            className="truncate rounded-md px-2 py-1 text-xs font-medium"
+                            style={{
+                                backgroundColor: '#F9FAFB',
+                                color: '#9CA3AF',
+                                borderLeft: '3px solid #E5E7EB',
+                            }}
+                        >
+                            Member
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Actions */}

@@ -11,6 +11,9 @@ class FamilyMemberSerializer(serializers.ModelSerializer):
 
 class MemberSerializer(serializers.ModelSerializer):
     ministry_name = serializers.CharField(source="ministry.name", read_only=True, allow_null=True)
+    ministry_2_name = serializers.CharField(source="ministry_2.name", read_only=True, allow_null=True)
+    ministry_3_name = serializers.CharField(source="ministry_3.name", read_only=True, allow_null=True)
+    ministries = serializers.SerializerMethodField(read_only=True)
     family_members = FamilyMemberSerializer(many=True, required=False)
 
     # ✅ Explicitly allow null for boolean fields
@@ -28,6 +31,8 @@ class MemberSerializer(serializers.ModelSerializer):
             "date_of_birth",
             "gender",
             "ministry",
+            "ministry_2",
+            "ministry_3",
             "is_active",
             # Extended personal info
             "complete_address",
@@ -56,6 +61,9 @@ class MemberSerializer(serializers.ModelSerializer):
             # Family members
             "family_members",
             "ministry_name",
+            "ministry_2_name",
+            "ministry_3_name",
+            "ministries",
             "status",
             "archived_at",
             "created_at",
@@ -67,6 +75,34 @@ class MemberSerializer(serializers.ModelSerializer):
             "attendance_rate",
             "consecutive_absences",
         ]
+
+    def get_ministries(self, obj):
+        ministries = []
+        seen = set()
+        slots = [obj.ministry, obj.ministry_2, obj.ministry_3]
+
+        for ministry in slots:
+            if not ministry or ministry.id in seen:
+                continue
+            seen.add(ministry.id)
+            ministries.append({"id": ministry.id, "name": ministry.name})
+
+        return ministries
+
+    def validate(self, attrs):
+        selected_ministries = [
+            attrs.get("ministry", getattr(self.instance, "ministry", None)),
+            attrs.get("ministry_2", getattr(self.instance, "ministry_2", None)),
+            attrs.get("ministry_3", getattr(self.instance, "ministry_3", None)),
+        ]
+
+        selected_ids = [m.id for m in selected_ministries if m is not None]
+        if len(selected_ids) != len(set(selected_ids)):
+            raise serializers.ValidationError(
+                {"ministries": "Please select distinct ministries for slots 1 to 3."}
+            )
+
+        return attrs
         read_only_fields = [
             "id",
             "full_name",

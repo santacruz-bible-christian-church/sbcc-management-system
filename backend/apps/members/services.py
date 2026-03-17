@@ -169,23 +169,35 @@ def get_demographic_statistics():
     )
 
     # ========== Ministry Distribution ==========
-    ministry_stats = (
-        active_members.filter(ministry__isnull=False)
-        .values("ministry__id", "ministry__name")
-        .annotate(count=Count("id"))
-        .order_by("-count")
+    ministry_counter = {}
+    unassigned_count = 0
+
+    for member in active_members.select_related("ministry", "ministry_2", "ministry_3"):
+        seen_ids = set()
+        ministry_entries = []
+
+        for ministry in [member.ministry, member.ministry_2, member.ministry_3]:
+            if not ministry or ministry.id in seen_ids:
+                continue
+            seen_ids.add(ministry.id)
+            ministry_entries.append((ministry.id, ministry.name))
+
+        if not ministry_entries:
+            unassigned_count += 1
+            continue
+
+        for ministry_id, ministry_name in ministry_entries:
+            if ministry_id not in ministry_counter:
+                ministry_counter[ministry_id] = {
+                    "ministry_id": ministry_id,
+                    "ministry_name": ministry_name,
+                    "count": 0,
+                }
+            ministry_counter[ministry_id]["count"] += 1
+
+    ministry_distribution = sorted(
+        ministry_counter.values(), key=lambda item: item["count"], reverse=True
     )
-
-    ministry_distribution = [
-        {
-            "ministry_id": stat["ministry__id"],
-            "ministry_name": stat["ministry__name"],
-            "count": stat["count"],
-        }
-        for stat in ministry_stats
-    ]
-
-    unassigned_count = active_members.filter(ministry__isnull=True).count()
 
     # ========== Return Complete Stats ==========
     return {
@@ -224,7 +236,10 @@ def get_ministry_demographics(ministry_id):
     except Ministry.DoesNotExist:
         return {"error": "Ministry not found"}
 
-    members = Member.objects.filter(ministry=ministry, is_active=True)
+    members = Member.objects.filter(
+        Q(ministry=ministry) | Q(ministry_2=ministry) | Q(ministry_3=ministry),
+        is_active=True,
+    ).distinct()
     total_count = members.count()
 
     if total_count == 0:

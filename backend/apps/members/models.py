@@ -77,6 +77,20 @@ class Member(models.Model):
         blank=True,
         related_name="members",
     )
+    ministry_2 = models.ForeignKey(
+        "ministries.Ministry",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="members_secondary",
+    )
+    ministry_3 = models.ForeignKey(
+        "ministries.Ministry",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="members_tertiary",
+    )
 
     # Status tracking
     is_active = models.BooleanField(default=True)
@@ -106,6 +120,8 @@ class Member(models.Model):
             # Composite indexes for common queries
             models.Index(fields=["status", "is_active"]),
             models.Index(fields=["ministry", "status"]),
+            models.Index(fields=["ministry_2", "status"]),
+            models.Index(fields=["ministry_3", "status"]),
             # For birthday/anniversary queries
             models.Index(fields=["date_of_birth"]),
             models.Index(fields=["wedding_anniversary"]),
