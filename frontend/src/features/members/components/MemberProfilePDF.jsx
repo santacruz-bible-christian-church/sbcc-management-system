@@ -282,7 +282,7 @@ const MemberProfilePDF = ({ member }) => {
             </Section>
 
             <Section title="Church Membership">
-              <InfoRow label="Ministry" value={member.ministry_name || "Member"} />
+              <InfoRow label="Ministry" value={[member.ministry_name, member.ministry_2_name, member.ministry_3_name].filter(Boolean).join(", ") || "Member"} />
               <InfoRow label="Attending Since" value={formatDate(member.began_attending_since)} />
               <InfoRow label="Previous Church" value={member.previous_church} />
               <InfoRow label="How Introduced" value={member.how_introduced ? member.how_introduced.replace(/_/g, " ") : "—"} isLast />
