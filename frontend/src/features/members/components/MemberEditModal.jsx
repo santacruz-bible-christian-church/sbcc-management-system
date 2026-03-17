@@ -50,10 +50,44 @@ const FormSelect = ({ label, name, value, onChange, options, error, required, di
 );
 
 // Section header component
-const SectionHeader = ({ title }) => (
-  <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-    {title}
-  </h3>
+const SectionHeader = ({ title, rightSlot }) => (
+  <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-gray-200 pb-3">
+    <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+    {rightSlot ? <div className="w-full sm:w-auto">{rightSlot}</div> : null}
+  </div>
+);
+
+const ActivityToggle = ({ isActive, onChange }) => (
+  <div className="rounded-xl border border-gray-200 bg-gradient-to-r from-white to-gray-50 px-3 py-2 shadow-sm">
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Member Status</p>
+        <p className={`text-xs font-medium ${isActive ? 'text-emerald-700' : 'text-gray-600'}`}>
+          {isActive ? 'Currently Active' : 'Currently Inactive'}
+        </p>
+      </div>
+      <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+            isActive ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          Active
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+            isActive ? 'text-gray-600 hover:bg-gray-100' : 'bg-slate-700 text-white'
+          }`}
+        >
+          Inactive
+        </button>
+      </div>
+    </div>
+  </div>
 );
 
 export const MemberEditModal = ({
@@ -250,7 +284,10 @@ export const MemberEditModal = ({
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Personal Information */}
               <section>
-                <SectionHeader title="Personal Information" />
+                <SectionHeader
+                  title="Personal Information"
+                  rightSlot={<ActivityToggle isActive={!!formData.is_active} onChange={handleActiveChange} />}
+                />
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <FormInput label="First Name" name="first_name" value={formData.first_name} onChange={handleChange} error={errors.first_name} required />
                   <FormInput label="Last Name" name="last_name" value={formData.last_name} onChange={handleChange} error={errors.last_name} required />
@@ -394,30 +431,6 @@ export const MemberEditModal = ({
                   ]} />
                   <FormInput label="Began Attending Since" name="began_attending_since" type="date" value={formData.began_attending_since} onChange={handleChange} />
                 </div>
-
-                <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <p className="text-sm font-medium text-gray-700">Member Activity</p>
-                  <div className="mt-3 inline-flex rounded-lg border border-gray-300 bg-white p-1">
-                    <button
-                      type="button"
-                      onClick={() => handleActiveChange(true)}
-                      className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
-                        formData.is_active ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      Active
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleActiveChange(false)}
-                      className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
-                        formData.is_active ? 'text-gray-600 hover:bg-gray-100' : 'bg-gray-700 text-white'
-                      }`}
-                    >
-                      Inactive
-                    </button>
-                  </div>
-                </div>
               </section>
             </form>
           </div>
@@ -456,6 +469,16 @@ export const MemberEditModal = ({
       </div>
     </>
   );
+};
+
+SectionHeader.propTypes = {
+  title: PropTypes.string.isRequired,
+  rightSlot: PropTypes.node,
+};
+
+ActivityToggle.propTypes = {
+  isActive: PropTypes.bool,
+  onChange: PropTypes.func.isRequired,
 };
 
 MemberEditModal.propTypes = {
